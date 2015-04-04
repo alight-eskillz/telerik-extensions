@@ -22,4 +22,4 @@ Includes a robust RadGrid Group State Preservation extension written in TypeScri
     	Grid_GroupStatePreservation.RestoreGrouping();
     }
 
-View the Wiki for complete documentation.
+View the Wiki for complete documentation.  If you'd like to contribute to this project, please let me know.
