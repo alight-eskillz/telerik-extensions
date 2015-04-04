@@ -20,7 +20,7 @@ namespace WebApplication2
 
 		protected void Button1_Click(object sender, EventArgs e)
 		{
-			System.Threading.Thread.Sleep(250);
+			System.Threading.Thread.Sleep(30);
 			RadGrid1.Rebind();
 		}
 	}

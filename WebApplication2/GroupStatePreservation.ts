@@ -7,15 +7,14 @@ $ = $telerik.$;
 
 module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 	export class Options {
-		constructor(public gridClientID: string,
+		constructor(
+			public gridClientID: string,
 			public groupByExpressionAggregates_AutoStrip: boolean = false,
 			public groupByExpressionAggregates_SecondDisplayName: string = null,
 			public clientDataSource_AddEventHandlers: boolean = false,
 			public ajaxRefresh_AddEventHandlers: boolean = false,
-			/*
-			 * Specify for a performance boost with larger grids. Do not specify this option if you manipulate group expand/collapse state manually.
-			 */
-			public masterTableView_GroupsExpandedDefault: boolean = null) {
+			public saveGridScrollPosition: boolean = false,
+			public gridContainerSelector: string = null) {
 
 		}
 	}
@@ -34,7 +33,8 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 	}
 	enum SaveRestoreModes {
 		Save = 1,
-		Restore = 2
+		Restore = 2,
+		PerformanceModeValidate = 3
 	}
 
 	export class Core {
@@ -52,6 +52,7 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 		static groupExpandCollapseInputElementClass_Collapse = "rgCollapse";
 
 		static groupingSettings_GroupByFieldsSeparator: string;
+
 		private _InitializeExtender() {
 			var grid = this.get_Grid();
 			Core.groupingSettings_GroupByFieldsSeparator = (<any>grid)._groupingSettings.GroupByFieldsSeparator;
@@ -110,13 +111,49 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 		}
 
 		//#region Scroll Position
-		//private _containerScrollTop: number = 0;
-		//private _scrollPosition_Save() {
-		//	this._containerScrollTop = $(window).get(0).scrollTop;
-		//}
-		//private _scrollPosition_Restore() {
-		//	$(window).get(0).scrollTop = this._containerScrollTop;
-		//}
+		get_$GridDataElement(): JQuery {
+			//Note: this element is available only when the grid has static headers and scrolling enabled in the grid
+			var gridDataElement = $("#" + this._Options.gridClientID + "_GridData");
+			if (gridDataElement.length === 1) {
+				return gridDataElement;
+			}
+			return null;
+		}
+		private _containerScrollTop: number = 0;
+		private _scrollPosition_Save() {
+			if (this.get_Options().saveGridScrollPosition) {
+				var containerElement: JQuery;
+				if (this._Options.gridContainerSelector) {
+					containerElement = $(this._Options.gridContainerSelector);
+				} else {
+					containerElement = this.get_$GridDataElement();
+				}
+				if (containerElement.length === 1) {
+					this._containerScrollTop = containerElement.get(0).scrollTop;
+				} else {
+					if (console && typeof console.log === "function") {
+						console.log("RadGrid Group State Preservation: Scroll container not found.  Enable grid scrolling or specify a container selector in Options.");
+					}
+				}
+			}
+		}
+		private _scrollPosition_Restore() {
+			if (this.get_Options().saveGridScrollPosition) {
+				var containerElement: JQuery;
+				if (this._Options.gridContainerSelector) {
+					containerElement = $(this._Options.gridContainerSelector);
+				} else {
+					containerElement = this.get_$GridDataElement();
+				}
+				if (containerElement.length === 1) {
+					containerElement.get(0).scrollTop = this._containerScrollTop;
+				} else {
+					if (console && typeof console.log === "function") {
+						console.log("RadGrid Group State Preservation: Scroll container not found.  Enable grid scrolling or specify a container selector in Options.");
+					}
+				}
+			}
+		}
 		//#endregion
 
 		//#region Group Expanded/Collapsed State Tracking
@@ -125,6 +162,12 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 		private _groupItemAdd(list: Array<string>, value: string) {
 			if (list.indexOf(value) === -1) {
 				list.push(value);
+			}
+		}
+		private _groupItemRemove(list: Array<string>, value: string) {
+			var itemIndex = list.indexOf(value);
+			if (itemIndex > -1) {
+				list.splice(itemIndex, 1);
 			}
 		}
 
@@ -152,12 +195,17 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 				case SaveRestoreModes.Save:
 					$groupHeaderCellElementsForCurrentRow.each(
 						(elementIndex, groupCellElement) =>
-							this._saveGroupingHeaderCellLoop(elementIndex, groupCellElement));
+							this._saveGroupingHeaderCellLoop(Mode, elementIndex, groupCellElement));
 					break;
 				case SaveRestoreModes.Restore:
 					$groupHeaderCellElementsForCurrentRow.each(
 						(elementIndex, groupCellElement) =>
 							this._restoreGroupingHeaderCellLoop(elementIndex, groupCellElement));
+					break;
+				case SaveRestoreModes.PerformanceModeValidate:
+					$groupHeaderCellElementsForCurrentRow.each(
+						(elementIndex, groupCellElement) =>
+							this._saveGroupingHeaderCellLoop(Mode, elementIndex, groupCellElement));
 					break;
 			}
 		}
@@ -262,26 +310,18 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 		//#endregion
 
 		//#region Save
-		private _saveGroupingHeaderCellLoop(elementIndex: number, groupCellElement: Element) {
+		private _saveGroupingHeaderCellLoop(Mode: SaveRestoreModes, elementIndex: number, groupCellElement: Element) {
 			var groupState = this._get_GroupState(
 				<HTMLTableCellElement>groupCellElement,
 				elementIndex);
+
 			if (groupState) {
-				if (this._Options.masterTableView_GroupsExpandedDefault !== null) {
-					//Performance enhancement for larger grids (track only items that changed from normal state)
-					if (groupState.IsExpanded
-						&& !this._Options.masterTableView_GroupsExpandedDefault) {
-						this._groupItemAdd(this._groupsExpanded, groupState.FullGroupText());
-					} else if (!groupState.IsExpanded
-						&& this._Options.masterTableView_GroupsExpandedDefault) {
-						this._groupItemAdd(this._groupsCollapsed, groupState.FullGroupText());
-					}
+				if (groupState.IsExpanded) {
+					this._groupItemAdd(this._groupsExpanded, groupState.FullGroupText());
+					this._groupItemRemove(this._groupsCollapsed, groupState.FullGroupText());
 				} else {
-					if (groupState.IsExpanded) {
-						this._groupItemAdd(this._groupsExpanded, groupState.FullGroupText());
-					} else {
-						this._groupItemAdd(this._groupsCollapsed, groupState.FullGroupText());
-					}
+					this._groupItemAdd(this._groupsCollapsed, groupState.FullGroupText());
+					this._groupItemRemove(this._groupsExpanded, groupState.FullGroupText());
 				}
 			}
 		}
@@ -310,8 +350,7 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 				this.ResetGrouping();
 			}
 
-			//If you aren't using RadGrid scrolling, you'd want to save the container scroll position here
-			//this._scrollPosition_Save();
+			this._scrollPosition_Save();
 
 			var thisClass = this;
 			this._beginSaveRestore();
@@ -338,8 +377,7 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 					thisClass._SaveRestoreGroupingHeaderRowLoop(
 						SaveRestoreModes.Restore, elementIndex, groupRowElement));
 
-			//If you aren't using RadGrid scrolling, you'd want to restore the container scroll position here
-			//this._scrollPosition_Restore();
+			this._scrollPosition_Restore();
 		}
 		ResetGrouping() {
 			this._groupsExpanded = [];
@@ -354,7 +392,7 @@ var Grid_GroupStatePreservation: ClApps_Common.Extenders.TelerikCustom.RadGrid.G
 function ApplicationLoaded(): void {
 	var GroupStatePreservation_Options = new ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation.Options(
 		"RadGrid1", true, "Random Number Sum");
-	GroupStatePreservation_Options.masterTableView_GroupsExpandedDefault = false;
+	GroupStatePreservation_Options.saveGridScrollPosition = true;
 	Grid_GroupStatePreservation = new ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation.Core(
 		GroupStatePreservation_Options);
 }

@@ -38,7 +38,7 @@
         <telerik:RadGrid runat="server" ID="RadGrid1" ShowGroupPanel="true" AutoGenerateColumns="false" 
 			OnNeedDataSource="RadGrid1_NeedDataSource" AllowPaging="true" PageSize="50">
             <ClientSettings AllowDragToGroup="true">
-                <Scrolling AllowScroll="true" UseStaticHeaders="true" SaveScrollPosition="true" ScrollHeight="400" />
+                <Scrolling AllowScroll="true" UseStaticHeaders="true" ScrollHeight="400" />
             </ClientSettings>
 			<GroupingSettings GroupByFieldsSeparator=" | " />
             <MasterTableView GroupLoadMode="Client" GroupsDefaultExpanded="false">
