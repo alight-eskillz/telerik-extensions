@@ -71,8 +71,11 @@
                 </GroupByExpressions>
             </MasterTableView>
         </telerik:RadGrid>
-
     </div>
+		<div>
+			<p>Note that group state is also preserved when changing pages (very handy when groups continue to the next page).</p>
+			<p>It doesn't seem possible to track the page change event client-side (at least not with AJAX), so it's important to set the RadGrid as an AjaxSetting with itself as an updated control.</p>
+		</div>
     </form>
 </body>
 </html>
