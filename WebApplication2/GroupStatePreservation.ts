@@ -1,6 +1,6 @@
-﻿/// <reference path="typings/telerik/telerik.web.ui.d.ts" />
-/// <reference path="typings/microsoft-ajax/microsoft.ajax.d.ts" />
+﻿/// <reference path="typings/microsoft-ajax/microsoft.ajax.d.ts" />
 /// <reference path="typings/jquery/jquery.d.ts" />
+/// <reference path="typings/telerik/telerik.web.ui.d.ts" />
 
 var $telerik = Telerik.Web.CommonScripts;
 $ = $telerik.$;
@@ -174,6 +174,7 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 		//#region Helpers		
 		//#region Common
 		private _currentNestLevel: number;
+		private _currentTopLevelGroupName: string = null;
 		private _currentParentGroupPathArray: Array<string>;
 		private _beginSaveRestore() {
 			this._currentNestLevel = 0;
@@ -184,7 +185,7 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 			return this._currentParentGroupPathArray.join("/");
 		}
 		private _SaveRestoreGroupingHeaderRowLoop(
-			Mode: SaveRestoreModes, elementIndex: number, groupRowElement: Element) {
+			Mode: SaveRestoreModes, elementIndex: number, groupRowElement: Element): void {
 			var $groupRowElement = $(groupRowElement);
 			var $groupHeaderCellElementsForCurrentRow =
 				$groupRowElement.find(Core.groupHeaderCellElementSelector);
@@ -207,6 +208,30 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 						(elementIndex, groupCellElement) =>
 							this._saveGroupingHeaderCellLoop(Mode, elementIndex, groupCellElement));
 					break;
+			}
+		}
+
+		static groupColumnNameValueSplitter = ":";
+		private _get_GroupColumnDisplayName(GroupText: string): string {
+			if (!GroupText || GroupText === "") { return null; }
+			return GroupText.substring(0, GroupText.indexOf(Core.groupColumnNameValueSplitter));
+		}
+		/*
+		 * Ensure that group tracking is reset when the top-level group changes (to prevent excessive memory consumption).
+		 */
+		private _trackTopLevelGroupChanges(nestLevel: number, groupText: string): void {
+			if (nestLevel === 0) {
+				var currentGroupColumnName = this._get_GroupColumnDisplayName(groupText);
+				if (currentGroupColumnName) {
+					if (!this._currentTopLevelGroupName) {
+						this._currentTopLevelGroupName = currentGroupColumnName;
+					} else {
+						if (this._currentTopLevelGroupName !== currentGroupColumnName) {
+							this._currentTopLevelGroupName = currentGroupColumnName;
+							this.ResetGrouping();
+						}
+					}
+				}
 			}
 		}
 		private _headerRowGroupProcessing($groupRowElement: JQuery, $groupHeaderCellElementsForCurrentRow: JQuery): void {
@@ -234,6 +259,8 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 				}
 			}
 			this._currentNestLevel = nestLevel;
+
+			this._trackTopLevelGroupChanges(nestLevel, groupText);
 		}
 		private _get_$GroupHeaderRowElements(): JQuery {
 			var masterTableView = this.get_GridMasterTableView();

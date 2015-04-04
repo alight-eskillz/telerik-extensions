@@ -1,6 +1,6 @@
-/// <reference path="typings/telerik/telerik.web.ui.d.ts" />
 /// <reference path="typings/microsoft-ajax/microsoft.ajax.d.ts" />
 /// <reference path="typings/jquery/jquery.d.ts" />
+/// <reference path="typings/telerik/telerik.web.ui.d.ts" />
 var $telerik = Telerik.Web.CommonScripts;
 $ = $telerik.$;
 var ClApps_Common;
@@ -58,6 +58,7 @@ var ClApps_Common;
                             //#region Group Expanded/Collapsed State Tracking
                             this._groupsExpanded = [];
                             this._groupsCollapsed = [];
+                            this._currentTopLevelGroupName = null;
                             this._InitializeExtender();
                         }
                         Core.prototype.get_Options = function () {
@@ -205,6 +206,31 @@ var ClApps_Common;
                                     break;
                             }
                         };
+                        Core.prototype._get_GroupColumnDisplayName = function (GroupText) {
+                            if (!GroupText || GroupText === "") {
+                                return null;
+                            }
+                            return GroupText.substring(0, GroupText.indexOf(Core.groupColumnNameValueSplitter));
+                        };
+                        /*
+                         * Ensure that group tracking is reset when the top-level group changes (to prevent excessive memory consumption).
+                         */
+                        Core.prototype._trackTopLevelGroupChanges = function (nestLevel, groupText) {
+                            if (nestLevel === 0) {
+                                var currentGroupColumnName = this._get_GroupColumnDisplayName(groupText);
+                                if (currentGroupColumnName) {
+                                    if (!this._currentTopLevelGroupName) {
+                                        this._currentTopLevelGroupName = currentGroupColumnName;
+                                    }
+                                    else {
+                                        if (this._currentTopLevelGroupName !== currentGroupColumnName) {
+                                            this._currentTopLevelGroupName = currentGroupColumnName;
+                                            this.ResetGrouping();
+                                        }
+                                    }
+                                }
+                            }
+                        };
                         Core.prototype._headerRowGroupProcessing = function ($groupRowElement, $groupHeaderCellElementsForCurrentRow) {
                             var nestLevel = 0;
                             var thisClass = this;
@@ -231,6 +257,7 @@ var ClApps_Common;
                                 }
                             }
                             this._currentNestLevel = nestLevel;
+                            this._trackTopLevelGroupChanges(nestLevel, groupText);
                         };
                         Core.prototype._get_$GroupHeaderRowElements = function () {
                             var masterTableView = this.get_GridMasterTableView();
@@ -357,6 +384,7 @@ var ClApps_Common;
                         Core.groupHeaderCellToggleElementName = "INPUT";
                         Core.groupExpandCollapseInputElementClass_Expand = "rgExpand";
                         Core.groupExpandCollapseInputElementClass_Collapse = "rgCollapse";
+                        Core.groupColumnNameValueSplitter = ":";
                         return Core;
                     })();
                     GroupStatePreservation.Core = Core;
