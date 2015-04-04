@@ -24,17 +24,24 @@
                         <telerik:AjaxUpdatedControl ControlID="Button1" />
                     </UpdatedControls>
                 </telerik:AjaxSetting>
+				<telerik:AjaxSetting AjaxControlID="RadGrid1">
+                    <UpdatedControls>
+                        <telerik:AjaxUpdatedControl ControlID="RadGrid1" />
+                    </UpdatedControls>
+                </telerik:AjaxSetting>
             </AjaxSettings>
         </telerik:RadAjaxManager>
 
         <p>Click to see the expand / collapse state is persisted after post-back</p>
         <asp:Button Text="Ajax request" runat="server" ID="Button1" OnClick="Button1_Click" />
         <br />
-        <telerik:RadGrid runat="server" ID="RadGrid1" ShowGroupPanel="true" AutoGenerateColumns="false" OnNeedDataSource="RadGrid1_NeedDataSource">
+        <telerik:RadGrid runat="server" ID="RadGrid1" ShowGroupPanel="true" AutoGenerateColumns="false" 
+			OnNeedDataSource="RadGrid1_NeedDataSource" AllowPaging="true" PageSize="50">
             <ClientSettings AllowDragToGroup="true">
                 <Scrolling AllowScroll="true" UseStaticHeaders="true" SaveScrollPosition="true" ScrollHeight="400" />
             </ClientSettings>
-            <MasterTableView GroupLoadMode="Client">
+			<GroupingSettings GroupByFieldsSeparator=" | " />
+            <MasterTableView GroupLoadMode="Client" GroupsDefaultExpanded="false">
                 <Columns>
                     <telerik:GridBoundColumn UniqueName="Name" DataField="Name" HeaderText="Name" />
                     <telerik:GridBoundColumn UniqueName="Test" DataField="Test" HeaderText="Test" />

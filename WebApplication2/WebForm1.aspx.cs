@@ -10,7 +10,7 @@ namespace WebApplication2
 			Random rnd = new Random();
 			RadGrid1.DataSource = Enumerable.Range(1, 300).Select(i => new
 			{
-				Name = "Name" + Math.Ceiling(Convert.ToDouble(i / 6)),
+				Name = "Name" + Math.Ceiling(Convert.ToDouble(i / rnd.Next(6,12))),
 				Test = "Test-" + Math.IEEERemainder(i,3),
 				Desc = "Desc" + i,
 				Loc = "Loc" + i,

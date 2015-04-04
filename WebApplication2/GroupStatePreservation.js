@@ -14,16 +14,22 @@ var ClApps_Common;
                 var GroupStatePreservation;
                 (function (GroupStatePreservation) {
                     var Options = (function () {
-                        function Options(gridClientID, groupByExpressionAggregates_AutoStrip, groupByExpressionAggregates_SecondDisplayName, clientDataSource_AddEventHandlers, ajaxRefresh_AddEventHandlers) {
+                        function Options(gridClientID, groupByExpressionAggregates_AutoStrip, groupByExpressionAggregates_SecondDisplayName, clientDataSource_AddEventHandlers, ajaxRefresh_AddEventHandlers, 
+                            /*
+                             * Specify for a performance boost with larger grids. Do not specify this option if you manipulate group expand/collapse state manually.
+                             */
+                            masterTableView_GroupsExpandedDefault) {
                             if (groupByExpressionAggregates_AutoStrip === void 0) { groupByExpressionAggregates_AutoStrip = false; }
                             if (groupByExpressionAggregates_SecondDisplayName === void 0) { groupByExpressionAggregates_SecondDisplayName = null; }
                             if (clientDataSource_AddEventHandlers === void 0) { clientDataSource_AddEventHandlers = false; }
                             if (ajaxRefresh_AddEventHandlers === void 0) { ajaxRefresh_AddEventHandlers = false; }
+                            if (masterTableView_GroupsExpandedDefault === void 0) { masterTableView_GroupsExpandedDefault = null; }
                             this.gridClientID = gridClientID;
                             this.groupByExpressionAggregates_AutoStrip = groupByExpressionAggregates_AutoStrip;
                             this.groupByExpressionAggregates_SecondDisplayName = groupByExpressionAggregates_SecondDisplayName;
                             this.clientDataSource_AddEventHandlers = clientDataSource_AddEventHandlers;
                             this.ajaxRefresh_AddEventHandlers = ajaxRefresh_AddEventHandlers;
+                            this.masterTableView_GroupsExpandedDefault = masterTableView_GroupsExpandedDefault;
                         }
                         return Options;
                     })();
@@ -66,6 +72,8 @@ var ClApps_Common;
                             return this._Options;
                         };
                         Core.prototype._InitializeExtender = function () {
+                            var grid = this.get_Grid();
+                            Core.groupingSettings_GroupByFieldsSeparator = grid._groupingSettings.GroupByFieldsSeparator;
                             if (this._Options.clientDataSource_AddEventHandlers) {
                                 this._InitializeExtender_ClientSideData();
                             }
@@ -120,6 +128,11 @@ var ClApps_Common;
                                 }
                             }
                         };
+                        Core.prototype._groupItemAdd = function (list, value) {
+                            if (list.indexOf(value) === -1) {
+                                list.push(value);
+                            }
+                        };
                         Core.prototype._beginSaveRestore = function () {
                             this._currentNestLevel = 0;
                             this._currentParentGroupPathArray = [];
@@ -133,7 +146,7 @@ var ClApps_Common;
                         Core.prototype._SaveRestoreGroupingHeaderRowLoop = function (Mode, elementIndex, groupRowElement) {
                             var _this = this;
                             var $groupRowElement = $(groupRowElement);
-                            var $groupHeaderCellElementsForCurrentRow = $groupRowElement.find(Core.groupHeaderRowCellElementSelector);
+                            var $groupHeaderCellElementsForCurrentRow = $groupRowElement.find(Core.groupHeaderCellElementSelector);
                             this._headerRowGroupProcessing($groupRowElement, $groupHeaderCellElementsForCurrentRow);
                             switch (Mode) {
                                 case 1 /* Save */:
@@ -180,10 +193,10 @@ var ClApps_Common;
                         };
                         Core.prototype._get_GroupState = function (groupHeaderTDElement, elementIndex) {
                             var tdElement_FirstChild = (groupHeaderTDElement.firstChild);
-                            if (tdElement_FirstChild !== null && tdElement_FirstChild.tagName === "INPUT") {
+                            if (tdElement_FirstChild !== null && tdElement_FirstChild.tagName === Core.groupHeaderCellToggleElementName) {
                                 var $tdElement_FirstChild = $(tdElement_FirstChild);
-                                if ($tdElement_FirstChild.hasClass("rgExpand") || $tdElement_FirstChild.hasClass("rgCollapse")) {
-                                    var IsExpanded = $tdElement_FirstChild.hasClass("rgCollapse");
+                                if ($tdElement_FirstChild.hasClass(Core.groupExpandCollapseInputElementClass_Expand) || $tdElement_FirstChild.hasClass(Core.groupExpandCollapseInputElementClass_Collapse)) {
+                                    var IsExpanded = $tdElement_FirstChild.hasClass(Core.groupExpandCollapseInputElementClass_Collapse);
                                     var GroupText = this._get_GroupText(groupHeaderTDElement);
                                     if (GroupText) {
                                         return new GroupState(GroupText, this._getCurrentParentGroupPath(), IsExpanded, (groupHeaderTDElement.firstChild));
@@ -193,7 +206,7 @@ var ClApps_Common;
                             return null;
                         };
                         Core.prototype._get_GroupTextByGroupRowElement = function ($groupRowElement) {
-                            var $groupHeaderCellElementsForCurrentRow = $groupRowElement.find(Core.groupHeaderRowCellElementSelector);
+                            var $groupHeaderCellElementsForCurrentRow = $groupRowElement.find(Core.groupHeaderCellElementSelector);
                             var groupText = null;
                             var thisClass = this;
                             $groupHeaderCellElementsForCurrentRow.each(function (elementIndex, groupCellElement) {
@@ -214,12 +227,12 @@ var ClApps_Common;
                                 if (this._Options.groupByExpressionAggregates_AutoStrip) {
                                     var groupByExpressionsProcessed = false;
                                     if (this._Options.groupByExpressionAggregates_SecondDisplayName && GroupText.indexOf(this._Options.groupByExpressionAggregates_SecondDisplayName) > -1) {
-                                        GroupText = GroupText.substring(0, GroupText.indexOf("; " + this._Options.groupByExpressionAggregates_SecondDisplayName));
+                                        GroupText = GroupText.substring(0, GroupText.indexOf(Core.groupingSettings_GroupByFieldsSeparator + this._Options.groupByExpressionAggregates_SecondDisplayName));
                                         groupByExpressionsProcessed = true;
                                     }
-                                    if ((!groupByExpressionsProcessed) && GroupText.indexOf("; ") > -1) {
+                                    if ((!groupByExpressionsProcessed) && GroupText.indexOf(Core.groupingSettings_GroupByFieldsSeparator) > -1) {
                                         //GroupByExpression (Aggregates) are likely present but not identified explicitly, so strip manually.
-                                        GroupText = GroupText.substring(0, GroupText.indexOf("; "));
+                                        GroupText = GroupText.substring(0, GroupText.indexOf(Core.groupingSettings_GroupByFieldsSeparator));
                                     }
                                 }
                                 var finalGroupText = GroupText.trim();
@@ -235,11 +248,22 @@ var ClApps_Common;
                         Core.prototype._saveGroupingHeaderCellLoop = function (elementIndex, groupCellElement) {
                             var groupState = this._get_GroupState(groupCellElement, elementIndex);
                             if (groupState) {
-                                if (groupState.IsExpanded) {
-                                    this._groupsExpanded.push(groupState.FullGroupText());
+                                if (this._Options.masterTableView_GroupsExpandedDefault !== null) {
+                                    //Performance enhancement for larger grids (track only items that changed from normal state)
+                                    if (groupState.IsExpanded && !this._Options.masterTableView_GroupsExpandedDefault) {
+                                        this._groupItemAdd(this._groupsExpanded, groupState.FullGroupText());
+                                    }
+                                    else if (!groupState.IsExpanded && this._Options.masterTableView_GroupsExpandedDefault) {
+                                        this._groupItemAdd(this._groupsCollapsed, groupState.FullGroupText());
+                                    }
                                 }
                                 else {
-                                    this._groupsCollapsed.push(groupState.FullGroupText());
+                                    if (groupState.IsExpanded) {
+                                        this._groupItemAdd(this._groupsExpanded, groupState.FullGroupText());
+                                    }
+                                    else {
+                                        this._groupItemAdd(this._groupsCollapsed, groupState.FullGroupText());
+                                    }
                                 }
                             }
                         };
@@ -258,8 +282,11 @@ var ClApps_Common;
                         };
                         //#endregion
                         //#endregion
-                        Core.prototype.SaveGrouping = function () {
-                            this.ResetGrouping();
+                        Core.prototype.SaveGrouping = function (resetGrouping) {
+                            if (resetGrouping === void 0) { resetGrouping = false; }
+                            if (resetGrouping) {
+                                this.ResetGrouping();
+                            }
                             //If you aren't using RadGrid scrolling, you'd want to save the container scroll position here
                             //this._scrollPosition_Save();
                             var thisClass = this;
@@ -289,7 +316,10 @@ var ClApps_Common;
                             this._groupsCollapsed = [];
                         };
                         Core.groupHeaderRowSelector = "tr.rgGroupHeader";
-                        Core.groupHeaderRowCellElementSelector = "td.rgGroupCol";
+                        Core.groupHeaderCellElementSelector = "td.rgGroupCol";
+                        Core.groupHeaderCellToggleElementName = "INPUT";
+                        Core.groupExpandCollapseInputElementClass_Expand = "rgExpand";
+                        Core.groupExpandCollapseInputElementClass_Collapse = "rgCollapse";
                         return Core;
                     })();
                     GroupStatePreservation.Core = Core;
@@ -298,9 +328,11 @@ var ClApps_Common;
         })(TelerikCustom = Extenders.TelerikCustom || (Extenders.TelerikCustom = {}));
     })(Extenders = ClApps_Common.Extenders || (ClApps_Common.Extenders = {}));
 })(ClApps_Common || (ClApps_Common = {}));
+//#region Implementation Example
 var Grid_GroupStatePreservation;
 function ApplicationLoaded() {
     var GroupStatePreservation_Options = new ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation.Options("RadGrid1", true, "Random Number Sum");
+    GroupStatePreservation_Options.masterTableView_GroupsExpandedDefault = false;
     Grid_GroupStatePreservation = new ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation.Core(GroupStatePreservation_Options);
 }
 $telerik.$(document).ready(function () {
@@ -312,4 +344,5 @@ function RadAjaxManager1_requestStart(sender, eventArgs) {
 function RadAjaxManager1_responseEnd(sender, eventArgs) {
     Grid_GroupStatePreservation.RestoreGrouping();
 }
+//#endregion 
 //# sourceMappingURL=GroupStatePreservation.js.map

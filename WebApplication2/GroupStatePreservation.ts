@@ -11,7 +11,11 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 			public groupByExpressionAggregates_AutoStrip: boolean = false,
 			public groupByExpressionAggregates_SecondDisplayName: string = null,
 			public clientDataSource_AddEventHandlers: boolean = false,
-			public ajaxRefresh_AddEventHandlers: boolean = false) {
+			public ajaxRefresh_AddEventHandlers: boolean = false,
+			/*
+			 * Specify for a performance boost with larger grids. Do not specify this option if you manipulate group expand/collapse state manually.
+			 */
+			public masterTableView_GroupsExpandedDefault: boolean = null) {
 
 		}
 	}
@@ -37,12 +41,21 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 		constructor(private _Options: Options) {
 			this._InitializeExtender();
 		}
-
-		public get_Options() {
+		get_Options() {
 			return this._Options;
 		}
 
+		static groupHeaderRowSelector = "tr.rgGroupHeader";
+		static groupHeaderCellElementSelector = "td.rgGroupCol";
+		static groupHeaderCellToggleElementName = "INPUT";
+		static groupExpandCollapseInputElementClass_Expand = "rgExpand";
+		static groupExpandCollapseInputElementClass_Collapse = "rgCollapse";
+
+		static groupingSettings_GroupByFieldsSeparator: string;
 		private _InitializeExtender() {
+			var grid = this.get_Grid();
+			Core.groupingSettings_GroupByFieldsSeparator = (<any>grid)._groupingSettings.GroupByFieldsSeparator;
+
 			if (this._Options.clientDataSource_AddEventHandlers) {
 				this._InitializeExtender_ClientSideData();
 			} else if (this._Options.ajaxRefresh_AddEventHandlers) {
@@ -72,7 +85,7 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 			grid.add_command((sender, args) => this._Grid_OnCommand(sender, args));
 			grid.add_dataBound((sender, args) => this._Grid_OnDataBound(sender, args));
 		}
-		private _Grid_OnCommand(sender, args) {
+		private _Grid_OnCommand(sender, args: Telerik.Web.UI.GridCommandEventArgs) {
 			this.SaveGrouping();
 		}
 		private _Grid_OnDataBound(sender, args) {
@@ -109,6 +122,11 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 		//#region Group Expanded/Collapsed State Tracking
 		private _groupsExpanded: Array<string> = [];
 		private _groupsCollapsed: Array<string> = [];
+		private _groupItemAdd(list: Array<string>, value: string) {
+			if (list.indexOf(value) === -1) {
+				list.push(value);
+			}
+		}
 
 		//#region Helpers		
 		//#region Common
@@ -122,13 +140,11 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 			if (this._currentParentGroupPathArray.length === 0) { return ""; }
 			return this._currentParentGroupPathArray.join("/");
 		}
-		static groupHeaderRowSelector = "tr.rgGroupHeader";
-		static groupHeaderRowCellElementSelector = "td.rgGroupCol";
 		private _SaveRestoreGroupingHeaderRowLoop(
 			Mode: SaveRestoreModes, elementIndex: number, groupRowElement: Element) {
 			var $groupRowElement = $(groupRowElement);
 			var $groupHeaderCellElementsForCurrentRow =
-				$groupRowElement.find(Core.groupHeaderRowCellElementSelector);
+				$groupRowElement.find(Core.groupHeaderCellElementSelector);
 
 			this._headerRowGroupProcessing($groupRowElement, $groupHeaderCellElementsForCurrentRow);
 
@@ -181,11 +197,11 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 		private _get_GroupState(groupHeaderTDElement: HTMLTableCellElement, elementIndex: number): GroupState {
 			var tdElement_FirstChild = <HTMLElement>(groupHeaderTDElement.firstChild);
 			if (tdElement_FirstChild !== null
-				&& tdElement_FirstChild.tagName === "INPUT") {
+				&& tdElement_FirstChild.tagName === Core.groupHeaderCellToggleElementName) {
 				var $tdElement_FirstChild = $(tdElement_FirstChild);
-				if ($tdElement_FirstChild.hasClass("rgExpand")
-					|| $tdElement_FirstChild.hasClass("rgCollapse")) {
-					var IsExpanded: boolean = $tdElement_FirstChild.hasClass("rgCollapse");
+				if ($tdElement_FirstChild.hasClass(Core.groupExpandCollapseInputElementClass_Expand)
+					|| $tdElement_FirstChild.hasClass(Core.groupExpandCollapseInputElementClass_Collapse)) {
+					var IsExpanded: boolean = $tdElement_FirstChild.hasClass(Core.groupExpandCollapseInputElementClass_Collapse);
 					var GroupText = this._get_GroupText(groupHeaderTDElement);
 					if (GroupText) {
 						return new GroupState(
@@ -200,7 +216,7 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 		}
 		private _get_GroupTextByGroupRowElement($groupRowElement: JQuery) {
 			var $groupHeaderCellElementsForCurrentRow =
-				$groupRowElement.find(Core.groupHeaderRowCellElementSelector);
+				$groupRowElement.find(Core.groupHeaderCellElementSelector);
 			var groupText = null;
 			var thisClass = this;
 			$groupHeaderCellElementsForCurrentRow.each(
@@ -223,12 +239,16 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 					if (this._Options.groupByExpressionAggregates_SecondDisplayName
 						&& GroupText.indexOf(this._Options.groupByExpressionAggregates_SecondDisplayName) > -1) {
 						GroupText = GroupText.substring(
-							0, GroupText.indexOf("; " + this._Options.groupByExpressionAggregates_SecondDisplayName));
+							0, GroupText.indexOf(
+								Core.groupingSettings_GroupByFieldsSeparator
+								+ this._Options.groupByExpressionAggregates_SecondDisplayName));
 						groupByExpressionsProcessed = true;
 					}
-					if ((!groupByExpressionsProcessed) && GroupText.indexOf("; ") > - 1) {
+					if ((!groupByExpressionsProcessed)
+						&& GroupText.indexOf(Core.groupingSettings_GroupByFieldsSeparator) > - 1) {
 						//GroupByExpression (Aggregates) are likely present but not identified explicitly, so strip manually.
-						GroupText = GroupText.substring(0, GroupText.indexOf("; "));
+						GroupText = GroupText.substring(
+							0, GroupText.indexOf(Core.groupingSettings_GroupByFieldsSeparator));
 					}
 				}
 				var finalGroupText = GroupText.trim();
@@ -247,11 +267,21 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 				<HTMLTableCellElement>groupCellElement,
 				elementIndex);
 			if (groupState) {
-				if (groupState.IsExpanded) {
-					this._groupsExpanded.push(
-						groupState.FullGroupText());
+				if (this._Options.masterTableView_GroupsExpandedDefault !== null) {
+					//Performance enhancement for larger grids (track only items that changed from normal state)
+					if (groupState.IsExpanded
+						&& !this._Options.masterTableView_GroupsExpandedDefault) {
+						this._groupItemAdd(this._groupsExpanded, groupState.FullGroupText());
+					} else if (!groupState.IsExpanded
+						&& this._Options.masterTableView_GroupsExpandedDefault) {
+						this._groupItemAdd(this._groupsCollapsed, groupState.FullGroupText());
+					}
 				} else {
-					this._groupsCollapsed.push(groupState.FullGroupText());
+					if (groupState.IsExpanded) {
+						this._groupItemAdd(this._groupsExpanded, groupState.FullGroupText());
+					} else {
+						this._groupItemAdd(this._groupsCollapsed, groupState.FullGroupText());
+					}
 				}
 			}
 		}
@@ -275,8 +305,10 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 		//#endregion
 		//#endregion
 
-		SaveGrouping() {
-			this.ResetGrouping();
+		SaveGrouping(resetGrouping = false) {
+			if (resetGrouping) {
+				this.ResetGrouping();
+			}
 
 			//If you aren't using RadGrid scrolling, you'd want to save the container scroll position here
 			//this._scrollPosition_Save();
@@ -317,10 +349,12 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 	}
 }
 
+//#region Implementation Example
 var Grid_GroupStatePreservation: ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation.Core;
 function ApplicationLoaded(): void {
 	var GroupStatePreservation_Options = new ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation.Options(
 		"RadGrid1", true, "Random Number Sum");
+	GroupStatePreservation_Options.masterTableView_GroupsExpandedDefault = false;
 	Grid_GroupStatePreservation = new ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation.Core(
 		GroupStatePreservation_Options);
 }
@@ -334,3 +368,4 @@ function RadAjaxManager1_requestStart(sender, eventArgs): void {
 function RadAjaxManager1_responseEnd(sender, eventArgs): void {
 	Grid_GroupStatePreservation.RestoreGrouping();
 }
+//#endregion
