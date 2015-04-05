@@ -6,13 +6,17 @@
 $ = $telerik.$;
 
 module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
+	export enum RefreshModes {
+		ClientDataSource = 1,
+		AJAX = 2
+	}
 	export class Options {
 		constructor(
 			public gridClientID: string,
+			public RefreshMode: RefreshModes = null,
 			public groupByExpressionAggregates_AutoStrip: boolean = false,
 			public groupByExpressionAggregates_SecondDisplayName: string = null,
-			public clientDataSource_AddEventHandlers: boolean = false,
-			public ajaxRefresh_AddEventHandlers: boolean = false,
+			public addEventHandlers: boolean = true,
 			public saveGridScrollPosition: boolean = false,
 			public gridContainerSelector: string = null) {
 
@@ -39,7 +43,7 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 
 	export class Core {
 		constructor(private _Options: Options) {
-			this._InitializeExtender();
+			this._Initialize();
 		}
 		get_Options() {
 			return this._Options;
@@ -53,40 +57,77 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 
 		static groupingSettings_GroupByFieldsSeparator: string;
 
-		private _InitializeExtender() {
-			var grid = this.get_Grid();
-			Core.groupingSettings_GroupByFieldsSeparator = (<any>grid)._groupingSettings.GroupByFieldsSeparator;
+		private _Initialize() {
+			if (!this._Options.RefreshMode) {
+				if (console && typeof console.log === "function") {
+					console.log("Error, must specify Options.RefreshMode.");
+				}
+				return;
+			}
 
-			if (this._Options.clientDataSource_AddEventHandlers) {
-				this._InitializeExtender_ClientSideData();
-			} else if (this._Options.ajaxRefresh_AddEventHandlers) {
-				this._InitializeExtender_AjaxRefresh();
+			var grid = this.get_Grid();
+
+			var gridInternalProperties: TelerikInternalProps.Web.UI.RadGrid = (<any>grid);
+			if (gridInternalProperties._groupingSettings) {
+				Core.groupingSettings_GroupByFieldsSeparator = gridInternalProperties._groupingSettings.GroupByFieldsSeparator;
+			}
+
+			this._addGroupStateChangeEventHandlers();
+			switch (this._Options.RefreshMode) {
+				case RefreshModes.ClientDataSource:
+					this._InitializeStateTrackingModes_ClientSideData();
+					break;
+				case RefreshModes.AJAX:
+					this._InitializeStateTrackingModes_Ajax();
+					break;
 			}
 		}
 
+		//#region Group State Change Event Handlers
+		private gridGroupStateChangedHandler: (sender, args) => void;
+		private _pauseGroupStateChangeEventHandlers = false;
+		private _addGroupStateChangeEventHandlers() {
+			var grid = this.get_Grid();
+			this.gridGroupStateChangedHandler = (sender, args) => this._gridGroupStateChanged(sender, args);
+			grid.add_groupExpanded(this.gridGroupStateChangedHandler);
+			grid.add_groupCollapsed(this.gridGroupStateChangedHandler);
+		}
+		private _removeGroupStateChangeEventHandlers() {
+			var grid = this.get_Grid();
+			grid.remove_groupExpanded(this.gridGroupStateChangedHandler);
+			grid.remove_groupCollapsed(this.gridGroupStateChangedHandler);
+		}
+		private _gridGroupStateChanged(sender, args: Telerik.Web.UI.GridGroupCollapsingEventArgs) {
+			if (this._pauseGroupStateChangeEventHandlers) { return; }
+			this.SaveGrouping();
+		}
+		//#endregion
+
 		//#region AJAX Refresh Event Handlers
-		private _InitializeExtender_AjaxRefresh() {
+		private _InitializeStateTrackingModes_Ajax() {
 			var prmInstance = Sys.WebForms.PageRequestManager.getInstance();
-			if (!prmInstance) { return; }
+			if (!prmInstance) {
+				if (console && typeof console.log === "function") {
+					console.log("Error, Options.RefreshMode was set to AJAX, but there is no PageRequestManager.");
+				}
+				return;
+			}
 			prmInstance.add_beginRequest((sender, args) => this._PageRequestManager_BeginRequest(sender, args));
 			prmInstance.add_endRequest((sender, args) => this._PageRequestManager_EndRequest(sender, args));
 		}
 		private _PageRequestManager_BeginRequest(sender, args: Sys.WebForms.BeginRequestEventArgs) {
-			this.SaveGrouping();
+			this._removeGroupStateChangeEventHandlers();
 		}
 		private _PageRequestManager_EndRequest(sender, args: Sys.WebForms.EndRequestEventArgs) {
 			this.RestoreGrouping();
+			this._addGroupStateChangeEventHandlers();
 		}
 		//#endregion
 
 		//#region Client Data Source Event Handlers
-		private _InitializeExtender_ClientSideData() {
+		private _InitializeStateTrackingModes_ClientSideData() {
 			var grid = this.get_Grid();
-			grid.add_command((sender, args) => this._Grid_OnCommand(sender, args));
 			grid.add_dataBound((sender, args) => this._Grid_OnDataBound(sender, args));
-		}
-		private _Grid_OnCommand(sender, args: Telerik.Web.UI.GridCommandEventArgs) {
-			this.SaveGrouping();
 		}
 		private _Grid_OnDataBound(sender, args) {
 			this.RestoreGrouping();
@@ -127,7 +168,7 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 				} else {
 					containerElement = this.get_$GridDataElement();
 				}
-				if (containerElement.length === 1) {
+				if (containerElement && containerElement.length === 1) {
 					this._containerScrollTop = containerElement.get(0).scrollTop;
 				} else {
 					if (console && typeof console.log === "function") {
@@ -144,7 +185,7 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 				} else {
 					containerElement = this.get_$GridDataElement();
 				}
-				if (containerElement.length === 1) {
+				if (containerElement && containerElement.length === 1) {
 					containerElement.get(0).scrollTop = this._containerScrollTop;
 				} else {
 					if (console && typeof console.log === "function") {
@@ -390,54 +431,31 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 						SaveRestoreModes.Save, elementIndex, groupRowElement));
 		}
 		RestoreGrouping() {
-			if (this._groupsExpanded.length === 0 && this._groupsCollapsed.length === 0) { return; }
+			if (this._groupsExpanded.length === 0 && this._groupsCollapsed.length === 0) {
+				this._scrollPosition_Restore();
+				return;
+			}
 
 			var thisClass = this;
+			this._pauseGroupStateChangeEventHandlers = true;
 			this._beginSaveRestore();
 
 			var $groupHeaderRowElements = this._get_$GroupHeaderRowElements();
-			if (!$groupHeaderRowElements) { return; }
-
-			$groupHeaderRowElements.each(
-				(elementIndex, groupRowElement) =>
-					thisClass._SaveRestoreGroupingHeaderRowLoop(
-						SaveRestoreModes.Restore, elementIndex, groupRowElement));
+			if ($groupHeaderRowElements) {
+				$groupHeaderRowElements.each(
+					(elementIndex, groupRowElement) =>
+						thisClass._SaveRestoreGroupingHeaderRowLoop(
+							SaveRestoreModes.Restore, elementIndex, groupRowElement));
+			}
 
 			this._scrollPosition_Restore();
+			this._pauseGroupStateChangeEventHandlers = false;
 		}
 		ResetGrouping() {
 			this._groupsExpanded = [];
 			this._groupsCollapsed = [];
+			this._containerScrollTop = 0;
 		}
 		//#endregion
 	}
 }
-
-//#region Implementation Example
-var Grid_GroupStatePreservation: ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation.Core;
-function ApplicationLoaded(args): void {
-	Sys.Application.remove_load(appLoadedHandler);
-	var GroupStatePreservation_Options = new ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation.Options(
-		"RadGrid1", true, "Random Number Sum");
-	GroupStatePreservation_Options.saveGridScrollPosition = true;
-	GroupStatePreservation_Options.ajaxRefresh_AddEventHandlers = true;
-	Grid_GroupStatePreservation = new ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation.Core(
-		GroupStatePreservation_Options);
-}
-var appLoadedHandler = (args) => ApplicationLoaded(args);
-Sys.Application.add_load(appLoadedHandler);
-
-//Note: the following $(document).ready(...) method does not ensure that all ASP.Net controls are loaded (Sys.Application.load event is required only for ASP.Net AJAX).
-//	Kendo UI can use this method, however; just call ApplicationLoaded() after you've initialized your Kendo UI grid.
-//$telerik.$(document).ready(function () {
-//	ApplicationLoaded();
-//});
-
-//** If you wanted to control when group states are saved/restored, this is one way to do it:
-function RadAjaxManager1_requestStart(sender, eventArgs): void {
-	//Grid_GroupStatePreservation.SaveGrouping();
-}
-function RadAjaxManager1_responseEnd(sender, eventArgs): void {
-	//Grid_GroupStatePreservation.RestoreGrouping();
-}
-//#endregion

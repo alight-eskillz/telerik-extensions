@@ -13,19 +13,24 @@ var ClApps_Common;
             (function (RadGrid) {
                 var GroupStatePreservation;
                 (function (GroupStatePreservation) {
+                    (function (RefreshModes) {
+                        RefreshModes[RefreshModes["ClientDataSource"] = 1] = "ClientDataSource";
+                        RefreshModes[RefreshModes["AJAX"] = 2] = "AJAX";
+                    })(GroupStatePreservation.RefreshModes || (GroupStatePreservation.RefreshModes = {}));
+                    var RefreshModes = GroupStatePreservation.RefreshModes;
                     var Options = (function () {
-                        function Options(gridClientID, groupByExpressionAggregates_AutoStrip, groupByExpressionAggregates_SecondDisplayName, clientDataSource_AddEventHandlers, ajaxRefresh_AddEventHandlers, saveGridScrollPosition, gridContainerSelector) {
+                        function Options(gridClientID, RefreshMode, groupByExpressionAggregates_AutoStrip, groupByExpressionAggregates_SecondDisplayName, addEventHandlers, saveGridScrollPosition, gridContainerSelector) {
+                            if (RefreshMode === void 0) { RefreshMode = null; }
                             if (groupByExpressionAggregates_AutoStrip === void 0) { groupByExpressionAggregates_AutoStrip = false; }
                             if (groupByExpressionAggregates_SecondDisplayName === void 0) { groupByExpressionAggregates_SecondDisplayName = null; }
-                            if (clientDataSource_AddEventHandlers === void 0) { clientDataSource_AddEventHandlers = false; }
-                            if (ajaxRefresh_AddEventHandlers === void 0) { ajaxRefresh_AddEventHandlers = false; }
+                            if (addEventHandlers === void 0) { addEventHandlers = true; }
                             if (saveGridScrollPosition === void 0) { saveGridScrollPosition = false; }
                             if (gridContainerSelector === void 0) { gridContainerSelector = null; }
                             this.gridClientID = gridClientID;
+                            this.RefreshMode = RefreshMode;
                             this.groupByExpressionAggregates_AutoStrip = groupByExpressionAggregates_AutoStrip;
                             this.groupByExpressionAggregates_SecondDisplayName = groupByExpressionAggregates_SecondDisplayName;
-                            this.clientDataSource_AddEventHandlers = clientDataSource_AddEventHandlers;
-                            this.ajaxRefresh_AddEventHandlers = ajaxRefresh_AddEventHandlers;
+                            this.addEventHandlers = addEventHandlers;
                             this.saveGridScrollPosition = saveGridScrollPosition;
                             this.gridContainerSelector = gridContainerSelector;
                         }
@@ -53,53 +58,85 @@ var ClApps_Common;
                     var Core = (function () {
                         function Core(_Options) {
                             this._Options = _Options;
+                            this._pauseGroupStateChangeEventHandlers = false;
                             this._containerScrollTop = 0;
                             //#endregion
                             //#region Group Expanded/Collapsed State Tracking
                             this._groupsExpanded = [];
                             this._groupsCollapsed = [];
                             this._currentTopLevelGroupName = null;
-                            this._InitializeExtender();
+                            this._Initialize();
                         }
                         Core.prototype.get_Options = function () {
                             return this._Options;
                         };
-                        Core.prototype._InitializeExtender = function () {
-                            var grid = this.get_Grid();
-                            Core.groupingSettings_GroupByFieldsSeparator = grid._groupingSettings.GroupByFieldsSeparator;
-                            if (this._Options.clientDataSource_AddEventHandlers) {
-                                this._InitializeExtender_ClientSideData();
+                        Core.prototype._Initialize = function () {
+                            if (!this._Options.RefreshMode) {
+                                if (console && typeof console.log === "function") {
+                                    console.log("Error, must specify Options.RefreshMode.");
+                                }
+                                return;
                             }
-                            else if (this._Options.ajaxRefresh_AddEventHandlers) {
-                                this._InitializeExtender_AjaxRefresh();
+                            var grid = this.get_Grid();
+                            var gridInternalProperties = grid;
+                            if (gridInternalProperties._groupingSettings) {
+                                Core.groupingSettings_GroupByFieldsSeparator = gridInternalProperties._groupingSettings.GroupByFieldsSeparator;
+                            }
+                            this._addGroupStateChangeEventHandlers();
+                            switch (this._Options.RefreshMode) {
+                                case 1 /* ClientDataSource */:
+                                    this._InitializeStateTrackingModes_ClientSideData();
+                                    break;
+                                case 2 /* AJAX */:
+                                    this._InitializeStateTrackingModes_Ajax();
+                                    break;
                             }
                         };
+                        Core.prototype._addGroupStateChangeEventHandlers = function () {
+                            var _this = this;
+                            var grid = this.get_Grid();
+                            this.gridGroupStateChangedHandler = function (sender, args) { return _this._gridGroupStateChanged(sender, args); };
+                            grid.add_groupExpanded(this.gridGroupStateChangedHandler);
+                            grid.add_groupCollapsed(this.gridGroupStateChangedHandler);
+                        };
+                        Core.prototype._removeGroupStateChangeEventHandlers = function () {
+                            var grid = this.get_Grid();
+                            grid.remove_groupExpanded(this.gridGroupStateChangedHandler);
+                            grid.remove_groupCollapsed(this.gridGroupStateChangedHandler);
+                        };
+                        Core.prototype._gridGroupStateChanged = function (sender, args) {
+                            if (this._pauseGroupStateChangeEventHandlers) {
+                                return;
+                            }
+                            this.SaveGrouping();
+                        };
+                        //#endregion
                         //#region AJAX Refresh Event Handlers
-                        Core.prototype._InitializeExtender_AjaxRefresh = function () {
+                        Core.prototype._InitializeStateTrackingModes_Ajax = function () {
                             var _this = this;
                             var prmInstance = Sys.WebForms.PageRequestManager.getInstance();
                             if (!prmInstance) {
+                                if (console && typeof console.log === "function") {
+                                    console.log("Error, Options.RefreshMode was set to AJAX, but there is no PageRequestManager.");
+                                }
                                 return;
                             }
                             prmInstance.add_beginRequest(function (sender, args) { return _this._PageRequestManager_BeginRequest(sender, args); });
                             prmInstance.add_endRequest(function (sender, args) { return _this._PageRequestManager_EndRequest(sender, args); });
                         };
                         Core.prototype._PageRequestManager_BeginRequest = function (sender, args) {
-                            this.SaveGrouping();
+                            this._removeGroupStateChangeEventHandlers();
                         };
                         Core.prototype._PageRequestManager_EndRequest = function (sender, args) {
                             this.RestoreGrouping();
+                            this._addGroupStateChangeEventHandlers();
                         };
                         //#endregion
                         //#region Client Data Source Event Handlers
-                        Core.prototype._InitializeExtender_ClientSideData = function () {
+                        Core.prototype._InitializeStateTrackingModes_ClientSideData = function () {
                             var _this = this;
                             var grid = this.get_Grid();
-                            grid.add_command(function (sender, args) { return _this._Grid_OnCommand(sender, args); });
                             grid.add_dataBound(function (sender, args) { return _this._Grid_OnDataBound(sender, args); });
-                        };
-                        Core.prototype._Grid_OnCommand = function (sender, args) {
-                            this.SaveGrouping();
                         };
                         Core.prototype._Grid_OnDataBound = function (sender, args) {
                             this.RestoreGrouping();
@@ -139,7 +176,7 @@ var ClApps_Common;
                                 else {
                                     containerElement = this.get_$GridDataElement();
                                 }
-                                if (containerElement.length === 1) {
+                                if (containerElement && containerElement.length === 1) {
                                     this._containerScrollTop = containerElement.get(0).scrollTop;
                                 }
                                 else {
@@ -158,7 +195,7 @@ var ClApps_Common;
                                 else {
                                     containerElement = this.get_$GridDataElement();
                                 }
-                                if (containerElement.length === 1) {
+                                if (containerElement && containerElement.length === 1) {
                                     containerElement.get(0).scrollTop = this._containerScrollTop;
                                 }
                                 else {
@@ -364,20 +401,23 @@ var ClApps_Common;
                         };
                         Core.prototype.RestoreGrouping = function () {
                             if (this._groupsExpanded.length === 0 && this._groupsCollapsed.length === 0) {
+                                this._scrollPosition_Restore();
                                 return;
                             }
                             var thisClass = this;
+                            this._pauseGroupStateChangeEventHandlers = true;
                             this._beginSaveRestore();
                             var $groupHeaderRowElements = this._get_$GroupHeaderRowElements();
-                            if (!$groupHeaderRowElements) {
-                                return;
+                            if ($groupHeaderRowElements) {
+                                $groupHeaderRowElements.each(function (elementIndex, groupRowElement) { return thisClass._SaveRestoreGroupingHeaderRowLoop(2 /* Restore */, elementIndex, groupRowElement); });
                             }
-                            $groupHeaderRowElements.each(function (elementIndex, groupRowElement) { return thisClass._SaveRestoreGroupingHeaderRowLoop(2 /* Restore */, elementIndex, groupRowElement); });
                             this._scrollPosition_Restore();
+                            this._pauseGroupStateChangeEventHandlers = false;
                         };
                         Core.prototype.ResetGrouping = function () {
                             this._groupsExpanded = [];
                             this._groupsCollapsed = [];
+                            this._containerScrollTop = 0;
                         };
                         Core.groupHeaderRowSelector = "tr.rgGroupHeader";
                         Core.groupHeaderCellElementSelector = "td.rgGroupCol";
@@ -393,28 +433,4 @@ var ClApps_Common;
         })(TelerikCustom = Extenders.TelerikCustom || (Extenders.TelerikCustom = {}));
     })(Extenders = ClApps_Common.Extenders || (ClApps_Common.Extenders = {}));
 })(ClApps_Common || (ClApps_Common = {}));
-//#region Implementation Example
-var Grid_GroupStatePreservation;
-function ApplicationLoaded(args) {
-    Sys.Application.remove_load(appLoadedHandler);
-    var GroupStatePreservation_Options = new ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation.Options("RadGrid1", true, "Random Number Sum");
-    GroupStatePreservation_Options.saveGridScrollPosition = true;
-    GroupStatePreservation_Options.ajaxRefresh_AddEventHandlers = true;
-    Grid_GroupStatePreservation = new ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation.Core(GroupStatePreservation_Options);
-}
-var appLoadedHandler = function (args) { return ApplicationLoaded(args); };
-Sys.Application.add_load(appLoadedHandler);
-//Note: the following $(document).ready(...) method does not ensure that all ASP.Net controls are loaded (Sys.Application.load event is required only for ASP.Net AJAX).
-//	Kendo UI can use this method, however; just call ApplicationLoaded() after you've initialized your Kendo UI grid.
-//$telerik.$(document).ready(function () {
-//	ApplicationLoaded();
-//});
-//** If you wanted to control when group states are saved/restored, this is one way to do it:
-function RadAjaxManager1_requestStart(sender, eventArgs) {
-    //Grid_GroupStatePreservation.SaveGrouping();
-}
-function RadAjaxManager1_responseEnd(sender, eventArgs) {
-    //Grid_GroupStatePreservation.RestoreGrouping();
-}
-//#endregion 
 //# sourceMappingURL=GroupStatePreservation.js.map
