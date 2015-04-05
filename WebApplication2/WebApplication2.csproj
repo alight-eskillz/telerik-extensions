@@ -64,9 +64,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="bin\Telerik.Web.UI.dll" />
-    <Content Include="bin\WebApplication2.dll" />
-    <Content Include="bin\WebApplication2.pdb" />
     <Content Include="Scripts\GroupStatePreservation.js" />
     <Content Include="Web.config" />
     <Content Include="AJAXWebForm.aspx" />
@@ -82,7 +79,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Scripts\GroupStatePreservation.js.map" />
-    <Content Include="bin\WebApplication2.dll.config" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
