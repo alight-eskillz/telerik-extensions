@@ -126,6 +126,7 @@ var ClApps_Common;
                         };
                         Core.prototype._PageRequestManager_BeginRequest = function (sender, args) {
                             this._removeGroupStateChangeEventHandlers();
+                            this.SaveGrouping();
                         };
                         Core.prototype._PageRequestManager_EndRequest = function (sender, args) {
                             this.RestoreGrouping();

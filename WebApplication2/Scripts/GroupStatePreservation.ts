@@ -117,6 +117,7 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 		}
 		private _PageRequestManager_BeginRequest(sender, args: Sys.WebForms.BeginRequestEventArgs) {
 			this._removeGroupStateChangeEventHandlers();
+			this.SaveGrouping();
 		}
 		private _PageRequestManager_EndRequest(sender, args: Sys.WebForms.EndRequestEventArgs) {
 			this.RestoreGrouping();

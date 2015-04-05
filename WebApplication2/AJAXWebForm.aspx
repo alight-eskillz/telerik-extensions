@@ -33,7 +33,7 @@
 				<asp:Button Text="Ajax request" runat="server" ID="Button1" OnClick="Button1_Click" />
 				<br />
 				<telerik:RadGrid runat="server" ID="RadGrid1" ShowGroupPanel="true" AutoGenerateColumns="false" 
-								 OnNeedDataSource="RadGrid1_NeedDataSource" AllowPaging="true" PageSize="50">
+								 OnNeedDataSource="RadGrid1_NeedDataSource" AllowPaging="false" PageSize="50">
 					<ClientSettings AllowDragToGroup="true">
 						<Scrolling AllowScroll="true" UseStaticHeaders="true" ScrollHeight="400" />
 					</ClientSettings>
