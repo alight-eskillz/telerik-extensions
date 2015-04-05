@@ -1,7 +1,7 @@
-/// <reference path="typings/microsoft-ajax/microsoft.ajax.d.ts" />
 /// <reference path="typings/jquery/jquery.d.ts" />
+/// <reference path="typings/microsoft-ajax/microsoft.ajax.d.ts" />
 /// <reference path="typings/telerik/telerik.web.ui.d.ts" />
-var $telerik = Telerik.Web.CommonScripts;
+/// <reference path="typings/app_shared.d.ts" />
 $ = $telerik.$;
 var ClApps_Common;
 (function (ClApps_Common) {

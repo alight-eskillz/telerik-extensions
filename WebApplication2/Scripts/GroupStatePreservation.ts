@@ -1,8 +1,8 @@
-﻿/// <reference path="typings/microsoft-ajax/microsoft.ajax.d.ts" />
-/// <reference path="typings/jquery/jquery.d.ts" />
+﻿/// <reference path="typings/jquery/jquery.d.ts" />
+/// <reference path="typings/microsoft-ajax/microsoft.ajax.d.ts" />
 /// <reference path="typings/telerik/telerik.web.ui.d.ts" />
+/// <reference path="typings/app_shared.d.ts" />
 
-var $telerik = Telerik.Web.CommonScripts;
 $ = $telerik.$;
 
 module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {

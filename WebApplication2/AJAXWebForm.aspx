@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="WebForm1.aspx.cs" Inherits="WebApplication2.WebForm1" %>
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="AJAXWebForm.aspx.cs" Inherits="WebApplication2.WebForm1" %>
 
 <!DOCTYPE html>
 
@@ -11,7 +11,7 @@
     <div>
         <telerik:RadScriptManager runat="server" ID="RadScriptManager1">
 			<Scripts>
-				<asp:ScriptReference Path="~/GroupStatePreservation.js" />
+				<asp:ScriptReference Path="~/Scripts/GroupStatePreservation.js" />
 			</Scripts>
         </telerik:RadScriptManager>
         <telerik:RadAjaxLoadingPanel runat="server" ID="RadAjaxLoadingPanel1" Skin="Default"></telerik:RadAjaxLoadingPanel>
