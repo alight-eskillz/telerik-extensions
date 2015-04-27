@@ -5,4 +5,3 @@
 		}
 	}
 }
-declare var $telerik: typeof Telerik.Web.CommonScripts;

@@ -2,7 +2,6 @@
 /// <reference path="typings/microsoft-ajax/microsoft.ajax.d.ts" />
 /// <reference path="typings/telerik/telerik.web.ui.d.ts" />
 /// <reference path="typings/app_shared.d.ts" />
-$ = $telerik.$;
 var ClApps_Common;
 (function (ClApps_Common) {
     var Extenders;

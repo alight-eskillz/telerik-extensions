@@ -3,8 +3,6 @@
 /// <reference path="typings/telerik/telerik.web.ui.d.ts" />
 /// <reference path="typings/app_shared.d.ts" />
 
-$ = $telerik.$;
-
 module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 	export enum RefreshModes {
 		ClientDataSource = 1,
