@@ -421,7 +421,7 @@ var ClApps_Common;
                         };
                         Core.groupHeaderRowSelector = "tr.rgGroupHeader";
                         Core.groupHeaderCellElementSelector = "td.rgGroupCol";
-                        Core.groupHeaderCellToggleElementName = "INPUT";
+                        Core.groupHeaderCellToggleElementName = "BUTTON";
                         Core.groupExpandCollapseInputElementClass_Expand = "rgExpand";
                         Core.groupExpandCollapseInputElementClass_Collapse = "rgCollapse";
                         Core.groupColumnNameValueSplitter = ":";

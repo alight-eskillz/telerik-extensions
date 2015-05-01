@@ -49,7 +49,7 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 
 		static groupHeaderRowSelector = "tr.rgGroupHeader";
 		static groupHeaderCellElementSelector = "td.rgGroupCol";
-		static groupHeaderCellToggleElementName = "INPUT";
+		static groupHeaderCellToggleElementName = "BUTTON";
 		static groupExpandCollapseInputElementClass_Expand = "rgExpand";
 		static groupExpandCollapseInputElementClass_Collapse = "rgCollapse";
 
