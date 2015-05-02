@@ -37,11 +37,10 @@ var ClApps_Common;
                     })();
                     GroupStatePreservation.Options = Options;
                     var GroupState = (function () {
-                        function GroupState(GroupText, ParentGroupText, IsExpanded, ExpandCollapseButtonElement) {
+                        function GroupState(GroupText, ParentGroupText, CheckToggleButtonResult) {
                             this.GroupText = GroupText;
                             this.ParentGroupText = ParentGroupText;
-                            this.IsExpanded = IsExpanded;
-                            this.ExpandCollapseButtonElement = ExpandCollapseButtonElement;
+                            this.CheckToggleButtonResult = CheckToggleButtonResult;
                         }
                         GroupState.prototype.FullGroupText = function () {
                             return this.ParentGroupText + "/" + this.GroupText;
@@ -52,7 +51,6 @@ var ClApps_Common;
                     (function (SaveRestoreModes) {
                         SaveRestoreModes[SaveRestoreModes["Save"] = 1] = "Save";
                         SaveRestoreModes[SaveRestoreModes["Restore"] = 2] = "Restore";
-                        SaveRestoreModes[SaveRestoreModes["PerformanceModeValidate"] = 3] = "PerformanceModeValidate";
                     })(SaveRestoreModes || (SaveRestoreModes = {}));
                     var Core = (function () {
                         function Core(_Options) {
@@ -79,7 +77,7 @@ var ClApps_Common;
                             var grid = this.get_Grid();
                             var gridInternalProperties = grid;
                             if (gridInternalProperties._groupingSettings) {
-                                Core.groupingSettings_GroupByFieldsSeparator = gridInternalProperties._groupingSettings.GroupByFieldsSeparator;
+                                Core.GroupingSettings_GroupByFieldsSeparator = gridInternalProperties._groupingSettings.GroupByFieldsSeparator;
                             }
                             this._addGroupStateChangeEventHandlers();
                             switch (this._Options.RefreshMode) {
@@ -169,15 +167,15 @@ var ClApps_Common;
                         };
                         Core.prototype._scrollPosition_Save = function () {
                             if (this.get_Options().saveGridScrollPosition) {
-                                var containerElement;
+                                var $containerElement;
                                 if (this._Options.gridContainerSelector) {
-                                    containerElement = $(this._Options.gridContainerSelector);
+                                    $containerElement = $(this._Options.gridContainerSelector);
                                 }
                                 else {
-                                    containerElement = this.get_$GridDataElement();
+                                    $containerElement = this.get_$GridDataElement();
                                 }
-                                if (containerElement && containerElement.length === 1) {
-                                    this._containerScrollTop = containerElement.get(0).scrollTop;
+                                if ($containerElement && $containerElement.length === 1) {
+                                    this._containerScrollTop = $containerElement.get(0).scrollTop;
                                 }
                                 else {
                                     if (console && typeof console.log === "function") {
@@ -188,15 +186,15 @@ var ClApps_Common;
                         };
                         Core.prototype._scrollPosition_Restore = function () {
                             if (this.get_Options().saveGridScrollPosition) {
-                                var containerElement;
+                                var $containerElement;
                                 if (this._Options.gridContainerSelector) {
-                                    containerElement = $(this._Options.gridContainerSelector);
+                                    $containerElement = $(this._Options.gridContainerSelector);
                                 }
                                 else {
-                                    containerElement = this.get_$GridDataElement();
+                                    $containerElement = this.get_$GridDataElement();
                                 }
-                                if (containerElement && containerElement.length === 1) {
-                                    containerElement.get(0).scrollTop = this._containerScrollTop;
+                                if ($containerElement && $containerElement.length === 1) {
+                                    $containerElement.get(0).scrollTop = this._containerScrollTop;
                                 }
                                 else {
                                     if (console && typeof console.log === "function") {
@@ -217,7 +215,8 @@ var ClApps_Common;
                             }
                         };
                         Core.prototype._beginSaveRestore = function () {
-                            this._currentNestLevel = 0;
+                            this._lastNestLevel = -1;
+                            this._nestingRootColSpan = -1;
                             this._currentParentGroupPathArray = [];
                         };
                         Core.prototype._getCurrentParentGroupPath = function () {
@@ -226,20 +225,15 @@ var ClApps_Common;
                             }
                             return this._currentParentGroupPathArray.join("/");
                         };
-                        Core.prototype._SaveRestoreGroupingHeaderRowLoop = function (Mode, elementIndex, groupRowElement) {
-                            var _this = this;
-                            var $groupRowElement = $(groupRowElement);
-                            var $groupHeaderCellElementsForCurrentRow = $groupRowElement.find(Core.groupHeaderCellElementSelector);
-                            this._headerRowGroupProcessing($groupRowElement, $groupHeaderCellElementsForCurrentRow);
+                        Core.prototype._SaveRestoreGroupHeaderLoopHandler = function (Mode, elementIndex, groupHeaderElement) {
+                            var $groupHeaderElement = $(groupHeaderElement);
+                            this._groupHeaderNestLevelProcessing($groupHeaderElement);
                             switch (Mode) {
                                 case 1 /* Save */:
-                                    $groupHeaderCellElementsForCurrentRow.each(function (elementIndex, groupCellElement) { return _this._saveGroupingHeaderCellLoop(Mode, elementIndex, groupCellElement); });
+                                    this._saveGroupingForHeaderElement($groupHeaderElement);
                                     break;
                                 case 2 /* Restore */:
-                                    $groupHeaderCellElementsForCurrentRow.each(function (elementIndex, groupCellElement) { return _this._restoreGroupingHeaderCellLoop(elementIndex, groupCellElement); });
-                                    break;
-                                case 3 /* PerformanceModeValidate */:
-                                    $groupHeaderCellElementsForCurrentRow.each(function (elementIndex, groupCellElement) { return _this._saveGroupingHeaderCellLoop(Mode, elementIndex, groupCellElement); });
+                                    this._restoreGroupingForHeaderElement($groupHeaderElement);
                                     break;
                             }
                         };
@@ -268,99 +262,99 @@ var ClApps_Common;
                                 }
                             }
                         };
-                        Core.prototype._headerRowGroupProcessing = function ($groupRowElement, $groupHeaderCellElementsForCurrentRow) {
-                            var nestLevel = 0;
-                            var thisClass = this;
-                            var groupText = "";
-                            $groupHeaderCellElementsForCurrentRow.each(function (elementIndex, groupCellElement) {
-                                groupText = thisClass._get_GroupText(groupCellElement);
-                                if (!groupText) {
-                                    nestLevel += 1;
-                                    groupText = "";
-                                }
-                            });
-                            if (nestLevel !== this._currentNestLevel) {
-                                var nestLevelChange = this._currentNestLevel - nestLevel;
+                        /**
+                         * Determine nesting level/changes.
+                         */
+                        Core.prototype._groupHeaderNestLevelProcessing = function ($groupHeaderElement) {
+                            var groupHeaderLastChildElement = ($groupHeaderElement.children(Core.groupHeaderElementChildTagName).last().get(0));
+                            var groupText = this._get_GroupText(this._get_GroupHeaderTextParentElement($groupHeaderElement));
+                            if (this._lastNestLevel === -1) {
+                                this._nestingRootColSpan = groupHeaderLastChildElement.colSpan;
+                            }
+                            var nestLevel = (this._nestingRootColSpan - groupHeaderLastChildElement.colSpan);
+                            if (nestLevel !== this._lastNestLevel) {
+                                var nestLevelChange = this._lastNestLevel - nestLevel;
                                 if (nestLevel === 0) {
                                     this._currentParentGroupPathArray = [];
                                 }
-                                else if (nestLevel < this._currentNestLevel) {
+                                else if (nestLevel < this._lastNestLevel) {
                                     for (var i = 0; i < nestLevelChange; i++) {
                                         this._currentParentGroupPathArray.pop();
                                     }
                                 }
-                                else if (nestLevel > this._currentNestLevel) {
-                                    this._currentParentGroupPathArray.push(this._get_GroupTextByGroupRowElement($groupRowElement.prev()));
+                                else if (nestLevel > this._lastNestLevel) {
+                                    this._currentParentGroupPathArray.push(this._get_GroupText(this._get_GroupHeaderTextParentElement($groupHeaderElement.prev())));
                                 }
                             }
-                            this._currentNestLevel = nestLevel;
+                            this._lastNestLevel = nestLevel;
                             this._trackTopLevelGroupChanges(nestLevel, groupText);
                         };
-                        Core.prototype._get_$GroupHeaderRowElements = function () {
+                        Core.prototype._get_$GroupHeaderElements = function () {
                             var masterTableView = this.get_GridMasterTableView();
                             if (!masterTableView) {
                                 return null;
                             }
-                            return $(masterTableView.get_element()).find(Core.groupHeaderRowSelector);
+                            return $(masterTableView.get_element()).find(Core.groupHeaderElementSelector);
                         };
-                        Core.prototype._get_GroupState = function (groupHeaderTDElement, elementIndex) {
-                            var tdElement_FirstChild = (groupHeaderTDElement.firstChild);
-                            if (tdElement_FirstChild !== null && tdElement_FirstChild.tagName === Core.groupHeaderCellToggleElementName) {
-                                var $tdElement_FirstChild = $(tdElement_FirstChild);
-                                if ($tdElement_FirstChild.hasClass(Core.groupExpandCollapseInputElementClass_Expand) || $tdElement_FirstChild.hasClass(Core.groupExpandCollapseInputElementClass_Collapse)) {
-                                    var IsExpanded = $tdElement_FirstChild.hasClass(Core.groupExpandCollapseInputElementClass_Collapse);
-                                    var GroupText = this._get_GroupText(groupHeaderTDElement);
-                                    if (GroupText) {
-                                        return new GroupState(GroupText, this._getCurrentParentGroupPath(), IsExpanded, (groupHeaderTDElement.firstChild));
-                                    }
+                        Core.prototype._checkToggleButton = function ($toggleButtonParentElement) {
+                            var $toggleButtonElement = $toggleButtonParentElement.find(Core.GroupHeaderToggleElementName).first();
+                            if ($toggleButtonElement.length > 0) {
+                                if ($toggleButtonElement.hasClass(Core.GoupExpandCollapseElementClass_Expand) || $toggleButtonElement.hasClass(Core.GroupExpandCollapseElementClass_Collapse)) {
+                                    return {
+                                        IsToggleButton: true,
+                                        ToggleStateIsExpanded: $toggleButtonElement.hasClass(Core.GroupExpandCollapseElementClass_Collapse),
+                                        ToggleButtonElement: $toggleButtonElement
+                                    };
                                 }
+                            }
+                            return { IsToggleButton: false };
+                        };
+                        Core.prototype._get_GroupState = function ($groupHeaderTextParentElement) {
+                            var GroupText = this._get_GroupText($groupHeaderTextParentElement);
+                            if (GroupText) {
+                                var _checkToggleButtonResult = this._checkToggleButton($groupHeaderTextParentElement.prev());
+                                return new GroupState(GroupText, this._getCurrentParentGroupPath(), _checkToggleButtonResult);
                             }
                             return null;
                         };
-                        Core.prototype._get_GroupTextByGroupRowElement = function ($groupRowElement) {
-                            var $groupHeaderCellElementsForCurrentRow = $groupRowElement.find(Core.groupHeaderCellElementSelector);
-                            var groupText = null;
-                            var thisClass = this;
-                            $groupHeaderCellElementsForCurrentRow.each(function (elementIndex, groupCellElement) {
-                                groupText = thisClass._get_GroupText(groupCellElement);
-                                if (!groupText) {
-                                    groupText = "";
-                                }
-                                else {
-                                    return false;
-                                }
-                            });
-                            return groupText;
+                        Core.prototype._get_GroupHeaderTextParentElement = function ($groupHeaderElement) {
+                            return $groupHeaderElement.children(Core.groupHeaderElementChildTagName).last();
                         };
-                        Core.prototype._get_GroupText = function (groupHeaderTDElement) {
-                            var tdElement_NextSibling = (groupHeaderTDElement.nextSibling);
-                            if (tdElement_NextSibling !== null) {
-                                var GroupText = tdElement_NextSibling.innerText;
-                                if (this._Options.groupByExpressionAggregates_AutoStrip) {
-                                    var groupByExpressionsProcessed = false;
-                                    if (this._Options.groupByExpressionAggregates_SecondDisplayName && GroupText.indexOf(this._Options.groupByExpressionAggregates_SecondDisplayName) > -1) {
-                                        GroupText = GroupText.substring(0, GroupText.indexOf(Core.groupingSettings_GroupByFieldsSeparator + this._Options.groupByExpressionAggregates_SecondDisplayName));
-                                        groupByExpressionsProcessed = true;
-                                    }
-                                    if ((!groupByExpressionsProcessed) && GroupText.indexOf(Core.groupingSettings_GroupByFieldsSeparator) > -1) {
-                                        //GroupByExpression (Aggregates) are likely present but not identified explicitly, so strip manually.
-                                        GroupText = GroupText.substring(0, GroupText.indexOf(Core.groupingSettings_GroupByFieldsSeparator));
-                                    }
-                                }
-                                var finalGroupText = GroupText.trim();
-                                if (finalGroupText === "") {
-                                    return null;
-                                }
-                                return finalGroupText;
+                        Core.prototype._get_GroupText = function ($groupHeaderTextParent) {
+                            var $groupHeaderTextElement;
+                            if (Core.GroupHeaderTextElementClass) {
+                                $groupHeaderTextElement = $groupHeaderTextParent.find("." + Core.GroupHeaderTextElementClass);
                             }
-                            return null;
+                            else {
+                                $groupHeaderTextElement = $groupHeaderTextParent;
+                            }
+                            if ($groupHeaderTextElement.length === 0) {
+                                return null;
+                            }
+                            var groupText = $groupHeaderTextElement.text();
+                            if (this._Options.groupByExpressionAggregates_AutoStrip) {
+                                var groupByExpressionsProcessed = false;
+                                if (this._Options.groupByExpressionAggregates_SecondDisplayName && groupText.indexOf(this._Options.groupByExpressionAggregates_SecondDisplayName) > -1) {
+                                    groupText = groupText.substring(0, groupText.indexOf(Core.GroupingSettings_GroupByFieldsSeparator + this._Options.groupByExpressionAggregates_SecondDisplayName));
+                                    groupByExpressionsProcessed = true;
+                                }
+                                if ((!groupByExpressionsProcessed) && groupText.indexOf(Core.GroupingSettings_GroupByFieldsSeparator) > -1) {
+                                    //GroupByExpression (Aggregates) are likely present but not identified explicitly, so strip manually.
+                                    groupText = groupText.substring(0, groupText.indexOf(Core.GroupingSettings_GroupByFieldsSeparator));
+                                }
+                            }
+                            var finalGroupText = groupText.trim();
+                            if (finalGroupText === "") {
+                                return null;
+                            }
+                            return finalGroupText;
                         };
                         //#endregion
                         //#region Save
-                        Core.prototype._saveGroupingHeaderCellLoop = function (Mode, elementIndex, groupCellElement) {
-                            var groupState = this._get_GroupState(groupCellElement, elementIndex);
+                        Core.prototype._saveGroupingForHeaderElement = function ($groupHeaderElement) {
+                            var groupState = this._get_GroupState(this._get_GroupHeaderTextParentElement($groupHeaderElement));
                             if (groupState) {
-                                if (groupState.IsExpanded) {
+                                if (groupState.CheckToggleButtonResult.ToggleStateIsExpanded) {
                                     this._groupItemAdd(this._groupsExpanded, groupState.FullGroupText());
                                     this._groupItemRemove(this._groupsCollapsed, groupState.FullGroupText());
                                 }
@@ -372,14 +366,14 @@ var ClApps_Common;
                         };
                         //#endregion
                         //#region Restore
-                        Core.prototype._restoreGroupingHeaderCellLoop = function (elementIndex, groupCellElement) {
-                            var groupState = this._get_GroupState(groupCellElement, elementIndex);
+                        Core.prototype._restoreGroupingForHeaderElement = function ($groupHeaderElement) {
+                            var groupState = this._get_GroupState(this._get_GroupHeaderTextParentElement($groupHeaderElement));
                             if (groupState) {
-                                if (groupState.IsExpanded && this._groupsCollapsed.indexOf(groupState.FullGroupText()) !== -1) {
-                                    groupState.ExpandCollapseButtonElement.click();
+                                if (groupState.CheckToggleButtonResult.ToggleStateIsExpanded && this._groupsCollapsed.indexOf(groupState.FullGroupText()) !== -1) {
+                                    groupState.CheckToggleButtonResult.ToggleButtonElement.click();
                                 }
-                                else if (!groupState.IsExpanded && this._groupsExpanded.indexOf(groupState.FullGroupText()) !== -1) {
-                                    groupState.ExpandCollapseButtonElement.click();
+                                else if (!groupState.CheckToggleButtonResult.ToggleStateIsExpanded && this._groupsExpanded.indexOf(groupState.FullGroupText()) !== -1) {
+                                    groupState.CheckToggleButtonResult.ToggleButtonElement.click();
                                 }
                             }
                         };
@@ -393,11 +387,11 @@ var ClApps_Common;
                             this._scrollPosition_Save();
                             var thisClass = this;
                             this._beginSaveRestore();
-                            var $groupHeaderRowElements = this._get_$GroupHeaderRowElements();
-                            if (!$groupHeaderRowElements) {
+                            var $groupHeaderElements = this._get_$GroupHeaderElements();
+                            if (!$groupHeaderElements) {
                                 return;
                             }
-                            $groupHeaderRowElements.each(function (elementIndex, groupRowElement) { return thisClass._SaveRestoreGroupingHeaderRowLoop(1 /* Save */, elementIndex, groupRowElement); });
+                            $groupHeaderElements.each(function (elementIndex, groupHeaderElement) { return thisClass._SaveRestoreGroupHeaderLoopHandler(1 /* Save */, elementIndex, groupHeaderElement); });
                         };
                         Core.prototype.RestoreGrouping = function () {
                             if (this._groupsExpanded.length === 0 && this._groupsCollapsed.length === 0) {
@@ -407,9 +401,9 @@ var ClApps_Common;
                             var thisClass = this;
                             this._pauseGroupStateChangeEventHandlers = true;
                             this._beginSaveRestore();
-                            var $groupHeaderRowElements = this._get_$GroupHeaderRowElements();
-                            if ($groupHeaderRowElements) {
-                                $groupHeaderRowElements.each(function (elementIndex, groupRowElement) { return thisClass._SaveRestoreGroupingHeaderRowLoop(2 /* Restore */, elementIndex, groupRowElement); });
+                            var $groupHeaderElements = this._get_$GroupHeaderElements();
+                            if ($groupHeaderElements) {
+                                $groupHeaderElements.each(function (elementIndex, groupHeaderElement) { return thisClass._SaveRestoreGroupHeaderLoopHandler(2 /* Restore */, elementIndex, groupHeaderElement); });
                             }
                             this._scrollPosition_Restore();
                             this._pauseGroupStateChangeEventHandlers = false;
@@ -419,11 +413,15 @@ var ClApps_Common;
                             this._groupsCollapsed = [];
                             this._containerScrollTop = 0;
                         };
-                        Core.groupHeaderRowSelector = "tr.rgGroupHeader";
-                        Core.groupHeaderCellElementSelector = "td.rgGroupCol";
-                        Core.groupHeaderCellToggleElementName = "BUTTON";
-                        Core.groupExpandCollapseInputElementClass_Expand = "rgExpand";
-                        Core.groupExpandCollapseInputElementClass_Collapse = "rgCollapse";
+                        Core.groupHeaderElementSelector = "tr.rgGroupHeader";
+                        Core.groupHeaderElementChildTagName = "td";
+                        //NOTE: In order for this extension to work as is:
+                        //	- The Group Header element must be the last child of the groupHeaderElement.
+                        //	- The toggle element must be the second-to-last child of the groupHeaderElement.
+                        Core.GroupHeaderToggleElementName = "BUTTON";
+                        Core.GoupExpandCollapseElementClass_Expand = "rgExpand";
+                        Core.GroupExpandCollapseElementClass_Collapse = "rgCollapse";
+                        Core.GroupHeaderTextElementClass = null; //if a specific class should be used to get the group header text element, set value here (Telerik uses <span class="rgGroupHeaderText">...</span> when header template is not customized); under normal conditions, it should be fine to exclude this value.
                         Core.groupColumnNameValueSplitter = ":";
                         return Core;
                     })();

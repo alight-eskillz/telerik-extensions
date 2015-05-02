@@ -25,8 +25,7 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 		constructor(
 			public GroupText: string,
 			public ParentGroupText: string,
-			public IsExpanded: boolean,
-			public ExpandCollapseButtonElement: HTMLInputElement) {
+			public CheckToggleButtonResult: ICheckToggleButtonResult) {
 
 		}
 		FullGroupText(): string {
@@ -35,9 +34,15 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 	}
 	enum SaveRestoreModes {
 		Save = 1,
-		Restore = 2,
-		PerformanceModeValidate = 3
+		Restore = 2
 	}
+	interface ICheckToggleButtonResult {
+		IsToggleButton: boolean;
+		ToggleStateIsExpanded?: boolean;
+		ToggleButtonElement?: JQuery;
+	}
+
+	type GroupHeaderElementChildType = HTMLTableCellElement;
 
 	export class Core {
 		constructor(private _Options: Options) {
@@ -47,13 +52,19 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 			return this._Options;
 		}
 
-		static groupHeaderRowSelector = "tr.rgGroupHeader";
-		static groupHeaderCellElementSelector = "td.rgGroupCol";
-		static groupHeaderCellToggleElementName = "BUTTON";
-		static groupExpandCollapseInputElementClass_Expand = "rgExpand";
-		static groupExpandCollapseInputElementClass_Collapse = "rgCollapse";
+		static groupHeaderElementSelector = "tr.rgGroupHeader";
+		static groupHeaderElementChildTagName = "td";
+		
+		//NOTE: In order for this extension to work as is:
+		//	- The Group Header element must be the last child of the groupHeaderElement.
+		//	- The toggle element must be the second-to-last child of the groupHeaderElement.
 
-		static groupingSettings_GroupByFieldsSeparator: string;
+		static GroupHeaderToggleElementName = "BUTTON";
+		static GoupExpandCollapseElementClass_Expand = "rgExpand";
+		static GroupExpandCollapseElementClass_Collapse = "rgCollapse";
+		static GroupHeaderTextElementClass = null;	//if a specific class should be used to get the group header text element, set value here (Telerik uses <span class="rgGroupHeaderText">...</span> when header template is not customized); under normal conditions, it should be fine to exclude this value.
+
+		static GroupingSettings_GroupByFieldsSeparator: string;
 
 		private _Initialize() {
 			if (!this._Options.RefreshMode) {
@@ -67,7 +78,7 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 
 			var gridInternalProperties: TelerikInternalProps.Web.UI.RadGrid = (<any>grid);
 			if (gridInternalProperties._groupingSettings) {
-				Core.groupingSettings_GroupByFieldsSeparator = gridInternalProperties._groupingSettings.GroupByFieldsSeparator;
+				Core.GroupingSettings_GroupByFieldsSeparator = gridInternalProperties._groupingSettings.GroupByFieldsSeparator;
 			}
 
 			this._addGroupStateChangeEventHandlers();
@@ -161,14 +172,14 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 		private _containerScrollTop: number = 0;
 		private _scrollPosition_Save() {
 			if (this.get_Options().saveGridScrollPosition) {
-				var containerElement: JQuery;
+				var $containerElement: JQuery;
 				if (this._Options.gridContainerSelector) {
-					containerElement = $(this._Options.gridContainerSelector);
+					$containerElement = $(this._Options.gridContainerSelector);
 				} else {
-					containerElement = this.get_$GridDataElement();
+					$containerElement = this.get_$GridDataElement();
 				}
-				if (containerElement && containerElement.length === 1) {
-					this._containerScrollTop = containerElement.get(0).scrollTop;
+				if ($containerElement && $containerElement.length === 1) {
+					this._containerScrollTop = $containerElement.get(0).scrollTop;
 				} else {
 					if (console && typeof console.log === "function") {
 						console.log("RadGrid Group State Preservation: Scroll container not found.  Enable grid scrolling or specify a container selector in Options.");
@@ -178,14 +189,14 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 		}
 		private _scrollPosition_Restore() {
 			if (this.get_Options().saveGridScrollPosition) {
-				var containerElement: JQuery;
+				var $containerElement: JQuery;
 				if (this._Options.gridContainerSelector) {
-					containerElement = $(this._Options.gridContainerSelector);
+					$containerElement = $(this._Options.gridContainerSelector);
 				} else {
-					containerElement = this.get_$GridDataElement();
+					$containerElement = this.get_$GridDataElement();
 				}
-				if (containerElement && containerElement.length === 1) {
-					containerElement.get(0).scrollTop = this._containerScrollTop;
+				if ($containerElement && $containerElement.length === 1) {
+					$containerElement.get(0).scrollTop = this._containerScrollTop;
 				} else {
 					if (console && typeof console.log === "function") {
 						console.log("RadGrid Group State Preservation: Scroll container not found.  Enable grid scrolling or specify a container selector in Options.");
@@ -212,40 +223,31 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 
 		//#region Helpers		
 		//#region Common
-		private _currentNestLevel: number;
+		private _lastNestLevel: number;
+		private _nestingRootColSpan: number;
 		private _currentTopLevelGroupName: string = null;
 		private _currentParentGroupPathArray: Array<string>;
 		private _beginSaveRestore() {
-			this._currentNestLevel = 0;
+			this._lastNestLevel = -1;
+			this._nestingRootColSpan = -1;
 			this._currentParentGroupPathArray = [];
 		}
 		private _getCurrentParentGroupPath(): string {
 			if (this._currentParentGroupPathArray.length === 0) { return ""; }
 			return this._currentParentGroupPathArray.join("/");
 		}
-		private _SaveRestoreGroupingHeaderRowLoop(
-			Mode: SaveRestoreModes, elementIndex: number, groupRowElement: Element): void {
-			var $groupRowElement = $(groupRowElement);
-			var $groupHeaderCellElementsForCurrentRow =
-				$groupRowElement.find(Core.groupHeaderCellElementSelector);
+		private _SaveRestoreGroupHeaderLoopHandler(
+			Mode: SaveRestoreModes, elementIndex: number, groupHeaderElement: Element): void {
+			var $groupHeaderElement = $(groupHeaderElement);
 
-			this._headerRowGroupProcessing($groupRowElement, $groupHeaderCellElementsForCurrentRow);
+			this._groupHeaderNestLevelProcessing($groupHeaderElement);
 
 			switch (Mode) {
 				case SaveRestoreModes.Save:
-					$groupHeaderCellElementsForCurrentRow.each(
-						(elementIndex, groupCellElement) =>
-							this._saveGroupingHeaderCellLoop(Mode, elementIndex, groupCellElement));
+					this._saveGroupingForHeaderElement($groupHeaderElement);
 					break;
 				case SaveRestoreModes.Restore:
-					$groupHeaderCellElementsForCurrentRow.each(
-						(elementIndex, groupCellElement) =>
-							this._restoreGroupingHeaderCellLoop(elementIndex, groupCellElement));
-					break;
-				case SaveRestoreModes.PerformanceModeValidate:
-					$groupHeaderCellElementsForCurrentRow.each(
-						(elementIndex, groupCellElement) =>
-							this._saveGroupingHeaderCellLoop(Mode, elementIndex, groupCellElement));
+					this._restoreGroupingForHeaderElement($groupHeaderElement);
 					break;
 			}
 		}
@@ -273,116 +275,116 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 				}
 			}
 		}
-		private _headerRowGroupProcessing($groupRowElement: JQuery, $groupHeaderCellElementsForCurrentRow: JQuery): void {
-			var nestLevel = 0;
-			var thisClass = this;
-			var groupText = "";
-			$groupHeaderCellElementsForCurrentRow.each(
-				function (elementIndex, groupCellElement) {
-					groupText = thisClass._get_GroupText(<HTMLTableCellElement>groupCellElement);
-					if (!groupText) {
-						nestLevel += 1;
-						groupText = "";
-					}
-				});
-			if (nestLevel !== this._currentNestLevel) {
-				var nestLevelChange: number = this._currentNestLevel - nestLevel;
+		/**
+		 * Determine nesting level/changes.
+		 */
+		private _groupHeaderNestLevelProcessing($groupHeaderElement: JQuery): void {
+			var groupHeaderLastChildElement = <GroupHeaderElementChildType>(
+				$groupHeaderElement.children(Core.groupHeaderElementChildTagName).last().get(0));
+			var groupText = this._get_GroupText(this._get_GroupHeaderTextParentElement($groupHeaderElement));
+
+			if (this._lastNestLevel === -1) {
+				this._nestingRootColSpan = groupHeaderLastChildElement.colSpan;
+			}
+			var nestLevel = (this._nestingRootColSpan - groupHeaderLastChildElement.colSpan);
+
+			if (nestLevel !== this._lastNestLevel) {
+				var nestLevelChange: number = this._lastNestLevel - nestLevel;
 				if (nestLevel === 0) {
 					this._currentParentGroupPathArray = [];
-				} else if (nestLevel < this._currentNestLevel) {
+				} else if (nestLevel < this._lastNestLevel) {
 					for (var i = 0; i < nestLevelChange; i++) {
 						this._currentParentGroupPathArray.pop();
 					}
-				} else if (nestLevel > this._currentNestLevel) {
-					this._currentParentGroupPathArray.push(this._get_GroupTextByGroupRowElement($groupRowElement.prev()));
+				} else if (nestLevel > this._lastNestLevel) {
+					this._currentParentGroupPathArray.push(
+						this._get_GroupText(this._get_GroupHeaderTextParentElement($groupHeaderElement.prev())));
 				}
 			}
-			this._currentNestLevel = nestLevel;
-
+			this._lastNestLevel = nestLevel;
 			this._trackTopLevelGroupChanges(nestLevel, groupText);
 		}
-		private _get_$GroupHeaderRowElements(): JQuery {
+		private _get_$GroupHeaderElements(): JQuery {
 			var masterTableView = this.get_GridMasterTableView();
 			if (!masterTableView) { return null; }
 
 			return $(masterTableView.get_element()).
-				find(Core.groupHeaderRowSelector);
+				find(Core.groupHeaderElementSelector);
 		}
-		private _get_GroupState(groupHeaderTDElement: HTMLTableCellElement, elementIndex: number): GroupState {
-			var tdElement_FirstChild = <HTMLElement>(groupHeaderTDElement.firstChild);
-			if (tdElement_FirstChild !== null
-				&& tdElement_FirstChild.tagName === Core.groupHeaderCellToggleElementName) {
-				var $tdElement_FirstChild = $(tdElement_FirstChild);
-				if ($tdElement_FirstChild.hasClass(Core.groupExpandCollapseInputElementClass_Expand)
-					|| $tdElement_FirstChild.hasClass(Core.groupExpandCollapseInputElementClass_Collapse)) {
-					var IsExpanded: boolean = $tdElement_FirstChild.hasClass(Core.groupExpandCollapseInputElementClass_Collapse);
-					var GroupText = this._get_GroupText(groupHeaderTDElement);
-					if (GroupText) {
-						return new GroupState(
-							GroupText,
-							this._getCurrentParentGroupPath(),
-							IsExpanded,
-							(<HTMLInputElement>(groupHeaderTDElement.firstChild)));
-					}
+		private _checkToggleButton($toggleButtonParentElement: JQuery): ICheckToggleButtonResult {
+			var $toggleButtonElement = $toggleButtonParentElement.find(Core.GroupHeaderToggleElementName).first();
+			if ($toggleButtonElement.length > 0) {
+				if ($toggleButtonElement.hasClass(Core.GoupExpandCollapseElementClass_Expand)
+					|| $toggleButtonElement.hasClass(Core.GroupExpandCollapseElementClass_Collapse)) {
+					return {
+						IsToggleButton: true,
+						ToggleStateIsExpanded: $toggleButtonElement.hasClass(Core.GroupExpandCollapseElementClass_Collapse),
+						ToggleButtonElement: $toggleButtonElement
+					};
 				}
+			}
+			return { IsToggleButton: false };
+		}
+		private _get_GroupState($groupHeaderTextParentElement: JQuery): GroupState {
+			var GroupText = this._get_GroupText($groupHeaderTextParentElement);
+
+			if (GroupText) {
+				var _checkToggleButtonResult = this._checkToggleButton($groupHeaderTextParentElement.prev());
+				return new GroupState(
+					GroupText,
+					this._getCurrentParentGroupPath(),
+					_checkToggleButtonResult);
 			}
 			return null;
 		}
-		private _get_GroupTextByGroupRowElement($groupRowElement: JQuery) {
-			var $groupHeaderCellElementsForCurrentRow =
-				$groupRowElement.find(Core.groupHeaderCellElementSelector);
-			var groupText = null;
-			var thisClass = this;
-			$groupHeaderCellElementsForCurrentRow.each(
-				function (elementIndex, groupCellElement) {
-					groupText = thisClass._get_GroupText(<HTMLTableCellElement>groupCellElement);
-					if (!groupText) {
-						groupText = "";
-					} else { return false; }
-				});
-
-			return groupText;
+		private _get_GroupHeaderTextParentElement($groupHeaderElement: JQuery): JQuery {
+			return $groupHeaderElement.children(Core.groupHeaderElementChildTagName).last();
 		}
-		private _get_GroupText(groupHeaderTDElement: HTMLTableCellElement) {
-			var tdElement_NextSibling = <HTMLElement>(groupHeaderTDElement.nextSibling);
-			if (tdElement_NextSibling !== null) {
-				var GroupText = tdElement_NextSibling.innerText;
-
-				if (this._Options.groupByExpressionAggregates_AutoStrip) {
-					var groupByExpressionsProcessed = false;
-					if (this._Options.groupByExpressionAggregates_SecondDisplayName
-						&& GroupText.indexOf(this._Options.groupByExpressionAggregates_SecondDisplayName) > -1) {
-						GroupText = GroupText.substring(
-							0, GroupText.indexOf(
-								Core.groupingSettings_GroupByFieldsSeparator
-								+ this._Options.groupByExpressionAggregates_SecondDisplayName));
-						groupByExpressionsProcessed = true;
-					}
-					if ((!groupByExpressionsProcessed)
-						&& GroupText.indexOf(Core.groupingSettings_GroupByFieldsSeparator) > - 1) {
-						//GroupByExpression (Aggregates) are likely present but not identified explicitly, so strip manually.
-						GroupText = GroupText.substring(
-							0, GroupText.indexOf(Core.groupingSettings_GroupByFieldsSeparator));
-					}
-				}
-				var finalGroupText = GroupText.trim();
-				if (finalGroupText === "") {
-					return null;
-				}
-				return finalGroupText;
+		private _get_GroupText($groupHeaderTextParent: JQuery) {
+			var $groupHeaderTextElement: JQuery;
+			if (Core.GroupHeaderTextElementClass) {
+				$groupHeaderTextElement = $groupHeaderTextParent.find("." + Core.GroupHeaderTextElementClass);
+			} else {
+				$groupHeaderTextElement = $groupHeaderTextParent;
 			}
-			return null;
+			if ($groupHeaderTextElement.length === 0) {
+				return null;
+			}
+
+			var groupText = $groupHeaderTextElement.text();
+			if (this._Options.groupByExpressionAggregates_AutoStrip) {
+				var groupByExpressionsProcessed = false;
+				if (this._Options.groupByExpressionAggregates_SecondDisplayName
+					&& groupText.indexOf(this._Options.groupByExpressionAggregates_SecondDisplayName) > -1) {
+					groupText = groupText.substring(
+						0, groupText.indexOf(
+							Core.GroupingSettings_GroupByFieldsSeparator
+							+ this._Options.groupByExpressionAggregates_SecondDisplayName));
+					groupByExpressionsProcessed = true;
+				}
+				if ((!groupByExpressionsProcessed)
+					&& groupText.indexOf(Core.GroupingSettings_GroupByFieldsSeparator) > - 1) {
+					//GroupByExpression (Aggregates) are likely present but not identified explicitly, so strip manually.
+					groupText = groupText.substring(
+						0, groupText.indexOf(Core.GroupingSettings_GroupByFieldsSeparator));
+				}
+			}
+
+			var finalGroupText = groupText.trim();
+			if (finalGroupText === "") {
+				return null;
+			}
+
+			return finalGroupText;
 		}
 		//#endregion
 
 		//#region Save
-		private _saveGroupingHeaderCellLoop(Mode: SaveRestoreModes, elementIndex: number, groupCellElement: Element) {
-			var groupState = this._get_GroupState(
-				<HTMLTableCellElement>groupCellElement,
-				elementIndex);
+		private _saveGroupingForHeaderElement($groupHeaderElement: JQuery) {
+			var groupState = this._get_GroupState(this._get_GroupHeaderTextParentElement($groupHeaderElement));
 
 			if (groupState) {
-				if (groupState.IsExpanded) {
+				if (groupState.CheckToggleButtonResult.ToggleStateIsExpanded) {
 					this._groupItemAdd(this._groupsExpanded, groupState.FullGroupText());
 					this._groupItemRemove(this._groupsCollapsed, groupState.FullGroupText());
 				} else {
@@ -394,21 +396,20 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 		//#endregion
 
 		//#region Restore
-		private _restoreGroupingHeaderCellLoop(elementIndex: number, groupCellElement: Element) {
-			var groupState = this._get_GroupState(
-				<HTMLTableCellElement>groupCellElement,
-				elementIndex);
+		private _restoreGroupingForHeaderElement($groupHeaderElement: JQuery) {
+			var groupState = this._get_GroupState(this._get_GroupHeaderTextParentElement($groupHeaderElement));
 			if (groupState) {
-				if (groupState.IsExpanded
+				if (groupState.CheckToggleButtonResult.ToggleStateIsExpanded
 					&& this._groupsCollapsed.indexOf(groupState.FullGroupText()) !== -1) {
-					groupState.ExpandCollapseButtonElement.click();
-				} else if (!groupState.IsExpanded
+					groupState.CheckToggleButtonResult.ToggleButtonElement.click();
+				} else if (!groupState.CheckToggleButtonResult.ToggleStateIsExpanded
 					&& this._groupsExpanded.indexOf(groupState.FullGroupText()) !== -1) {
-					groupState.ExpandCollapseButtonElement.click();
+					groupState.CheckToggleButtonResult.ToggleButtonElement.click();
 				}
 			}
 		}
 		//#endregion
+
 		//#endregion
 
 		SaveGrouping(resetGrouping = false) {
@@ -421,13 +422,13 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 			var thisClass = this;
 			this._beginSaveRestore();
 
-			var $groupHeaderRowElements = this._get_$GroupHeaderRowElements();
-			if (!$groupHeaderRowElements) { return; }
+			var $groupHeaderElements = this._get_$GroupHeaderElements();
+			if (!$groupHeaderElements) { return; }
 
-			$groupHeaderRowElements.each(
-				(elementIndex, groupRowElement) =>
-					thisClass._SaveRestoreGroupingHeaderRowLoop(
-						SaveRestoreModes.Save, elementIndex, groupRowElement));
+			$groupHeaderElements.each(
+				(elementIndex, groupHeaderElement) =>
+					thisClass._SaveRestoreGroupHeaderLoopHandler(
+						SaveRestoreModes.Save, elementIndex, groupHeaderElement));
 		}
 		RestoreGrouping() {
 			if (this._groupsExpanded.length === 0 && this._groupsCollapsed.length === 0) {
@@ -439,12 +440,12 @@ module ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 			this._pauseGroupStateChangeEventHandlers = true;
 			this._beginSaveRestore();
 
-			var $groupHeaderRowElements = this._get_$GroupHeaderRowElements();
-			if ($groupHeaderRowElements) {
-				$groupHeaderRowElements.each(
-					(elementIndex, groupRowElement) =>
-						thisClass._SaveRestoreGroupingHeaderRowLoop(
-							SaveRestoreModes.Restore, elementIndex, groupRowElement));
+			var $groupHeaderElements = this._get_$GroupHeaderElements();
+			if ($groupHeaderElements) {
+				$groupHeaderElements.each(
+					(elementIndex, groupHeaderElement) =>
+						thisClass._SaveRestoreGroupHeaderLoopHandler(
+							SaveRestoreModes.Restore, elementIndex, groupHeaderElement));
 			}
 
 			this._scrollPosition_Restore();
