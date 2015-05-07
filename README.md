@@ -3,7 +3,77 @@ Extensions for the Telerik UI for ASP.NET AJAX RadGrid and Kendo UI Grid control
 
 Includes a robust Grid Group State Preservation extension written in TypeScript that enables you to preserve group expand/collapse states entirely on the client, even as data and pages change.
 
-Here's an implementation  example (please review the wiki for full implementation details):
+**Kendo UI Grid implementation example** Please review the wiki for full implementation details.
+This is Telerik's main demo page with the Group State Preservation extension applied (copy to the original demo file here to test it out on your computer: [Telerik Installation Path]\Kendo UI Professional Q1 2015\examples\grid\index.html).
+
+    <body>
+    
+    	<a class="offline-button" href="../index.html">Back</a>
+    
+    	<div id="example">
+    		<div id="grid"></div>
+    
+    		<!--NOTE: Typically, you may want to combine all TypeScript into a single file (which can be configured in Project Settings).
+    		In that case, include only the combined JS file here.
+    		These JS files have been kept separate only for demonstration purposes.-->
+    
+    		<script type="text/javascript" src="Scripts/eSkillz/Extenders/TelerikCustom/GridCommon/GroupStatePreservation/Core.js"></script>
+    		<script type="text/javascript" src="Scripts/eSkillz/Extenders/TelerikCustom/KendoGrid/GroupStatePreservation/Core.js"></script>
+    
+    		<script type="text/javascript">
+    			var GridGroupStatePreservation;
+    			function ApplicationLoaded() {
+    				var GroupStatePreservationOptions =
+    					new eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation.Options(
+    						"grid");
+    				GroupStatePreservationOptions.saveGridScrollPosition = true;
+    				GridGroupStatePreservation = new eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation.Core(
+    					GroupStatePreservationOptions);
+    			}
+    		</script>
+    
+    		<script>
+    			$(document).ready(function () {
+    				$("#grid").kendoGrid({
+    					dataSource: {
+    						type: "odata",
+    						transport: {
+    							read: "http://demos.telerik.com/kendo-ui/service/Northwind.svc/Customers"
+    						},
+    						pageSize: 20
+    					},
+    					height: 550,
+    					groupable: true,
+    					sortable: true,
+    					pageable: {
+    						refresh: true,
+    						pageSizes: true,
+    						buttonCount: 5
+    					},
+    					columns: [{
+    						field: "ContactName",
+    						title: "Contact Name",
+    						width: 200
+    					}, {
+    						field: "ContactTitle",
+    						title: "Contact Title"
+    					}, {
+    						field: "CompanyName",
+    						title: "Company Name"
+    					}, {
+    						field: "Country",
+    						width: 150
+    					}
+    					]
+    				});
+    
+    				ApplicationLoaded();
+    			});
+    		</script>
+    	</div>
+    </body>
+
+**ASP.Net RadGrid implementation example**
 
     <script type="text/javascript" src="/Scripts/eSkillz/Extenders/TelerikCustom/GridCommon/GroupStatePreservation/Core.js"></script>
     <script type="text/javascript" src="/Scripts/eSkillz/Extenders/TelerikCustom/ASPGrid/GroupStatePreservation/Core.js"></script>
