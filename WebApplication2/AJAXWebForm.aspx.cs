@@ -8,7 +8,7 @@ namespace WebApplication2
 		protected void RadGrid1_NeedDataSource(object sender, Telerik.Web.UI.GridNeedDataSourceEventArgs e)
 		{
 			Random rnd = new Random();
-			RadGrid1.DataSource = Enumerable.Range(1, 300).Select(i => new
+			RadGrid1.DataSource = Enumerable.Range(1, 1000).Select(i => new
 			{
 				Name = "Name" + Math.Ceiling(Convert.ToDouble(i / rnd.Next(6,12))),
 				Test = "Test-" + Math.IEEERemainder(i,3),

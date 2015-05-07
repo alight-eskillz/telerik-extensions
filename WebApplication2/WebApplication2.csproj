@@ -64,7 +64,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Scripts\GroupStatePreservation.js" />
+    <Content Include="Scripts\eSkillz\Extenders\TelerikCustom\ASPGrid\GroupStatePreservation\Core.js" />
+    <Content Include="Scripts\eSkillz\Extenders\TelerikCustom\GridCommon\GroupStatePreservation\core.js" />
     <Content Include="Web.config" />
     <Content Include="AJAXWebForm.aspx" />
   </ItemGroup>
@@ -78,7 +79,8 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Scripts\GroupStatePreservation.js.map" />
+    <Content Include="Scripts\eSkillz\Extenders\TelerikCustom\ASPGrid\GroupStatePreservation\Core.js.map" />
+    <Content Include="Scripts\eSkillz\Extenders\TelerikCustom\GridCommon\GroupStatePreservation\core.js.map" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -87,20 +89,23 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <TypeScriptCompile Include="Scripts\GroupStatePreservation.ts" />
+    <TypeScriptCompile Include="Scripts\eSkillz\Extenders\TelerikCustom\ASPGrid\GroupStatePreservation\Core.ts" />
+    <TypeScriptCompile Include="Scripts\eSkillz\Extenders\TelerikCustom\GridCommon\GroupStatePreservation\Core.ts" />
     <TypeScriptCompile Include="Scripts\typings\App_Shared.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\jquery\jquery.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\microsoft-ajax\microsoft.ajax.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\telerik\Telerik.Web.UI.d.ts" />
   </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
-    <Folder Include="Properties\" />
+    <EmbeddedResource Include="Properties\licenses.licx" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets')" />
   <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="false" />
@@ -120,7 +125,7 @@
           <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
         </WebProjectProperties>
       </FlavorProperties>
-      <UserProperties UseJQuerySupport="True" UseAjaxifiedTemplates="True" />
+      <UserProperties UseAjaxifiedTemplates="True" UseJQuerySupport="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

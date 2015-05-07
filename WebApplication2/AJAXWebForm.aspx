@@ -80,7 +80,12 @@
 				<p>It doesn't seem possible to track the page change event client-side (at least not with AJAX), so it's important to set the RadGrid as an AjaxSetting with itself as an updated control.</p>
 			</div>
 
-			<script type="text/javascript" src="/Scripts/GroupStatePreservation.js"></script>
+			<%--NOTE: Typically, you may want to combine all TypeScript into a single file (which can be configured in Project Settings).
+				In that case, include only the combined JS file here.
+				These JS files have been kept separate only for demonstration purposes.--%>
+				
+			<script type="text/javascript" src="/Scripts/eSkillz/Extenders/TelerikCustom/GridCommon/GroupStatePreservation/Core.js"></script>
+			<script type="text/javascript" src="/Scripts/eSkillz/Extenders/TelerikCustom/ASPGrid/GroupStatePreservation/Core.js"></script>
 			<telerik:RadCodeBlock ID="cbInit" runat="server">
 				<script type="text/javascript">
 					var GridGroupStatePreservation;
@@ -88,28 +93,28 @@
 					function ApplicationLoaded(args) {
 						Sys.Application.remove_load(appLoadedHandler);
 						var GroupStatePreservationOptions =
-							new ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation.Options(
+							new eSkillz.Extenders.TelerikCustom.ASPNetGrid.GroupStatePreservation.Options(
 								"<%= RadGrid1.ClientID%>",
 								//Change the following option to StateTrackingModes.ClientDataSource for client data sources
-								ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation.RefreshModes.AJAX,
+								eSkillz.Extenders.TelerikCustom.ASPNetGrid.GroupStatePreservation.RefreshModes.AJAX,
 								true, "Random Number Sum");
 						GroupStatePreservationOptions.saveGridScrollPosition = true;
-						GridGroupStatePreservation = new ClApps_Common.Extenders.TelerikCustom.RadGrid.GroupStatePreservation.Core(
+						GridGroupStatePreservation = new eSkillz.Extenders.TelerikCustom.ASPNetGrid.GroupStatePreservation.Core(
 							GroupStatePreservationOptions);
 					}
 
 					var appLoadedHandler = function (args) {
 						return ApplicationLoaded(args);
 					};
-					
+
 					Sys.Application.add_load(appLoadedHandler);
-					
+
 					//Note: the following $(document).ready(...) method does not ensure that all ASP.Net controls are loaded (Sys.Application.load event is required only for ASP.Net AJAX).
 					//	Kendo UI can use this method, however; just call ApplicationLoaded() after you've initialized your Kendo UI grid.
 					//$telerik.$(document).ready(function () {
 					//	ApplicationLoaded();
 					//});
-					
+
 					//** If you wanted to control when group states are saved/restored, this is one way to do it:
 					function RadAjaxManager1_requestStart(sender, eventArgs) {
 						//GridGroupStatePreservation.SaveGrouping();
