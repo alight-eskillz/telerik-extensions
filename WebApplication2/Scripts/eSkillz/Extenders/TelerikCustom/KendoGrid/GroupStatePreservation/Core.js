@@ -56,7 +56,11 @@ var eSkillz;
                             //NOTE: The Kendo Grid does not have any Group Expand/Collapse events to which we can bind, so this is our only option right now.
                         };
                         Core.prototype._Grid_OnDataBinding = function (sender, args) {
-                            this.FinishSaveGroupingCheck();
+                            //NOTE: forceSave is set to true here because the Kendo UI grid does not have any built-in events for group expand/collapse (so the method can't run asynchronously).
+                            //		Contacted Telerik to request such events.
+                            //		Until then, adding custom event handlers (add click handlers to the expand/ collapse buttons on init and on grid data bound, remove handlers on data binding to prevent memory leak) might be the only option.
+                            //			It would be very easy to add those events by getting all toggle elements via _commonGroupingState._get_$groupToggleElementsAll (would need to make that method public; probably make both Toggle and Text element retrieval functions public).
+                            this.FinishSaveGroupingCheck(true);
                         };
                         Core.prototype._Grid_OnDataBound = function (sender, args) {
                             this.RestoreGrouping();
@@ -131,8 +135,9 @@ var eSkillz;
                             this._scrollPosition_Save();
                             this._commonGroupState.SaveGroupingAsync(this._get_$GridElement());
                         };
-                        Core.prototype.FinishSaveGroupingCheck = function () {
-                            this._commonGroupState.FinishSaveGroupingCheck();
+                        Core.prototype.FinishSaveGroupingCheck = function (forceSave) {
+                            if (forceSave === void 0) { forceSave = false; }
+                            this._commonGroupState.FinishSaveGroupingCheck(this._get_$GridElement(), forceSave);
                         };
                         Core.prototype.RestoreGrouping = function () {
                             this._commonGroupState.RestoreGrouping(this._get_$GridElement());

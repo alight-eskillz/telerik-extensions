@@ -326,14 +326,21 @@ var eSkillz;
                         //#endregion
                         //#region Synchronous
                         Core.prototype._saveGrouping = function () {
+                            this._beginSaveRestore();
                             var thisClass = this;
                             var $groupHeaderElements = this._get_$GroupHeaderElements();
                             if ($groupHeaderElements) {
                                 $groupHeaderElements.each(function (elementIndex, groupHeaderElement) { return thisClass._SaveRestoreGroupHeaderLoopHandler(1 /* Save */, elementIndex, groupHeaderElement); });
                             }
                         };
-                        Core.prototype.FinishSaveGroupingCheck = function () {
-                            if (this._saveGroupingElementInterval) {
+                        Core.prototype.FinishSaveGroupingCheck = function ($tableElement, forceSave, resetGrouping) {
+                            if (forceSave === void 0) { forceSave = false; }
+                            if (resetGrouping === void 0) { resetGrouping = false; }
+                            this.set_tableElement($tableElement);
+                            if (resetGrouping) {
+                                this.ResetGrouping();
+                            }
+                            if (this._saveGroupingElementInterval || forceSave) {
                                 this._saveGroupingAsyncStop();
                                 this._saveGrouping();
                             }

@@ -27,7 +27,7 @@ module eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation {
 
 	export interface IImplementation {
 		SaveGroupingAsync: () => void;
-		FinishSaveGroupingCheck: () => void;
+		FinishSaveGroupingCheck: (forceSave?: boolean) => void;
 		RestoreGrouping: () => void;
 		ResetGrouping: () => void;
 	}
@@ -386,6 +386,8 @@ module eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation {
 
 		//#region Synchronous
 		private _saveGrouping() {
+			this._beginSaveRestore();
+
 			var thisClass = this;
 			var $groupHeaderElements = this._get_$GroupHeaderElements();
 			if ($groupHeaderElements) {
@@ -395,8 +397,13 @@ module eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation {
 							SaveRestoreModes.Save, elementIndex, groupHeaderElement));
 			}
 		}
-		FinishSaveGroupingCheck() {
-			if (this._saveGroupingElementInterval) {
+		FinishSaveGroupingCheck($tableElement: JQuery, forceSave = false, resetGrouping = false) {
+			this.set_tableElement($tableElement);
+			if (resetGrouping) {
+				this.ResetGrouping();
+			}
+
+			if (this._saveGroupingElementInterval || forceSave) {
 				this._saveGroupingAsyncStop();
 				this._saveGrouping();
 			}

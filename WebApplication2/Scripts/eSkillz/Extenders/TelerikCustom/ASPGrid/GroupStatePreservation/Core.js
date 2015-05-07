@@ -16,6 +16,7 @@ var eSkillz;
                     var RefreshModes = GroupStatePreservation.RefreshModes;
                     var Options = (function () {
                         function Options(gridClientID, RefreshMode, groupByExpressionAggregates_AutoStrip, groupByExpressionAggregates_SecondDisplayName, addEventHandlers, saveGridScrollPosition, gridContainerSelector) {
+                            if (RefreshMode === void 0) { RefreshMode = null; }
                             if (groupByExpressionAggregates_AutoStrip === void 0) { groupByExpressionAggregates_AutoStrip = false; }
                             if (groupByExpressionAggregates_SecondDisplayName === void 0) { groupByExpressionAggregates_SecondDisplayName = null; }
                             if (addEventHandlers === void 0) { addEventHandlers = true; }
@@ -203,9 +204,10 @@ var eSkillz;
                             this._scrollPosition_Save();
                             this._commonGroupState.SaveGroupingAsync(this._get_$MasterTableViewElement());
                         };
-                        Core.prototype.FinishSaveGroupingCheck = function () {
+                        Core.prototype.FinishSaveGroupingCheck = function (forceSave) {
+                            if (forceSave === void 0) { forceSave = false; }
                             this._scrollPosition_Save();
-                            this._commonGroupState.FinishSaveGroupingCheck();
+                            this._commonGroupState.FinishSaveGroupingCheck(this._get_$MasterTableViewElement(), forceSave);
                         };
                         Core.prototype.RestoreGrouping = function () {
                             this._commonGroupState.RestoreGrouping(this._get_$MasterTableViewElement());

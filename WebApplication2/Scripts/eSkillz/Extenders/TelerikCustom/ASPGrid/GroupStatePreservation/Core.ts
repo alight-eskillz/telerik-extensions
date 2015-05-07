@@ -9,7 +9,7 @@ module eSkillz.Extenders.TelerikCustom.ASPNetGrid.GroupStatePreservation {
 		implements eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.IImplementationOptions {
 		constructor(
 			public gridClientID: string,
-			public RefreshMode: RefreshModes,
+			public RefreshMode: RefreshModes = null,
 			public groupByExpressionAggregates_AutoStrip: boolean = false,
 			public groupByExpressionAggregates_SecondDisplayName: string = null,
 			public addEventHandlers: boolean = true,
@@ -206,9 +206,9 @@ module eSkillz.Extenders.TelerikCustom.ASPNetGrid.GroupStatePreservation {
 			this._scrollPosition_Save();
 			this._commonGroupState.SaveGroupingAsync(this._get_$MasterTableViewElement());
 		}
-		FinishSaveGroupingCheck(): void {
+		FinishSaveGroupingCheck(forceSave = false): void {
 			this._scrollPosition_Save();
-			this._commonGroupState.FinishSaveGroupingCheck();
+			this._commonGroupState.FinishSaveGroupingCheck(this._get_$MasterTableViewElement(), forceSave);
 		}
 		RestoreGrouping(): void {
 			this._commonGroupState.RestoreGrouping(this._get_$MasterTableViewElement());
