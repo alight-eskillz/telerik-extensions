@@ -64,6 +64,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Scripts\eSkillz\Extenders\TelerikCustom\KendoGrid\GroupStatePreservation\Core.js" />
     <Content Include="Scripts\eSkillz\Extenders\TelerikCustom\ASPGrid\GroupStatePreservation\Core.js" />
     <Content Include="Scripts\eSkillz\Extenders\TelerikCustom\GridCommon\GroupStatePreservation\core.js" />
     <Content Include="Web.config" />
@@ -81,6 +82,7 @@
   <ItemGroup>
     <Content Include="Scripts\eSkillz\Extenders\TelerikCustom\ASPGrid\GroupStatePreservation\Core.js.map" />
     <Content Include="Scripts\eSkillz\Extenders\TelerikCustom\GridCommon\GroupStatePreservation\core.js.map" />
+    <Content Include="Scripts\eSkillz\Extenders\TelerikCustom\KendoGrid\GroupStatePreservation\Core.js.map" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -89,11 +91,13 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="Scripts\eSkillz\Extenders\TelerikCustom\KendoGrid\GroupStatePreservation\Core.ts" />
     <TypeScriptCompile Include="Scripts\eSkillz\Extenders\TelerikCustom\ASPGrid\GroupStatePreservation\Core.ts" />
     <TypeScriptCompile Include="Scripts\eSkillz\Extenders\TelerikCustom\GridCommon\GroupStatePreservation\Core.ts" />
     <TypeScriptCompile Include="Scripts\typings\App_Shared.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\jquery\jquery.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\microsoft-ajax\microsoft.ajax.d.ts" />
+    <TypeScriptCompile Include="Scripts\typings\telerik\kendo.all.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\telerik\Telerik.Web.UI.d.ts" />
   </ItemGroup>
   <ItemGroup />

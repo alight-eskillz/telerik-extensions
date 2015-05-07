@@ -16,7 +16,6 @@ var eSkillz;
                     var RefreshModes = GroupStatePreservation.RefreshModes;
                     var Options = (function () {
                         function Options(gridClientID, RefreshMode, groupByExpressionAggregates_AutoStrip, groupByExpressionAggregates_SecondDisplayName, addEventHandlers, saveGridScrollPosition, gridContainerSelector) {
-                            if (RefreshMode === void 0) { RefreshMode = null; }
                             if (groupByExpressionAggregates_AutoStrip === void 0) { groupByExpressionAggregates_AutoStrip = false; }
                             if (groupByExpressionAggregates_SecondDisplayName === void 0) { groupByExpressionAggregates_SecondDisplayName = null; }
                             if (addEventHandlers === void 0) { addEventHandlers = true; }
@@ -37,6 +36,7 @@ var eSkillz;
                         function Core(_Options) {
                             this._Options = _Options;
                             this._containerScrollTop = 0;
+                            this._gridCurrentPageIndex = 0;
                             this._Initialize();
                         }
                         Core.prototype.get_Options = function () {
@@ -111,7 +111,11 @@ var eSkillz;
                         Core.prototype._InitializeStateTrackingModes_ClientSideData = function () {
                             var _this = this;
                             var grid = this.get_Grid();
+                            grid.add_dataBinding(function (sender, args) { return _this._Grid_OnDataBinding(sender, args); });
                             grid.add_dataBound(function (sender, args) { return _this._Grid_OnDataBound(sender, args); });
+                        };
+                        Core.prototype._Grid_OnDataBinding = function (sender, args) {
+                            this.FinishSaveGroupingCheck();
                         };
                         Core.prototype._Grid_OnDataBound = function (sender, args) {
                             this.RestoreGrouping();
@@ -153,10 +157,14 @@ var eSkillz;
                                 }
                                 if ($containerElement && $containerElement.length === 1) {
                                     this._containerScrollTop = $containerElement.get(0).scrollTop;
+                                    var masterTableView = this.get_GridMasterTableView();
+                                    if (masterTableView) {
+                                        this._gridCurrentPageIndex = masterTableView.get_currentPageIndex();
+                                    }
                                 }
                                 else {
                                     if (console && typeof console.log === "function") {
-                                        console.log("RadGrid Group State Preservation: Scroll container not found.  Enable grid scrolling or specify a container selector in Options.");
+                                        console.log("Grid Group State Preservation: Scroll container not found.  Enable grid scrolling or specify a container selector in Options.");
                                     }
                                 }
                             }
@@ -171,11 +179,14 @@ var eSkillz;
                                     $containerElement = this.get_$GridDataElement();
                                 }
                                 if ($containerElement && $containerElement.length === 1) {
-                                    $containerElement.get(0).scrollTop = this._containerScrollTop;
+                                    var masterTableView = this.get_GridMasterTableView();
+                                    if (masterTableView && this._gridCurrentPageIndex === masterTableView.get_currentPageIndex()) {
+                                        $containerElement.get(0).scrollTop = this._containerScrollTop;
+                                    }
                                 }
                                 else {
                                     if (console && typeof console.log === "function") {
-                                        console.log("RadGrid Group State Preservation: Scroll container not found.  Enable grid scrolling or specify a container selector in Options.");
+                                        console.log("Grid Group State Preservation: Scroll container not found.  Enable grid scrolling or specify a container selector in Options.");
                                     }
                                 }
                             }
@@ -193,6 +204,7 @@ var eSkillz;
                             this._commonGroupState.SaveGroupingAsync(this._get_$MasterTableViewElement());
                         };
                         Core.prototype.FinishSaveGroupingCheck = function () {
+                            this._scrollPosition_Save();
                             this._commonGroupState.FinishSaveGroupingCheck();
                         };
                         Core.prototype.RestoreGrouping = function () {

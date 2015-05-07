@@ -9,7 +9,7 @@ module eSkillz.Extenders.TelerikCustom.ASPNetGrid.GroupStatePreservation {
 		implements eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.IImplementationOptions {
 		constructor(
 			public gridClientID: string,
-			public RefreshMode: RefreshModes = null,
+			public RefreshMode: RefreshModes,
 			public groupByExpressionAggregates_AutoStrip: boolean = false,
 			public groupByExpressionAggregates_SecondDisplayName: string = null,
 			public addEventHandlers: boolean = true,
@@ -113,7 +113,11 @@ module eSkillz.Extenders.TelerikCustom.ASPNetGrid.GroupStatePreservation {
 		//#region Client Data Source Event Handlers
 		private _InitializeStateTrackingModes_ClientSideData() {
 			var grid = this.get_Grid();
+			grid.add_dataBinding((sender, args) => this._Grid_OnDataBinding(sender, args));
 			grid.add_dataBound((sender, args) => this._Grid_OnDataBound(sender, args));
+		}
+		private _Grid_OnDataBinding(sender, args) {
+			this.FinishSaveGroupingCheck();
 		}
 		private _Grid_OnDataBound(sender, args) {
 			this.RestoreGrouping();
@@ -146,6 +150,7 @@ module eSkillz.Extenders.TelerikCustom.ASPNetGrid.GroupStatePreservation {
 			return null;
 		}
 		private _containerScrollTop: number = 0;
+		private _gridCurrentPageIndex: number = 0;
 		private _scrollPosition_Save() {
 			if (this.get_Options().saveGridScrollPosition) {
 				var $containerElement: JQuery;
@@ -156,9 +161,14 @@ module eSkillz.Extenders.TelerikCustom.ASPNetGrid.GroupStatePreservation {
 				}
 				if ($containerElement && $containerElement.length === 1) {
 					this._containerScrollTop = $containerElement.get(0).scrollTop;
+
+					var masterTableView = this.get_GridMasterTableView();
+					if (masterTableView) {
+						this._gridCurrentPageIndex = masterTableView.get_currentPageIndex();
+					}
 				} else {
 					if (console && typeof console.log === "function") {
-						console.log("RadGrid Group State Preservation: Scroll container not found.  Enable grid scrolling or specify a container selector in Options.");
+						console.log("Grid Group State Preservation: Scroll container not found.  Enable grid scrolling or specify a container selector in Options.");
 					}
 				}
 			}
@@ -172,10 +182,13 @@ module eSkillz.Extenders.TelerikCustom.ASPNetGrid.GroupStatePreservation {
 					$containerElement = this.get_$GridDataElement();
 				}
 				if ($containerElement && $containerElement.length === 1) {
-					$containerElement.get(0).scrollTop = this._containerScrollTop;
+					var masterTableView = this.get_GridMasterTableView();
+					if (masterTableView && this._gridCurrentPageIndex === masterTableView.get_currentPageIndex()) {
+						$containerElement.get(0).scrollTop = this._containerScrollTop;
+					}
 				} else {
 					if (console && typeof console.log === "function") {
-						console.log("RadGrid Group State Preservation: Scroll container not found.  Enable grid scrolling or specify a container selector in Options.");
+						console.log("Grid Group State Preservation: Scroll container not found.  Enable grid scrolling or specify a container selector in Options.");
 					}
 				}
 			}
@@ -194,6 +207,7 @@ module eSkillz.Extenders.TelerikCustom.ASPNetGrid.GroupStatePreservation {
 			this._commonGroupState.SaveGroupingAsync(this._get_$MasterTableViewElement());
 		}
 		FinishSaveGroupingCheck(): void {
+			this._scrollPosition_Save();
 			this._commonGroupState.FinishSaveGroupingCheck();
 		}
 		RestoreGrouping(): void {

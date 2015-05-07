@@ -38,7 +38,7 @@
 				<asp:Button Text="Ajax request" runat="server" ID="Button1" OnClick="Button1_Click" />
 				<br />
 				<telerik:RadGrid runat="server" ID="RadGrid1" ShowGroupPanel="true" AutoGenerateColumns="false" 
-								 OnNeedDataSource="RadGrid1_NeedDataSource" AllowPaging="false" PageSize="50"
+								 OnNeedDataSource="RadGrid1_NeedDataSource" AllowPaging="true" PageSize="100"
 								 RenderMode="Lightweight">
 					<ClientSettings AllowDragToGroup="true">
 						<Scrolling AllowScroll="true" UseStaticHeaders="true" ScrollHeight="400" />
@@ -77,7 +77,7 @@
 			</div>
 			<div>
 				<p>Note that group state is also preserved when changing pages (very handy when groups continue to the next page).</p>
-				<p>It doesn't seem possible to track the page change event client-side (at least not with AJAX), so it's important to set the RadGrid as an AjaxSetting with itself as an updated control.</p>
+				<p>It doesn't seem possible to track the page change event client-side (at least not with AJAX), so it's important to set the RadGrid as an AjaxSetting with itself as an updated control.  See the wiki for more details.</p>
 			</div>
 
 			<%--NOTE: Typically, you may want to combine all TypeScript into a single file (which can be configured in Project Settings).
