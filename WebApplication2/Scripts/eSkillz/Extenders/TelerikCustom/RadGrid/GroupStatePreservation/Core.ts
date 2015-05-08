@@ -178,8 +178,6 @@ module eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 			}
 			return null;
 		}
-		private _containerScrollTop: number = 0;
-		private _gridCurrentPageIndex: number = 0;
 		private _scrollPosition_Save() {
 			if (this.get_Options().saveGridScrollPosition) {
 				var $containerElement: JQuery;
@@ -188,17 +186,10 @@ module eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 				} else {
 					$containerElement = this.get_$GridDataElement();
 				}
-				if ($containerElement && $containerElement.length === 1) {
-					this._containerScrollTop = $containerElement.get(0).scrollTop;
-
-					var masterTableView = this.get_GridMasterTableView();
-					if (masterTableView) {
-						this._gridCurrentPageIndex = masterTableView.get_currentPageIndex();
-					}
-				} else {
-					if (console && typeof console.log === "function") {
-						console.log("Grid Group State Preservation: Scroll container not found.  Enable grid scrolling or specify a container selector in Options.");
-					}
+				var masterTableView = this.get_GridMasterTableView();
+				if (masterTableView) {
+					this._commonGroupState.SaveScrollPosition(
+						$containerElement, masterTableView.get_currentPageIndex());
 				}
 			}
 		}
@@ -210,17 +201,10 @@ module eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 				} else {
 					$containerElement = this.get_$GridDataElement();
 				}
-				if ($containerElement && $containerElement.length === 1) {
-					var masterTableView = this.get_GridMasterTableView();
-					if (masterTableView && this._gridCurrentPageIndex === masterTableView.get_currentPageIndex()) {
-						$containerElement.get(0).scrollTop = this._containerScrollTop;
-					} else {
-						$containerElement.get(0).scrollTop = 0;
-					}
-				} else {
-					if (console && typeof console.log === "function") {
-						console.log("Grid Group State Preservation: Scroll container not found.  Enable grid scrolling or specify a container selector in Options.");
-					}
+				var masterTableView = this.get_GridMasterTableView();
+				if (masterTableView) {
+					this._commonGroupState.RestoreScrollPosition(
+						$containerElement, masterTableView.get_currentPageIndex());
 				}
 			}
 		}
@@ -252,7 +236,6 @@ module eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 		}
 		ResetGrouping(): void {
 			this._commonGroupState.ResetGrouping();
-			this._containerScrollTop = 0;
 		}
 	}
 }

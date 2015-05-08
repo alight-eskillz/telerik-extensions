@@ -32,8 +32,6 @@ var eSkillz;
                     var Core = (function () {
                         function Core(_Options) {
                             this._Options = _Options;
-                            this._containerScrollTop = 0;
-                            this._gridCurrentPageIndex = 0;
                             this._restoreInProgress_GridView = null;
                             this._Initialize();
                         }
@@ -180,17 +178,9 @@ var eSkillz;
                                 else {
                                     $containerElement = this.get_$GridDataElement();
                                 }
-                                if ($containerElement && $containerElement.length === 1) {
-                                    this._containerScrollTop = $containerElement.get(0).scrollTop;
-                                    var masterTableView = this.get_GridMasterTableView();
-                                    if (masterTableView) {
-                                        this._gridCurrentPageIndex = masterTableView.get_currentPageIndex();
-                                    }
-                                }
-                                else {
-                                    if (console && typeof console.log === "function") {
-                                        console.log("Grid Group State Preservation: Scroll container not found.  Enable grid scrolling or specify a container selector in Options.");
-                                    }
+                                var masterTableView = this.get_GridMasterTableView();
+                                if (masterTableView) {
+                                    this._commonGroupState.SaveScrollPosition($containerElement, masterTableView.get_currentPageIndex());
                                 }
                             }
                         };
@@ -203,19 +193,9 @@ var eSkillz;
                                 else {
                                     $containerElement = this.get_$GridDataElement();
                                 }
-                                if ($containerElement && $containerElement.length === 1) {
-                                    var masterTableView = this.get_GridMasterTableView();
-                                    if (masterTableView && this._gridCurrentPageIndex === masterTableView.get_currentPageIndex()) {
-                                        $containerElement.get(0).scrollTop = this._containerScrollTop;
-                                    }
-                                    else {
-                                        $containerElement.get(0).scrollTop = 0;
-                                    }
-                                }
-                                else {
-                                    if (console && typeof console.log === "function") {
-                                        console.log("Grid Group State Preservation: Scroll container not found.  Enable grid scrolling or specify a container selector in Options.");
-                                    }
+                                var masterTableView = this.get_GridMasterTableView();
+                                if (masterTableView) {
+                                    this._commonGroupState.RestoreScrollPosition($containerElement, masterTableView.get_currentPageIndex());
                                 }
                             }
                         };
@@ -246,7 +226,6 @@ var eSkillz;
                         };
                         Core.prototype.ResetGrouping = function () {
                             this._commonGroupState.ResetGrouping();
-                            this._containerScrollTop = 0;
                         };
                         return Core;
                     })();

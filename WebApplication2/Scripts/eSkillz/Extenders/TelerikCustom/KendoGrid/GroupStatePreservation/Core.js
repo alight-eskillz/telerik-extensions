@@ -15,7 +15,7 @@ var eSkillz;
                             if (addEventHandlers === void 0) { addEventHandlers = true; }
                             if (saveGridScrollPosition === void 0) { saveGridScrollPosition = false; }
                             if (gridContainerSelector === void 0) { gridContainerSelector = null; }
-                            if (defaultGroupState === void 0) { defaultGroupState = 0 /* None */; }
+                            if (defaultGroupState === void 0) { defaultGroupState = eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.None; }
                             this.gridClientID = gridClientID;
                             this.addEventHandlers = addEventHandlers;
                             this.saveGridScrollPosition = saveGridScrollPosition;
@@ -28,8 +28,6 @@ var eSkillz;
                     var Core = (function () {
                         function Core(_Options) {
                             this._Options = _Options;
-                            this._containerScrollTop = 0;
-                            this._gridCurrentPageNumber = 1;
                             this._restoreInProgress_Grid = null;
                             this._Initialize();
                         }
@@ -52,10 +50,10 @@ var eSkillz;
                         Core.prototype.ToggleGroupByRow = function ($groupHeaderElement, toggleAction) {
                             var grid = this.get_Grid();
                             switch (toggleAction) {
-                                case 2 /* Expand */:
+                                case eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.Expand:
                                     grid.expandGroup($groupHeaderElement.get(0));
                                     break;
-                                case 1 /* Collapse */:
+                                case eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.Collapse:
                                     grid.collapseGroup($groupHeaderElement.get(0));
                                     break;
                             }
@@ -112,18 +110,7 @@ var eSkillz;
                                 else {
                                     $containerElement = this.get_$GridContentElement();
                                 }
-                                if ($containerElement && $containerElement.length === 1) {
-                                    this._containerScrollTop = $containerElement.get(0).scrollTop;
-                                    var page = this.get_Grid().dataSource.page();
-                                    if (page) {
-                                        this._gridCurrentPageNumber = page;
-                                    }
-                                }
-                                else {
-                                    if (console && typeof console.log === "function") {
-                                        console.log("Grid Group State Preservation: Scroll container not found.  Enable grid scrolling or specify a container selector in Options.");
-                                    }
-                                }
+                                this._commonGroupState.SaveScrollPosition($containerElement, this.get_Grid().dataSource.page());
                             }
                         };
                         Core.prototype._scrollPosition_Restore = function () {
@@ -135,20 +122,7 @@ var eSkillz;
                                 else {
                                     $containerElement = this.get_$GridContentElement();
                                 }
-                                if ($containerElement && $containerElement.length === 1) {
-                                    var page = this.get_Grid().dataSource.page();
-                                    if (page && this._gridCurrentPageNumber === page) {
-                                        $containerElement.get(0).scrollTop = this._containerScrollTop;
-                                    }
-                                    else {
-                                        $containerElement.get(0).scrollTop = 0;
-                                    }
-                                }
-                                else {
-                                    if (console && typeof console.log === "function") {
-                                        console.log("Grid Group State Preservation: Scroll container not found.  Enable grid scrolling or specify a container selector in Options.");
-                                    }
-                                }
+                                this._commonGroupState.RestoreScrollPosition($containerElement, this.get_Grid().dataSource.page());
                             }
                         };
                         //#endregion
@@ -162,7 +136,7 @@ var eSkillz;
                         };
                         Core.prototype.RestoreGrouping = function (defaultGroupToggleAction) {
                             var _this = this;
-                            if (defaultGroupToggleAction === void 0) { defaultGroupToggleAction = 0 /* None */; }
+                            if (defaultGroupToggleAction === void 0) { defaultGroupToggleAction = eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.None; }
                             this._restoreInProgress_Grid = this.get_Grid();
                             this._commonGroupState.RestoreGrouping(this.get_Grid().table, defaultGroupToggleAction);
                             setTimeout(function () { return _this._scrollPosition_Restore(); }, 0);
@@ -170,7 +144,6 @@ var eSkillz;
                         };
                         Core.prototype.ResetGrouping = function () {
                             this._commonGroupState.ResetGrouping();
-                            this._containerScrollTop = 0;
                         };
                         return Core;
                     })();

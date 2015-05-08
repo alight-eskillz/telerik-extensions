@@ -459,5 +459,34 @@ module eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation {
 			this._restoreGroupingInner($tableElement, action);
 		}
 		//#endregion
+
+		//#region Scroll Position
+		private _scrollPositionsByPageIndex: number[] = [];
+		private _lastPageIndex: number = null;
+		SaveScrollPosition($scrollElement: JQuery, pageIndex: number): void {
+			if ($scrollElement && $scrollElement.length === 1
+				&& typeof pageIndex === "number") {
+				this._scrollPositionsByPageIndex[pageIndex] = $scrollElement.get(0).scrollTop;
+				//Check if scroll is at bottom
+				if ($scrollElement[0].scrollHeight - $scrollElement.scrollTop() === $scrollElement.outerHeight()) {
+					this._scrollPositionsByPageIndex[pageIndex + 1] = 0;
+					this._scrollPositionsByPageIndex[pageIndex - 1] = 10000;
+				}
+				this._lastPageIndex = pageIndex;
+			}
+		}
+		RestoreScrollPosition($scrollElement: JQuery, pageIndex: number): void {
+			if ($scrollElement && $scrollElement.length === 1
+				&& typeof pageIndex === "number") {
+				var savedScrollTop = this._scrollPositionsByPageIndex[pageIndex];
+				if (!savedScrollTop) {
+					savedScrollTop = 0;
+				}
+				$scrollElement.animate({
+					scrollTop: savedScrollTop
+				});
+			}
+		}
+		//#endregion
 	}
 }

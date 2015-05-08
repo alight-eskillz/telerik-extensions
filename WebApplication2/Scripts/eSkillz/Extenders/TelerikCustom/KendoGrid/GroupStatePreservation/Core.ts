@@ -117,8 +117,6 @@ module eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation {
 			}
 			return null;
 		}
-		private _containerScrollTop: number = 0;
-		private _gridCurrentPageNumber: number = 1;
 		private _scrollPosition_Save() {
 			if (this.get_Options().saveGridScrollPosition) {
 				var $containerElement: JQuery;
@@ -127,18 +125,8 @@ module eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation {
 				} else {
 					$containerElement = this.get_$GridContentElement();
 				}
-				if ($containerElement && $containerElement.length === 1) {
-					this._containerScrollTop = $containerElement.get(0).scrollTop;
-
-					var page = this.get_Grid().dataSource.page();
-					if (page) {
-						this._gridCurrentPageNumber = page;
-					}
-				} else {
-					if (console && typeof console.log === "function") {
-						console.log("Grid Group State Preservation: Scroll container not found.  Enable grid scrolling or specify a container selector in Options.");
-					}
-				}
+				this._commonGroupState.SaveScrollPosition(
+					$containerElement, this.get_Grid().dataSource.page());
 			}
 		}
 		private _scrollPosition_Restore() {
@@ -149,18 +137,8 @@ module eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation {
 				} else {
 					$containerElement = this.get_$GridContentElement();
 				}
-				if ($containerElement && $containerElement.length === 1) {
-					var page = this.get_Grid().dataSource.page();
-					if (page && this._gridCurrentPageNumber === page) {
-						$containerElement.get(0).scrollTop = this._containerScrollTop;
-					} else {
-						$containerElement.get(0).scrollTop = 0;
-					}
-				} else {
-					if (console && typeof console.log === "function") {
-						console.log("Grid Group State Preservation: Scroll container not found.  Enable grid scrolling or specify a container selector in Options.");
-					}
-				}
+				this._commonGroupState.RestoreScrollPosition(
+					$containerElement, this.get_Grid().dataSource.page());
 			}
 		}
 		//#endregion
@@ -183,7 +161,6 @@ module eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation {
 		}
 		ResetGrouping(): void {
 			this._commonGroupState.ResetGrouping();
-			this._containerScrollTop = 0;
 		}
 	}
 }

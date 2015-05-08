@@ -89,6 +89,10 @@ var eSkillz;
                             //#region Save Grouping
                             //#region Asynchronous
                             this._saveGroupingElementInterval = null;
+                            //#endregion
+                            //#region Scroll Position
+                            this._scrollPositionsByPageIndex = [];
+                            this._lastPageIndex = null;
                         }
                         Core.prototype.get_Options = function () {
                             return this._Options;
@@ -384,6 +388,28 @@ var eSkillz;
                             this.ResetGrouping();
                             this._restoreGroupingInner($tableElement, action);
                         };
+                        Core.prototype.SaveScrollPosition = function ($scrollElement, pageIndex) {
+                            if ($scrollElement && $scrollElement.length === 1 && typeof pageIndex === "number") {
+                                this._scrollPositionsByPageIndex[pageIndex] = $scrollElement.get(0).scrollTop;
+                                //Check if scroll is at bottom
+                                if ($scrollElement[0].scrollHeight - $scrollElement.scrollTop() === $scrollElement.outerHeight()) {
+                                    this._scrollPositionsByPageIndex[pageIndex + 1] = 0;
+                                    this._scrollPositionsByPageIndex[pageIndex - 1] = 10000;
+                                }
+                                this._lastPageIndex = pageIndex;
+                            }
+                        };
+                        Core.prototype.RestoreScrollPosition = function ($scrollElement, pageIndex) {
+                            if ($scrollElement && $scrollElement.length === 1 && typeof pageIndex === "number") {
+                                var savedScrollTop = this._scrollPositionsByPageIndex[pageIndex];
+                                if (!savedScrollTop) {
+                                    savedScrollTop = 0;
+                                }
+                                $scrollElement.animate({
+                                    scrollTop: savedScrollTop
+                                });
+                            }
+                        };
                         return Core;
                     })();
                     GroupStatePreservation.Core = Core;
@@ -392,4 +418,4 @@ var eSkillz;
         })(TelerikCustom = Extenders.TelerikCustom || (Extenders.TelerikCustom = {}));
     })(Extenders = eSkillz.Extenders || (eSkillz.Extenders = {}));
 })(eSkillz || (eSkillz = {}));
-//# sourceMappingURL=core.js.map
+//# sourceMappingURL=Core.js.map
