@@ -38,11 +38,12 @@
 				<asp:Button Text="Ajax request" runat="server" ID="Button1" OnClick="Button1_Click" />
 				<br />
 				<telerik:RadGrid runat="server" ID="RadGrid1" ShowGroupPanel="true" AutoGenerateColumns="false" 
-								 OnNeedDataSource="RadGrid1_NeedDataSource" AllowPaging="true" PageSize="100"
+								 OnNeedDataSource="RadGrid1_NeedDataSource" OnPreRender="RadGrid1_PreRender" AllowPaging="true" PageSize="100"
 								 RenderMode="Lightweight">
 					<ClientSettings AllowDragToGroup="true">
 						<Scrolling AllowScroll="true" UseStaticHeaders="true" ScrollHeight="400" />
 					</ClientSettings>
+					
 					<GroupingSettings GroupByFieldsSeparator=" | " />
 					<MasterTableView GroupLoadMode="Client" GroupsDefaultExpanded="false">
 						<Columns>
@@ -85,7 +86,7 @@
 				These JS files have been kept separate only for demonstration purposes.--%>
 				
 			<script type="text/javascript" src="/Scripts/eSkillz/Extenders/TelerikCustom/GridCommon/GroupStatePreservation/Core.js"></script>
-			<script type="text/javascript" src="/Scripts/eSkillz/Extenders/TelerikCustom/ASPGrid/GroupStatePreservation/Core.js"></script>
+			<script type="text/javascript" src="/Scripts/eSkillz/Extenders/TelerikCustom/RadGrid/GroupStatePreservation/Core.js"></script>
 			<telerik:RadCodeBlock ID="cbInit" runat="server">
 				<script type="text/javascript">
 					var GridGroupStatePreservation;
@@ -93,13 +94,13 @@
 					function ApplicationLoaded(args) {
 						Sys.Application.remove_load(appLoadedHandler);
 						var GroupStatePreservationOptions =
-							new eSkillz.Extenders.TelerikCustom.ASPNetGrid.GroupStatePreservation.Options(
+							new eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation.Options(
 								"<%= RadGrid1.ClientID%>",
 								//Change the following option to StateTrackingModes.ClientDataSource for client data sources
-								eSkillz.Extenders.TelerikCustom.ASPNetGrid.GroupStatePreservation.RefreshModes.AJAX,
+								eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation.RefreshModes.AJAX,
 								true, "Random Number Sum");
 						GroupStatePreservationOptions.saveGridScrollPosition = true;
-						GridGroupStatePreservation = new eSkillz.Extenders.TelerikCustom.ASPNetGrid.GroupStatePreservation.Core(
+						GridGroupStatePreservation = new eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation.Core(
 							GroupStatePreservationOptions);
 					}
 

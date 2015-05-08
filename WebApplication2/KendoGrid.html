@@ -1,98 +1,77 @@
 ﻿<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 <head>
-	<title></title>
+	<meta charset="utf-8">
+	<title>Kendo UI Snippet</title>
+
+	<link rel="stylesheet" href="http://cdn.kendostatic.com/2015.1.408/styles/kendo.common.min.css">
+	<link rel="stylesheet" href="http://cdn.kendostatic.com/2015.1.408/styles/kendo.rtl.min.css">
+	<link rel="stylesheet" href="http://cdn.kendostatic.com/2015.1.408/styles/kendo.default.min.css">
+	<link rel="stylesheet" href="http://cdn.kendostatic.com/2015.1.408/styles/kendo.dataviz.min.css">
+	<link rel="stylesheet" href="http://cdn.kendostatic.com/2015.1.408/styles/kendo.dataviz.default.min.css">
+	<link rel="stylesheet" href="http://cdn.kendostatic.com/2015.1.408/styles/kendo.mobile.all.min.css">
+
+	<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+	<script src="http://cdn.kendostatic.com/2015.1.408/js/kendo.all.min.js"></script>
 </head>
 <body>
+	<!--Example adapted from: http://docs.telerik.com/kendo-ui/web/grid/how-to/persist-grouped-grid-collapsed-details-state
+		Deleted Telerik's group state preservation algorithm with eSkillz custom algorithm.
+		-->
 
-	<a class="offline-button" href="../index.html">Back</a>
+	<div id="grid"></div>
 
-	<div id="example">
-		<div id="grid"></div>
-
-		<!--NOTE: Typically, you may want to combine all TypeScript into a single file (which can be configured in Project Settings).
+	<!--NOTE: Typically, you may want to combine all TypeScript into a single file (which can be configured in Project Settings).
 		In that case, include only the combined JS file here.
 		These JS files have been kept separate only for demonstration purposes.-->
 
-		<script type="text/javascript" src="Scripts/eSkillz/Extenders/TelerikCustom/GridCommon/GroupStatePreservation/Core.js"></script>
-		<script type="text/javascript" src="Scripts/eSkillz/Extenders/TelerikCustom/KendoGrid/GroupStatePreservation/Core.js"></script>
+	<script type="text/javascript" src="/Scripts/eSkillz/Extenders/TelerikCustom/GridCommon/GroupStatePreservation/Core.js"></script>
+	<script type="text/javascript" src="/Scripts/eSkillz/Extenders/TelerikCustom/KendoGrid/GroupStatePreservation/Core.js"></script>
+	<script type="text/javascript">
+	var GridGroupStatePreservation;
+	function ApplicationLoaded() {
+		var GroupStatePreservationOptions =
+			new eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation.Options(
+				"grid");
+		GroupStatePreservationOptions.saveGridScrollPosition = true;
+		//Setting this option will automatically collapse all rows by default (rows are collapsed when first group is applied).
+		GroupStatePreservationOptions.defaultGroupState =
+			eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.Collapse;
+		GridGroupStatePreservation = new eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation.Core(
+			GroupStatePreservationOptions);
+	}
+	</script>
 
-		<script type="text/javascript">
-			var GridGroupStatePreservation;
-			function ApplicationLoaded() {
-				var GroupStatePreservationOptions =
-					new eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation.Options(
-						"grid");
-				GroupStatePreservationOptions.saveGridScrollPosition = true;
-				GridGroupStatePreservation = new eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation.Core(
-					GroupStatePreservationOptions);
-			}
-
-		</script>
-
-		<script>
-			$(document).ready(function () {
-				$("#grid").kendoGrid({
-					dataSource: {
-						type: "odata",
-						transport: {
-							read: "http://demos.telerik.com/kendo-ui/service/Northwind.svc/Customers"
-						},
-						pageSize: 20
-					},
-					height: 550,
-					groupable: true,
-					sortable: true,
-					pageable: {
-						refresh: true,
-						pageSizes: true,
-						buttonCount: 5
-					},
-					columns: [{
-						field: "ContactName",
-						title: "Contact Name",
-						width: 200
-					}, {
-						field: "ContactTitle",
-						title: "Contact Title"
-					}, {
-						field: "CompanyName",
-						title: "Company Name"
-					}, {
-						field: "Country",
-						width: 150
+	<script>
+		
+		$(document).ready(function () {
+			var crudServiceBaseUrl = "",
+			dataSource = new kendo.data.DataSource({
+				transport: {
+					read: {
+						url: "http://demos.kendoui.com/service/Products",
+						dataType: "jsonp"
 					}
-					]
-				});
-
-				ApplicationLoaded();
+				},
+				pageSize: 20
 			});
-		</script>
-		@if (ViewBag.ShowDescription)
-		{
-		<div class="box">
-			<h4>Description</h4>
-			<p>The Kendo UI grid is a powerful widget which allows you to visualize and edit data via its table representation. It provides a variety of options about how to present and perform operations over the underlying data, such as paging, sorting, filtering, grouping, editing, etc. To feed the grid with data, you can supply either local or remote data via the Kendo UI DataSource component, used as a mediator.</p>
-			<br />
-			<p>
-				There are two possible ways to instantiate a Kendo UI grid:
-			</p>
-			<ol>
-				<li>From an empty div element. In this case all the Grid settings are provided in the initialization script statement.</li>
-				<li>From an existing HTML table element. In this case some of the Grid settings can be inferred from the table structure and elements HTML attributes.</li>
-			</ol>
-			<br />
-			<p>In both cases the grid is registered as a jQuery plugin</p>
-			<br />
-			<p>In this demo you can see how you can easily configure the grid to display data and perform sorting, paging and grouping operations via its built-in settings. </p>
-			<br />
-			<p>
-				Additional information about how to use the Kendo UI grid widget can be found in
-				<a href="http://docs.telerik.com/kendo-ui/web/grid/introduction" target="_blank">this section</a> of the product documentation.
-			</p>
-		</div>
-		}
-	</div>
 
+			$("#grid").kendoGrid({
+				dataSource: dataSource,
+				pageable: true,
+				height: 430,
+				sortable: true,
+				groupable: true,
+				columns: [
+				  "ProductName",
+				  { field: "UnitPrice", title: "Unit Price", format: "{0:c}", width: "100px" },
+				  { field: "UnitsInStock", title: "Units In Stock", width: "100px" },
+				  { field: "Discontinued", width: "100px" }]
+			});
+
+			ApplicationLoaded();
+		});
+
+	</script>
 </body>
 </html>

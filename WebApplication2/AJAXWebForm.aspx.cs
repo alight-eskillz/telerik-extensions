@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Data;
 using System.Linq;
+using System.Web.UI.WebControls;
+using Telerik.Web.UI;
+using WebApplication2.Extenders.TelerikCustom.RadGrid.Helpers;
 
 namespace WebApplication2
 {
@@ -8,20 +12,25 @@ namespace WebApplication2
 		protected void RadGrid1_NeedDataSource(object sender, Telerik.Web.UI.GridNeedDataSourceEventArgs e)
 		{
 			Random rnd = new Random();
-			RadGrid1.DataSource = Enumerable.Range(1, 1000).Select(i => new
+			this.RadGrid1.DataSource = Enumerable.Range(1, 1000).Select(i => new
 			{
-				Name = "Name" + Math.Ceiling(Convert.ToDouble(i / rnd.Next(6,12))),
-				Test = "Test-" + Math.IEEERemainder(i,3),
-				Desc = "Desc" + i,
-				Loc = "Loc" + i,
+				Name = string.Format("Name{0}", Math.Ceiling(Convert.ToDouble(i / rnd.Next(6, 12)))),
+				Test = string.Format("Test-'{0}", Math.IEEERemainder(i, 3)),
+				Desc = string.Format("Desc{0}", i),
+				Loc = string.Format("Loc{0}", i),
 				RandNum = rnd.Next(100)
 			});
 		}
 
+		protected void RadGrid1_PreRender(object sender, EventArgs e)
+		{
+			GroupingSupport.PreRenderGroupProcessing(grid: this.RadGrid1);
+		}
+		
 		protected void Button1_Click(object sender, EventArgs e)
 		{
 			System.Threading.Thread.Sleep(30);
-			RadGrid1.Rebind();
+			this.RadGrid1.Rebind();
 		}
 	}
 }

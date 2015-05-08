@@ -2,15 +2,13 @@
 /// <reference path="../../gridcommon/groupstatepreservation/core.ts" />
 
 module eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation {
-	export class Options
-		implements eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.IImplementationOptions {
+	export class Options {
 		constructor(
 			public gridClientID: string,
-			public groupByExpressionAggregates_AutoStrip: boolean = false,
-			public groupByExpressionAggregates_SecondDisplayName: string = null,
 			public addEventHandlers: boolean = true,
 			public saveGridScrollPosition: boolean = false,
-			public gridContainerSelector: string = null
+			public gridContainerSelector: string = null,
+			public defaultGroupState = eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.None
 			) {
 		}
 	}
@@ -27,14 +25,6 @@ module eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation {
 		static GroupingSettings_GroupByFieldsSeparator: string;
 		private _commonGroupState: eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Core;
 		private _Initialize() {
-			var grid = this.get_Grid();
-
-			var gridInternalProperties: TelerikInternalProps.Web.UI.RadGrid = (<any>grid);
-			var GroupingSettings_GroupByFieldsSeparator = ";";
-			if (gridInternalProperties._groupingSettings) {
-				GroupingSettings_GroupByFieldsSeparator = gridInternalProperties._groupingSettings.GroupByFieldsSeparator;
-			}
-
 			this._commonGroupState =
 			new eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Core(
 				new eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Options(
@@ -45,34 +35,77 @@ module eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation {
 					":last",
 					"k-i-expand",
 					"k-i-collapse",
-					GroupingSettings_GroupByFieldsSeparator,
-					this._Options));
+					($groupHeaderElement) => this.GetGroupDataByRow($groupHeaderElement),
+					($groupHeaderElement, toggleAction) =>
+						this.ToggleGroupByRow($groupHeaderElement, toggleAction)));
 
-			this._InitializeStateTrackingModes_ClientSideData();
+			this._Initialize_BindEventHandlers();
+		}
+
+		GetGroupDataByRow($groupHeaderElement: JQuery):
+			eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.IGroupData {
+			var grid = this.get_Grid(),
+				nextData = $groupHeaderElement.nextUntil("[data-uid]").next(),
+				dataItem = grid.dataItem(nextData.length ? nextData : $groupHeaderElement.next()),
+				groupLevel = $groupHeaderElement.children(".k-group-cell").length,
+				groups = grid.dataSource.group(),
+				fieldName = groups[groupLevel].field,
+				fieldValue = dataItem[fieldName];
+
+			return {
+				key: groupLevel.toString() + fieldName + fieldValue,
+				level: groupLevel,
+				fieldName: fieldName
+			};
+		}
+		ToggleGroupByRow($groupHeaderElement: JQuery,
+			toggleAction: eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions): void {
+			var grid = this.get_Grid();
+			switch (toggleAction) {
+				case eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.Expand:
+					grid.expandGroup($groupHeaderElement.get(0));
+					break;
+				case eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.Collapse:
+					grid.collapseGroup($groupHeaderElement.get(0));
+					break;
+			}
 		}
 		
-		//#region Client Data Source Event Handlers
-		private _InitializeStateTrackingModes_ClientSideData() {
+		//#region Event Handlers
+		private _Initialize_BindEventHandlers() {
 			var grid = this.get_Grid();
+
 			grid.bind("dataBinding",(sender, args) => this._Grid_OnDataBinding(sender, args));
 			grid.bind("dataBound",(sender, args) => this._Grid_OnDataBound(sender, args));
 
-			//NOTE: The Kendo Grid does not have any Group Expand/Collapse events to which we can bind, so this is our only option right now.
+			this._gridAddToggleButtonClickHandlers();
+		}
+		private _gridAddToggleButtonClickHandlers() {
+			var grid = this.get_Grid(),
+				commonOptions = this._commonGroupState.get_Options();
+			grid.table.on(
+				"click",
+				commonOptions.get_ExpandAndCollapseToggleElementsSelector(),
+				(e) => this._gridGroupToggleClicked(e));
+		}
+		private _gridGroupToggleClicked(event: JQueryEventObject) {
+			if (this._commonGroupState.get_pauseGroupStateChangeEventHandlers()) { return; }
+			this.SaveGroupingAsync();
 		}
 		private _Grid_OnDataBinding(sender, args) {
-			//NOTE: forceSave is set to true here because the Kendo UI grid does not have any built-in events for group expand/collapse (so the method can't run asynchronously).
-			//		Contacted Telerik to request such events.
-			//		Until then, adding custom event handlers (add click handlers to the expand/ collapse buttons on init and on grid data bound, remove handlers on data binding to prevent memory leak) might be the only option.
-			//			It would be very easy to add those events by getting all toggle elements via _commonGroupingState._get_$groupToggleElementsAll (would need to make that method public; probably make both Toggle and Text element retrieval functions public).
-			this.FinishSaveGroupingCheck(true);
+			this.FinishSaveGroupingCheck();
 		}
 		private _Grid_OnDataBound(sender, args) {
-			this.RestoreGrouping();
+			this.RestoreGrouping(this._Options.defaultGroupState);
 		}
 		//#endregion
 
 		get_Grid() {
-			return <kendo.ui.Grid>($("#" + this._Options.gridClientID).data("kendoGrid"));
+			if (this._restoreInProgress_Grid) {
+				return this._restoreInProgress_Grid;
+			} else {
+				return <kendo.ui.Grid>($("#" + this._Options.gridClientID).data("kendoGrid"));
+			}
 		}
 		
 		//#region Scroll Position
@@ -120,6 +153,8 @@ module eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation {
 					var page = this.get_Grid().dataSource.page();
 					if (page && this._gridCurrentPageNumber === page) {
 						$containerElement.get(0).scrollTop = this._containerScrollTop;
+					} else {
+						$containerElement.get(0).scrollTop = 0;
 					}
 				} else {
 					if (console && typeof console.log === "function") {
@@ -130,23 +165,21 @@ module eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation {
 		}
 		//#endregion
 
-		private _get_$GridElement(): JQuery {
-			var gridElement = this.get_Grid().element;
-			if (!gridElement) { return null; }
-
-			return $(gridElement);
-		}
-
 		SaveGroupingAsync(): void {
 			this._scrollPosition_Save();
-			this._commonGroupState.SaveGroupingAsync(this._get_$GridElement());
+			this._commonGroupState.SaveGroupingAsync(this.get_Grid().table);
 		}
 		FinishSaveGroupingCheck(forceSave = false): void {
-			this._commonGroupState.FinishSaveGroupingCheck(this._get_$GridElement(), forceSave);
+			this._commonGroupState.FinishSaveGroupingCheck(this.get_Grid().table, forceSave);
 		}
-		RestoreGrouping(): void {
-			this._commonGroupState.RestoreGrouping(this._get_$GridElement());
-			this._scrollPosition_Restore();
+		private _restoreInProgress_Grid: kendo.ui.Grid = null;
+		RestoreGrouping(
+			defaultGroupToggleAction =
+			eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.None): void {
+			this._restoreInProgress_Grid = this.get_Grid();
+			this._commonGroupState.RestoreGrouping(this.get_Grid().table, defaultGroupToggleAction);
+			setTimeout(() => this._scrollPosition_Restore(), 0);
+			this._restoreInProgress_Grid = null;
 		}
 		ResetGrouping(): void {
 			this._commonGroupState.ResetGrouping();

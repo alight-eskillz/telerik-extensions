@@ -5,8 +5,8 @@ var eSkillz;
     (function (Extenders) {
         var TelerikCustom;
         (function (TelerikCustom) {
-            var ASPNetGrid;
-            (function (ASPNetGrid) {
+            var RadGrid;
+            (function (RadGrid) {
                 var GroupStatePreservation;
                 (function (GroupStatePreservation) {
                     (function (RefreshModes) {
@@ -15,17 +15,13 @@ var eSkillz;
                     })(GroupStatePreservation.RefreshModes || (GroupStatePreservation.RefreshModes = {}));
                     var RefreshModes = GroupStatePreservation.RefreshModes;
                     var Options = (function () {
-                        function Options(gridClientID, RefreshMode, groupByExpressionAggregates_AutoStrip, groupByExpressionAggregates_SecondDisplayName, addEventHandlers, saveGridScrollPosition, gridContainerSelector) {
+                        function Options(gridClientID, RefreshMode, addEventHandlers, saveGridScrollPosition, gridContainerSelector) {
                             if (RefreshMode === void 0) { RefreshMode = null; }
-                            if (groupByExpressionAggregates_AutoStrip === void 0) { groupByExpressionAggregates_AutoStrip = false; }
-                            if (groupByExpressionAggregates_SecondDisplayName === void 0) { groupByExpressionAggregates_SecondDisplayName = null; }
                             if (addEventHandlers === void 0) { addEventHandlers = true; }
                             if (saveGridScrollPosition === void 0) { saveGridScrollPosition = false; }
                             if (gridContainerSelector === void 0) { gridContainerSelector = null; }
                             this.gridClientID = gridClientID;
                             this.RefreshMode = RefreshMode;
-                            this.groupByExpressionAggregates_AutoStrip = groupByExpressionAggregates_AutoStrip;
-                            this.groupByExpressionAggregates_SecondDisplayName = groupByExpressionAggregates_SecondDisplayName;
                             this.addEventHandlers = addEventHandlers;
                             this.saveGridScrollPosition = saveGridScrollPosition;
                             this.gridContainerSelector = gridContainerSelector;
@@ -38,25 +34,21 @@ var eSkillz;
                             this._Options = _Options;
                             this._containerScrollTop = 0;
                             this._gridCurrentPageIndex = 0;
+                            this._restoreInProgress_GridView = null;
                             this._Initialize();
                         }
                         Core.prototype.get_Options = function () {
                             return this._Options;
                         };
                         Core.prototype._Initialize = function () {
+                            var _this = this;
                             if (!this._Options.RefreshMode) {
                                 if (console && typeof console.log === "function") {
                                     console.log("Error, must specify Options.RefreshMode.");
                                 }
                                 return;
                             }
-                            var grid = this.get_Grid();
-                            var gridInternalProperties = grid;
-                            var GroupingSettings_GroupByFieldsSeparator = ";";
-                            if (gridInternalProperties._groupingSettings) {
-                                GroupingSettings_GroupByFieldsSeparator = gridInternalProperties._groupingSettings.GroupByFieldsSeparator;
-                            }
-                            this._commonGroupState = new eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Core(new eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Options("tr.rgGroupHeader", "td button", ":last", "td", ":last", "rgExpand", "rgCollapse", GroupingSettings_GroupByFieldsSeparator, this._Options));
+                            this._commonGroupState = new eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Core(new eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Options("tr.rgGroupHeader", "td button", ":last", "td", ":last", "rgExpand", "rgCollapse", function ($groupHeaderElement) { return _this.GetGroupDataByRow($groupHeaderElement); }));
                             this._addGroupStateChangeEventHandlers();
                             switch (this._Options.RefreshMode) {
                                 case 1 /* ClientDataSource */:
@@ -66,6 +58,33 @@ var eSkillz;
                                     this._InitializeStateTrackingModes_Ajax();
                                     break;
                             }
+                        };
+                        Core.prototype.GetGroupDataByRow = function ($groupHeaderElement) {
+                            var dataSpan = $groupHeaderElement.find("span[data-gdata]"), groupData;
+                            if (dataSpan.length === 0) {
+                                if (console && typeof console.log === "function") {
+                                    console.log("Error, group data attribute [data-gdata] is missing.");
+                                }
+                                return null;
+                            }
+                            groupData = JSON.parse(dataSpan.attr("data-gdata"));
+                            return {
+                                key: groupData.groupLevel.toString() + groupData.fieldName + groupData.fieldValue,
+                                level: groupData.groupLevel,
+                                fieldName: groupData.fieldName
+                            };
+                        };
+                        Core.prototype.ToggleGroupByRow = function ($groupHeaderElement, toggleAction) {
+                            //TODO: This code does not seem to work...check with Telerik
+                            //var view = this.get_GridMasterTableView();
+                            //switch (toggleAction) {
+                            //	case eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.Expand:
+                            //		view.expandGroup($groupHeaderElement.get(0));
+                            //		break;
+                            //	case eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.Collapse:
+                            //		view.collapseGroup($groupHeaderElement.get(0));
+                            //		break;
+                            //}
                         };
                         Core.prototype._addGroupStateChangeEventHandlers = function () {
                             var _this = this;
@@ -126,15 +145,20 @@ var eSkillz;
                             return ($find(this._Options.gridClientID));
                         };
                         Core.prototype.get_GridMasterTableView = function (grid) {
-                            if (!grid) {
-                                grid = this.get_Grid();
+                            if (this._restoreInProgress_GridView) {
+                                return this._restoreInProgress_GridView;
                             }
-                            try {
-                                return grid.get_masterTableView();
-                            }
-                            catch (err) {
-                                if (console && typeof console.log === "function") {
-                                    console.log("RadGrid Group State Preservation: MasterTableView missing/error.");
+                            else {
+                                if (!grid) {
+                                    grid = this.get_Grid();
+                                }
+                                try {
+                                    return grid.get_masterTableView();
+                                }
+                                catch (err) {
+                                    if (console && typeof console.log === "function") {
+                                        console.log("RadGrid Group State Preservation: MasterTableView missing/error.");
+                                    }
                                 }
                             }
                         };
@@ -184,6 +208,9 @@ var eSkillz;
                                     if (masterTableView && this._gridCurrentPageIndex === masterTableView.get_currentPageIndex()) {
                                         $containerElement.get(0).scrollTop = this._containerScrollTop;
                                     }
+                                    else {
+                                        $containerElement.get(0).scrollTop = 0;
+                                    }
                                 }
                                 else {
                                     if (console && typeof console.log === "function") {
@@ -209,9 +236,13 @@ var eSkillz;
                             this._scrollPosition_Save();
                             this._commonGroupState.FinishSaveGroupingCheck(this._get_$MasterTableViewElement(), forceSave);
                         };
-                        Core.prototype.RestoreGrouping = function () {
-                            this._commonGroupState.RestoreGrouping(this._get_$MasterTableViewElement());
-                            this._scrollPosition_Restore();
+                        Core.prototype.RestoreGrouping = function (defaultGroupToggleAction) {
+                            var _this = this;
+                            if (defaultGroupToggleAction === void 0) { defaultGroupToggleAction = 0 /* None */; }
+                            this._restoreInProgress_GridView = this.get_GridMasterTableView();
+                            this._commonGroupState.RestoreGrouping(this._get_$MasterTableViewElement(), defaultGroupToggleAction);
+                            setTimeout(function () { return _this._scrollPosition_Restore(); }, 0);
+                            this._restoreInProgress_GridView = null;
                         };
                         Core.prototype.ResetGrouping = function () {
                             this._commonGroupState.ResetGrouping();
@@ -220,8 +251,8 @@ var eSkillz;
                         return Core;
                     })();
                     GroupStatePreservation.Core = Core;
-                })(GroupStatePreservation = ASPNetGrid.GroupStatePreservation || (ASPNetGrid.GroupStatePreservation = {}));
-            })(ASPNetGrid = TelerikCustom.ASPNetGrid || (TelerikCustom.ASPNetGrid = {}));
+                })(GroupStatePreservation = RadGrid.GroupStatePreservation || (RadGrid.GroupStatePreservation = {}));
+            })(RadGrid = TelerikCustom.RadGrid || (TelerikCustom.RadGrid = {}));
         })(TelerikCustom = Extenders.TelerikCustom || (Extenders.TelerikCustom = {}));
     })(Extenders = eSkillz.Extenders || (eSkillz.Extenders = {}));
 })(eSkillz || (eSkillz = {}));

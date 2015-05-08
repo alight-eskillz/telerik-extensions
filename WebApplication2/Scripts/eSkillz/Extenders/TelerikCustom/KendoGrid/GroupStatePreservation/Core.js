@@ -11,18 +11,16 @@ var eSkillz;
                 var GroupStatePreservation;
                 (function (GroupStatePreservation) {
                     var Options = (function () {
-                        function Options(gridClientID, groupByExpressionAggregates_AutoStrip, groupByExpressionAggregates_SecondDisplayName, addEventHandlers, saveGridScrollPosition, gridContainerSelector) {
-                            if (groupByExpressionAggregates_AutoStrip === void 0) { groupByExpressionAggregates_AutoStrip = false; }
-                            if (groupByExpressionAggregates_SecondDisplayName === void 0) { groupByExpressionAggregates_SecondDisplayName = null; }
+                        function Options(gridClientID, addEventHandlers, saveGridScrollPosition, gridContainerSelector, defaultGroupState) {
                             if (addEventHandlers === void 0) { addEventHandlers = true; }
                             if (saveGridScrollPosition === void 0) { saveGridScrollPosition = false; }
                             if (gridContainerSelector === void 0) { gridContainerSelector = null; }
+                            if (defaultGroupState === void 0) { defaultGroupState = 0 /* None */; }
                             this.gridClientID = gridClientID;
-                            this.groupByExpressionAggregates_AutoStrip = groupByExpressionAggregates_AutoStrip;
-                            this.groupByExpressionAggregates_SecondDisplayName = groupByExpressionAggregates_SecondDisplayName;
                             this.addEventHandlers = addEventHandlers;
                             this.saveGridScrollPosition = saveGridScrollPosition;
                             this.gridContainerSelector = gridContainerSelector;
+                            this.defaultGroupState = defaultGroupState;
                         }
                         return Options;
                     })();
@@ -32,42 +30,69 @@ var eSkillz;
                             this._Options = _Options;
                             this._containerScrollTop = 0;
                             this._gridCurrentPageNumber = 1;
+                            this._restoreInProgress_Grid = null;
                             this._Initialize();
                         }
                         Core.prototype.get_Options = function () {
                             return this._Options;
                         };
                         Core.prototype._Initialize = function () {
-                            var grid = this.get_Grid();
-                            var gridInternalProperties = grid;
-                            var GroupingSettings_GroupByFieldsSeparator = ";";
-                            if (gridInternalProperties._groupingSettings) {
-                                GroupingSettings_GroupByFieldsSeparator = gridInternalProperties._groupingSettings.GroupByFieldsSeparator;
-                            }
-                            this._commonGroupState = new eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Core(new eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Options("tr.k-grouping-row", "td a", ":last", "td", ":last", "k-i-expand", "k-i-collapse", GroupingSettings_GroupByFieldsSeparator, this._Options));
-                            this._InitializeStateTrackingModes_ClientSideData();
+                            var _this = this;
+                            this._commonGroupState = new eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Core(new eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Options("tr.k-grouping-row", "td a", ":last", "td", ":last", "k-i-expand", "k-i-collapse", function ($groupHeaderElement) { return _this.GetGroupDataByRow($groupHeaderElement); }, function ($groupHeaderElement, toggleAction) { return _this.ToggleGroupByRow($groupHeaderElement, toggleAction); }));
+                            this._Initialize_BindEventHandlers();
                         };
-                        //#region Client Data Source Event Handlers
-                        Core.prototype._InitializeStateTrackingModes_ClientSideData = function () {
+                        Core.prototype.GetGroupDataByRow = function ($groupHeaderElement) {
+                            var grid = this.get_Grid(), nextData = $groupHeaderElement.nextUntil("[data-uid]").next(), dataItem = grid.dataItem(nextData.length ? nextData : $groupHeaderElement.next()), groupLevel = $groupHeaderElement.children(".k-group-cell").length, groups = grid.dataSource.group(), fieldName = groups[groupLevel].field, fieldValue = dataItem[fieldName];
+                            return {
+                                key: groupLevel.toString() + fieldName + fieldValue,
+                                level: groupLevel,
+                                fieldName: fieldName
+                            };
+                        };
+                        Core.prototype.ToggleGroupByRow = function ($groupHeaderElement, toggleAction) {
+                            var grid = this.get_Grid();
+                            switch (toggleAction) {
+                                case 2 /* Expand */:
+                                    grid.expandGroup($groupHeaderElement.get(0));
+                                    break;
+                                case 1 /* Collapse */:
+                                    grid.collapseGroup($groupHeaderElement.get(0));
+                                    break;
+                            }
+                        };
+                        //#region Event Handlers
+                        Core.prototype._Initialize_BindEventHandlers = function () {
                             var _this = this;
                             var grid = this.get_Grid();
                             grid.bind("dataBinding", function (sender, args) { return _this._Grid_OnDataBinding(sender, args); });
                             grid.bind("dataBound", function (sender, args) { return _this._Grid_OnDataBound(sender, args); });
-                            //NOTE: The Kendo Grid does not have any Group Expand/Collapse events to which we can bind, so this is our only option right now.
+                            this._gridAddToggleButtonClickHandlers();
+                        };
+                        Core.prototype._gridAddToggleButtonClickHandlers = function () {
+                            var _this = this;
+                            var grid = this.get_Grid(), commonOptions = this._commonGroupState.get_Options();
+                            grid.table.on("click", commonOptions.get_ExpandAndCollapseToggleElementsSelector(), function (e) { return _this._gridGroupToggleClicked(e); });
+                        };
+                        Core.prototype._gridGroupToggleClicked = function (event) {
+                            if (this._commonGroupState.get_pauseGroupStateChangeEventHandlers()) {
+                                return;
+                            }
+                            this.SaveGroupingAsync();
                         };
                         Core.prototype._Grid_OnDataBinding = function (sender, args) {
-                            //NOTE: forceSave is set to true here because the Kendo UI grid does not have any built-in events for group expand/collapse (so the method can't run asynchronously).
-                            //		Contacted Telerik to request such events.
-                            //		Until then, adding custom event handlers (add click handlers to the expand/ collapse buttons on init and on grid data bound, remove handlers on data binding to prevent memory leak) might be the only option.
-                            //			It would be very easy to add those events by getting all toggle elements via _commonGroupingState._get_$groupToggleElementsAll (would need to make that method public; probably make both Toggle and Text element retrieval functions public).
-                            this.FinishSaveGroupingCheck(true);
+                            this.FinishSaveGroupingCheck();
                         };
                         Core.prototype._Grid_OnDataBound = function (sender, args) {
-                            this.RestoreGrouping();
+                            this.RestoreGrouping(this._Options.defaultGroupState);
                         };
                         //#endregion
                         Core.prototype.get_Grid = function () {
-                            return ($("#" + this._Options.gridClientID).data("kendoGrid"));
+                            if (this._restoreInProgress_Grid) {
+                                return this._restoreInProgress_Grid;
+                            }
+                            else {
+                                return ($("#" + this._Options.gridClientID).data("kendoGrid"));
+                            }
                         };
                         //#region Scroll Position
                         Core.prototype.get_$GridContentElement = function () {
@@ -115,6 +140,9 @@ var eSkillz;
                                     if (page && this._gridCurrentPageNumber === page) {
                                         $containerElement.get(0).scrollTop = this._containerScrollTop;
                                     }
+                                    else {
+                                        $containerElement.get(0).scrollTop = 0;
+                                    }
                                 }
                                 else {
                                     if (console && typeof console.log === "function") {
@@ -124,24 +152,21 @@ var eSkillz;
                             }
                         };
                         //#endregion
-                        Core.prototype._get_$GridElement = function () {
-                            var gridElement = this.get_Grid().element;
-                            if (!gridElement) {
-                                return null;
-                            }
-                            return $(gridElement);
-                        };
                         Core.prototype.SaveGroupingAsync = function () {
                             this._scrollPosition_Save();
-                            this._commonGroupState.SaveGroupingAsync(this._get_$GridElement());
+                            this._commonGroupState.SaveGroupingAsync(this.get_Grid().table);
                         };
                         Core.prototype.FinishSaveGroupingCheck = function (forceSave) {
                             if (forceSave === void 0) { forceSave = false; }
-                            this._commonGroupState.FinishSaveGroupingCheck(this._get_$GridElement(), forceSave);
+                            this._commonGroupState.FinishSaveGroupingCheck(this.get_Grid().table, forceSave);
                         };
-                        Core.prototype.RestoreGrouping = function () {
-                            this._commonGroupState.RestoreGrouping(this._get_$GridElement());
-                            this._scrollPosition_Restore();
+                        Core.prototype.RestoreGrouping = function (defaultGroupToggleAction) {
+                            var _this = this;
+                            if (defaultGroupToggleAction === void 0) { defaultGroupToggleAction = 0 /* None */; }
+                            this._restoreInProgress_Grid = this.get_Grid();
+                            this._commonGroupState.RestoreGrouping(this.get_Grid().table, defaultGroupToggleAction);
+                            setTimeout(function () { return _this._scrollPosition_Restore(); }, 0);
+                            this._restoreInProgress_Grid = null;
                         };
                         Core.prototype.ResetGrouping = function () {
                             this._commonGroupState.ResetGrouping();
