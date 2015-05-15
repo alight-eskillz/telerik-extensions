@@ -62,21 +62,21 @@ module eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 
 		GetGroupDataByRow($groupHeaderElement: JQuery):
 			eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.IGroupData {
-			var dataSpan = $groupHeaderElement.find("span[data-gdata]"),
-				groupData: WebApplication2.Extenders.TelerikCustom.RadGrid.Helpers.IGroupData;
+			var groupDataString = $groupHeaderElement.attr("data-gdata");
 
-			if (dataSpan.length === 0) {
+			if (!groupDataString || groupDataString === "") {
 				if (console && typeof console.log === "function") {
 					console.log("Error, group data attribute [data-gdata] is missing.");
 				}
 				return null;
 			}
-			groupData = JSON.parse(dataSpan.attr("data-gdata"));
+			var groupData: WebApplication2.Extenders.TelerikCustom.RadGrid.Helpers.GroupData =
+				JSON.parse(groupDataString);
 
 			return {
-				key: groupData.groupLevel.toString() + groupData.fieldName + groupData.fieldValue,
-				level: groupData.groupLevel,
-				fieldName: groupData.fieldName
+				key: groupData.GroupLevel.toString() + groupData.FieldName + groupData.FieldValue,
+				level: groupData.GroupLevel,
+				fieldName: groupData.FieldName
 			};
 		}
 		ToggleGroupByRow($groupHeaderElement: JQuery,

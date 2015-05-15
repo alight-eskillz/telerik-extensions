@@ -3,8 +3,8 @@
 	[TypeLite.TsClass]
 	public class GroupData
 	{
-		public string fieldName { get; set; }
-		public string fieldValue { get; set; }
-		public int groupLevel { get; set; }
+		public string FieldName { get; set; }
+		public string FieldValue { get; set; }
+		public int GroupLevel { get; set; }
 	}
 }

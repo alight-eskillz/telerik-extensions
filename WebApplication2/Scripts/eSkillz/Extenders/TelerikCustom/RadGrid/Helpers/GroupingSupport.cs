@@ -11,19 +11,13 @@ namespace WebApplication2.Extenders.TelerikCustom.RadGrid.Helpers
 		public static GroupData GetGroupData(Telerik.Web.UI.RadGrid grid, GridGroupHeaderItem headerItem)
 		{
 			GroupData data = new GroupData();
-			data.groupLevel = headerItem.GroupIndex.Split('_').Length - 1;
+			data.GroupLevel = headerItem.GroupIndex.Split('_').Length - 1;
 
-			data.fieldName = System.Web.HttpUtility.HtmlEncode(
-				grid.MasterTableView.GroupByExpressions[Convert.ToInt32(data.groupLevel)].GroupByFields[0].FieldName);
+			data.FieldName = System.Web.HttpUtility.HtmlEncode(
+				grid.MasterTableView.GroupByExpressions[Convert.ToInt32(data.GroupLevel)].GroupByFields[0].FieldName);
 
 			DataRowView groupDataRow = (DataRowView)headerItem.DataItem;
-			data.fieldValue = System.Web.HttpUtility.HtmlEncode(groupDataRow[data.fieldName].ToString());
-
-			//data.fieldName = grid.MasterTableView.GroupByExpressions[Convert.ToInt32(data.groupLevel)]
-			//	.GroupByFields[0].FieldName;
-
-			//DataRowView groupDataRow = (DataRowView)headerItem.DataItem;
-			//data.fieldValue = groupDataRow[data.fieldName].ToString();
+			data.FieldValue = System.Web.HttpUtility.HtmlEncode(groupDataRow[data.FieldName].ToString());
 			
 			return data;
 		}
@@ -44,19 +38,7 @@ namespace WebApplication2.Extenders.TelerikCustom.RadGrid.Helpers
 				}
 
 				string groupDataJson = GroupingSupport.GetGroupDataJson(grid: grid, headerItem: headerItem);
-				string groupDataAttribute = String.Format("data-gdata='{0}'", groupDataJson);
-
-				TableCell dataCell = headerItem.DataCell;
-				string groupContent = "";
-				if (dataCell.Controls.Count == 0 && dataCell.Text.IndexOf("rgGroupHeaderText") < 0)
-				{
-					groupContent = dataCell.Text;
-				}
-				else
-				{
-					groupContent = dataCell.Text.Replace("<span class='rgGroupHeaderText'>", "").Replace("</span>", "");
-				}
-				dataCell.Text = String.Format("<span {0}>{1}</span>", groupDataAttribute, groupContent);
+				headerItem.Attributes.Add("data-gdata", groupDataJson);
 			}
 		}
 	}

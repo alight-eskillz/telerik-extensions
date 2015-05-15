@@ -15,7 +15,7 @@ var eSkillz;
                             if (addEventHandlers === void 0) { addEventHandlers = true; }
                             if (saveGridScrollPosition === void 0) { saveGridScrollPosition = false; }
                             if (gridContainerSelector === void 0) { gridContainerSelector = null; }
-                            if (defaultGroupState === void 0) { defaultGroupState = eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.None; }
+                            if (defaultGroupState === void 0) { defaultGroupState = 0 /* None */; }
                             this.gridClientID = gridClientID;
                             this.addEventHandlers = addEventHandlers;
                             this.saveGridScrollPosition = saveGridScrollPosition;
@@ -50,10 +50,10 @@ var eSkillz;
                         Core.prototype.ToggleGroupByRow = function ($groupHeaderElement, toggleAction) {
                             var grid = this.get_Grid();
                             switch (toggleAction) {
-                                case eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.Expand:
+                                case 2 /* Expand */:
                                     grid.expandGroup($groupHeaderElement.get(0));
                                     break;
-                                case eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.Collapse:
+                                case 1 /* Collapse */:
                                     grid.collapseGroup($groupHeaderElement.get(0));
                                     break;
                             }
@@ -136,7 +136,7 @@ var eSkillz;
                         };
                         Core.prototype.RestoreGrouping = function (defaultGroupToggleAction) {
                             var _this = this;
-                            if (defaultGroupToggleAction === void 0) { defaultGroupToggleAction = eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.None; }
+                            if (defaultGroupToggleAction === void 0) { defaultGroupToggleAction = 0 /* None */; }
                             this._restoreInProgress_Grid = this.get_Grid();
                             this._commonGroupState.RestoreGrouping(this.get_Grid().table, defaultGroupToggleAction);
                             setTimeout(function () { return _this._scrollPosition_Restore(); }, 0);

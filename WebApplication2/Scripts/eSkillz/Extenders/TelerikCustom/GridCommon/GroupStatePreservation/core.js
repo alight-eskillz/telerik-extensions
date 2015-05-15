@@ -418,4 +418,4 @@ var eSkillz;
         })(TelerikCustom = Extenders.TelerikCustom || (Extenders.TelerikCustom = {}));
     })(Extenders = eSkillz.Extenders || (eSkillz.Extenders = {}));
 })(eSkillz || (eSkillz = {}));
-//# sourceMappingURL=Core.js.map
+//# sourceMappingURL=core.js.map
