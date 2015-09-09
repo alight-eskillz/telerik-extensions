@@ -168,6 +168,9 @@ var eSkillz;
                         Core.prototype._SaveRestoreGroupHeaderLoopHandler = function (Mode, elementIndex, groupHeaderElement) {
                             var $groupHeaderElement = $(groupHeaderElement);
                             var groupState = this._get_GroupState($groupHeaderElement);
+                            if (!groupState) {
+                                return;
+                            }
                             this._groupHeader_GroupLevelProcessing(groupState);
                             groupState.parentGroupText = this._getCurrentParentGroupPath();
                             switch (Mode) {

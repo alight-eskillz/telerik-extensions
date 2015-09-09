@@ -50,7 +50,11 @@ module eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation {
 				groupLevel = $groupHeaderElement.children(".k-group-cell").length,
 				groups = grid.dataSource.group(),
 				fieldName = groups[groupLevel].field,
-				fieldValue = dataItem[fieldName];
+				fieldValue = dataItem ? dataItem[fieldName] : null;
+
+			if (typeof fieldValue === "undefined") {
+				return null;
+			}
 
 			return {
 				key: groupLevel.toString() + fieldName + fieldValue,

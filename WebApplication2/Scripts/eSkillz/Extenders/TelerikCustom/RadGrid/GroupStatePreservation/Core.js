@@ -30,17 +30,17 @@ var eSkillz;
                     })();
                     GroupStatePreservation.Options = Options;
                     var Core = (function () {
-                        function Core(_Options) {
-                            this._Options = _Options;
+                        function Core(options) {
+                            this.options = options;
                             this._restoreInProgress_GridView = null;
                             this._Initialize();
                         }
                         Core.prototype.get_Options = function () {
-                            return this._Options;
+                            return this.options;
                         };
                         Core.prototype._Initialize = function () {
                             var _this = this;
-                            if (!this._Options.RefreshMode) {
+                            if (!this.options.RefreshMode) {
                                 if (console && typeof console.log === "function") {
                                     console.log("Error, must specify Options.RefreshMode.");
                                 }
@@ -48,29 +48,54 @@ var eSkillz;
                             }
                             this._commonGroupState = new eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Core(new eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Options("tr.rgGroupHeader", "td button", ":last", "td", ":last", "rgExpand", "rgCollapse", function ($groupHeaderElement) { return _this.GetGroupDataByRow($groupHeaderElement); }));
                             this._addGroupStateChangeEventHandlers();
-                            switch (this._Options.RefreshMode) {
-                                case 1 /* ClientDataSource */:
-                                    this._InitializeStateTrackingModes_ClientSideData();
-                                    break;
-                                case 2 /* AJAX */:
-                                    this._InitializeStateTrackingModes_Ajax();
-                                    break;
-                            }
+                            this._InitializeStateTrackingMode();
                         };
                         Core.prototype.GetGroupDataByRow = function ($groupHeaderElement) {
-                            var groupDataString = $groupHeaderElement.attr("data-gdata");
-                            if (!groupDataString || groupDataString === "") {
-                                if (console && typeof console.log === "function") {
-                                    console.log("Error, group data attribute [data-gdata] is missing.");
-                                }
-                                return null;
+                            switch (this.options.RefreshMode) {
+                                case 1 /* ClientDataSource */:
+                                    var grid = this.get_Grid(), masterTableView = (grid.get_masterTableView());
+                                    var groupLevel = $groupHeaderElement.children(".rgGroupCol").length, groupByExpressions = masterTableView._data.GroupByExpressions, fieldName = groupByExpressions[groupLevel - 1].field;
+                                    var nextDataRow = $groupHeaderElement.nextUntil("tr.rgRow").last().next();
+                                    if (nextDataRow.length !== 1) {
+                                        nextDataRow = $groupHeaderElement.nextUntil("tr.rgAltRow").last().next();
+                                    }
+                                    var dataItems = masterTableView.get_dataItems();
+                                    var fieldValue;
+                                    if (nextDataRow.length === 1) {
+                                        for (var i = 0, itemCount = dataItems.length; i < itemCount; i++) {
+                                            var dataItem = dataItems[i];
+                                            if (dataItem.get_element() === nextDataRow.get(0)) {
+                                                fieldValue = dataItem.get_dataItem()[fieldName];
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    if (typeof fieldValue === "undefined") {
+                                        return null;
+                                    }
+                                    return {
+                                        key: groupLevel.toString() + fieldName + fieldValue,
+                                        level: groupLevel,
+                                        fieldName: fieldName
+                                    };
+                                case 2 /* AJAX */:
+                                    var groupDataString = $groupHeaderElement.attr("data-gdata");
+                                    if (!groupDataString || groupDataString === "") {
+                                        if (console && typeof console.log === "function") {
+                                            console.log("Error, group data attribute [data-gdata] is missing.");
+                                        }
+                                        return null;
+                                    }
+                                    var groupData = JSON.parse(groupDataString);
+                                    if (!groupData || typeof groupData.FieldValue === "undefined") {
+                                        return null;
+                                    }
+                                    return {
+                                        key: groupData.GroupLevel.toString() + groupData.FieldName + groupData.FieldValue,
+                                        level: groupData.GroupLevel,
+                                        fieldName: groupData.FieldName
+                                    };
                             }
-                            var groupData = JSON.parse(groupDataString);
-                            return {
-                                key: groupData.GroupLevel.toString() + groupData.FieldName + groupData.FieldValue,
-                                level: groupData.GroupLevel,
-                                fieldName: groupData.FieldName
-                            };
                         };
                         Core.prototype.ToggleGroupByRow = function ($groupHeaderElement, toggleAction) {
                             //TODO: This code does not seem to work...check with Telerik
@@ -103,19 +128,28 @@ var eSkillz;
                             this.SaveGroupingAsync();
                         };
                         //#endregion
-                        //#region AJAX Refresh Event Handlers
-                        Core.prototype._InitializeStateTrackingModes_Ajax = function () {
+                        Core.prototype._InitializeStateTrackingMode = function () {
                             var _this = this;
-                            var prmInstance = Sys.WebForms.PageRequestManager.getInstance();
-                            if (!prmInstance) {
-                                if (console && typeof console.log === "function") {
-                                    console.log("Error, Options.RefreshMode was set to AJAX, but there is no PageRequestManager.");
-                                }
-                                return;
+                            switch (this.options.RefreshMode) {
+                                case 1 /* ClientDataSource */:
+                                    var grid = this.get_Grid();
+                                    grid.add_dataBinding(function (sender, args) { return _this._Grid_OnDataBinding(sender, args); });
+                                    grid.add_dataBound(function (sender, args) { return _this._Grid_OnDataBound(sender, args); });
+                                    break;
+                                case 2 /* AJAX */:
+                                    var prmInstance = Sys.WebForms.PageRequestManager.getInstance();
+                                    if (!prmInstance) {
+                                        if (console && typeof console.log === "function") {
+                                            console.log("Error, Options.RefreshMode was set to AJAX, but there is no PageRequestManager.");
+                                        }
+                                        return;
+                                    }
+                                    prmInstance.add_beginRequest(function (sender, args) { return _this._PageRequestManager_BeginRequest(sender, args); });
+                                    prmInstance.add_endRequest(function (sender, args) { return _this._PageRequestManager_EndRequest(sender, args); });
+                                    break;
                             }
-                            prmInstance.add_beginRequest(function (sender, args) { return _this._PageRequestManager_BeginRequest(sender, args); });
-                            prmInstance.add_endRequest(function (sender, args) { return _this._PageRequestManager_EndRequest(sender, args); });
                         };
+                        //#region AJAX Refresh Event Handlers
                         Core.prototype._PageRequestManager_BeginRequest = function (sender, args) {
                             this._removeGroupStateChangeEventHandlers();
                             this.FinishSaveGroupingCheck();
@@ -126,12 +160,6 @@ var eSkillz;
                         };
                         //#endregion
                         //#region Client Data Source Event Handlers
-                        Core.prototype._InitializeStateTrackingModes_ClientSideData = function () {
-                            var _this = this;
-                            var grid = this.get_Grid();
-                            grid.add_dataBinding(function (sender, args) { return _this._Grid_OnDataBinding(sender, args); });
-                            grid.add_dataBound(function (sender, args) { return _this._Grid_OnDataBound(sender, args); });
-                        };
                         Core.prototype._Grid_OnDataBinding = function (sender, args) {
                             this.FinishSaveGroupingCheck();
                         };
@@ -140,7 +168,7 @@ var eSkillz;
                         };
                         //#endregion
                         Core.prototype.get_Grid = function () {
-                            return ($find(this._Options.gridClientID));
+                            return ($find(this.options.gridClientID));
                         };
                         Core.prototype.get_GridMasterTableView = function (grid) {
                             if (this._restoreInProgress_GridView) {
@@ -163,7 +191,7 @@ var eSkillz;
                         //#region Scroll Position
                         Core.prototype.get_$GridDataElement = function () {
                             //Note: this element is available only when the grid has static headers and scrolling enabled in the grid
-                            var gridDataElement = $("#" + this._Options.gridClientID + "_GridData");
+                            var gridDataElement = $("#" + this.options.gridClientID + "_GridData");
                             if (gridDataElement.length === 1) {
                                 return gridDataElement;
                             }
@@ -172,8 +200,8 @@ var eSkillz;
                         Core.prototype._scrollPosition_Save = function () {
                             if (this.get_Options().saveGridScrollPosition) {
                                 var $containerElement;
-                                if (this._Options.gridContainerSelector) {
-                                    $containerElement = $(this._Options.gridContainerSelector);
+                                if (this.options.gridContainerSelector) {
+                                    $containerElement = $(this.options.gridContainerSelector);
                                 }
                                 else {
                                     $containerElement = this.get_$GridDataElement();
@@ -187,8 +215,8 @@ var eSkillz;
                         Core.prototype._scrollPosition_Restore = function () {
                             if (this.get_Options().saveGridScrollPosition) {
                                 var $containerElement;
-                                if (this._Options.gridContainerSelector) {
-                                    $containerElement = $(this._Options.gridContainerSelector);
+                                if (this.options.gridContainerSelector) {
+                                    $containerElement = $(this.options.gridContainerSelector);
                                 }
                                 else {
                                     $containerElement = this.get_$GridDataElement();

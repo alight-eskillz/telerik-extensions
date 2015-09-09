@@ -1,8 +1,7 @@
 ﻿using System;
+using System.Data;
 using System.Linq;
 using Telerik.Web.UI;
-using System.Data;
-using System.Web.UI.WebControls;
 
 namespace WebApplication2.Extenders.TelerikCustom.RadGrid.Helpers
 {
@@ -36,9 +35,7 @@ namespace WebApplication2.Extenders.TelerikCustom.RadGrid.Helpers
 				{
 					return;
 				}
-
-				string groupDataJson = GroupingSupport.GetGroupDataJson(grid: grid, headerItem: headerItem);
-				headerItem.Attributes.Add("data-gdata", groupDataJson);
+				headerItem.Attributes.Add("data-gdata", GroupingSupport.GetGroupDataJson(grid: grid, headerItem: headerItem));
 			}
 		}
 	}

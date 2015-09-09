@@ -17,17 +17,17 @@ module eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 	export class Core
 		implements eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.IImplementation {
 
-		constructor(private _Options: Options) {
+		constructor(private options: Options) {
 			this._Initialize();
 		}
 		get_Options() {
-			return this._Options;
+			return this.options;
 		}
 
 		static GroupingSettings_GroupByFieldsSeparator: string;
 		private _commonGroupState: eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Core;
 		private _Initialize() {
-			if (!this._Options.RefreshMode) {
+			if (!this.options.RefreshMode) {
 				if (console && typeof console.log === "function") {
 					console.log("Error, must specify Options.RefreshMode.");
 				}
@@ -50,34 +50,66 @@ module eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 					));
 
 			this._addGroupStateChangeEventHandlers();
-			switch (this._Options.RefreshMode) {
-				case RefreshModes.ClientDataSource:
-					this._InitializeStateTrackingModes_ClientSideData();
-					break;
-				case RefreshModes.AJAX:
-					this._InitializeStateTrackingModes_Ajax();
-					break;
-			}
+			this._InitializeStateTrackingMode();
 		}
 
 		GetGroupDataByRow($groupHeaderElement: JQuery):
 			eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.IGroupData {
-			var groupDataString = $groupHeaderElement.attr("data-gdata");
+			
+			switch (this.options.RefreshMode) {
+				case RefreshModes.ClientDataSource:
+					var grid = this.get_Grid(),
+						masterTableView = <Telerik.Web.UI.GridTableViewInternal>(grid.get_masterTableView());
+					
+					var groupLevel = $groupHeaderElement.children(".rgGroupCol").length,
+						groupByExpressions = masterTableView._data.GroupByExpressions,
+						fieldName = groupByExpressions[groupLevel - 1].field;
 
-			if (!groupDataString || groupDataString === "") {
-				if (console && typeof console.log === "function") {
-					console.log("Error, group data attribute [data-gdata] is missing.");
-				}
-				return null;
+					var nextDataRow = $groupHeaderElement.nextUntil("tr.rgRow").last().next();
+					if (nextDataRow.length !== 1) {
+						nextDataRow = $groupHeaderElement.nextUntil("tr.rgAltRow").last().next();
+					}
+					
+					var dataItems = masterTableView.get_dataItems();
+					var fieldValue: any;
+					if (nextDataRow.length === 1) {
+						for (var i = 0, itemCount = dataItems.length; i < itemCount; i++) {
+							var dataItem = dataItems[i];
+							if (dataItem.get_element() === nextDataRow.get(0)) {
+								fieldValue = dataItem.get_dataItem()[fieldName];
+								break;
+							}
+						}
+					}
+					if (typeof fieldValue === "undefined") {
+						return null;
+					}
+					
+					return {
+						key: groupLevel.toString() + fieldName + fieldValue,
+						level: groupLevel,
+						fieldName: fieldName
+					};
+				case RefreshModes.AJAX:
+					var groupDataString = $groupHeaderElement.attr("data-gdata");
+
+					if (!groupDataString || groupDataString === "") {
+						if (console && typeof console.log === "function") {
+							console.log("Error, group data attribute [data-gdata] is missing.");
+						}
+						return null;
+					}
+					var groupData = JSON.parse<WebApplication2.Extenders.TelerikCustom.RadGrid.Helpers.GroupData>(groupDataString);
+					if (!groupData || typeof groupData.FieldValue === "undefined") {
+						return null;
+					}
+
+					return {
+						key: groupData.GroupLevel.toString() + groupData.FieldName + groupData.FieldValue,
+						level: groupData.GroupLevel,
+						fieldName: groupData.FieldName
+					};
 			}
-			var groupData: WebApplication2.Extenders.TelerikCustom.RadGrid.Helpers.GroupData =
-				JSON.parse(groupDataString);
-
-			return {
-				key: groupData.GroupLevel.toString() + groupData.FieldName + groupData.FieldValue,
-				level: groupData.GroupLevel,
-				fieldName: groupData.FieldName
-			};
 		}
 		ToggleGroupByRow($groupHeaderElement: JQuery,
 			toggleAction: eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions): void {
@@ -113,18 +145,28 @@ module eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 		}
 		//#endregion
 
-		//#region AJAX Refresh Event Handlers
-		private _InitializeStateTrackingModes_Ajax() {
-			var prmInstance = Sys.WebForms.PageRequestManager.getInstance();
-			if (!prmInstance) {
-				if (console && typeof console.log === "function") {
-					console.log("Error, Options.RefreshMode was set to AJAX, but there is no PageRequestManager.");
-				}
-				return;
+		private _InitializeStateTrackingMode(): void {
+			switch (this.options.RefreshMode) {
+				case RefreshModes.ClientDataSource:
+					var grid = this.get_Grid();
+					grid.add_dataBinding((sender, args) => this._Grid_OnDataBinding(sender, args));
+					grid.add_dataBound((sender, args) => this._Grid_OnDataBound(sender, args));
+					break;
+				case RefreshModes.AJAX:
+					var prmInstance = Sys.WebForms.PageRequestManager.getInstance();
+					if (!prmInstance) {
+						if (console && typeof console.log === "function") {
+							console.log("Error, Options.RefreshMode was set to AJAX, but there is no PageRequestManager.");
+						}
+						return;
+					}
+					prmInstance.add_beginRequest((sender, args) => this._PageRequestManager_BeginRequest(sender, args));
+					prmInstance.add_endRequest((sender, args) => this._PageRequestManager_EndRequest(sender, args));
+					break;
 			}
-			prmInstance.add_beginRequest((sender, args) => this._PageRequestManager_BeginRequest(sender, args));
-			prmInstance.add_endRequest((sender, args) => this._PageRequestManager_EndRequest(sender, args));
 		}
+
+		//#region AJAX Refresh Event Handlers
 		private _PageRequestManager_BeginRequest(sender, args: Sys.WebForms.BeginRequestEventArgs) {
 			this._removeGroupStateChangeEventHandlers();
 			this.FinishSaveGroupingCheck();
@@ -136,11 +178,6 @@ module eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 		//#endregion
 
 		//#region Client Data Source Event Handlers
-		private _InitializeStateTrackingModes_ClientSideData() {
-			var grid = this.get_Grid();
-			grid.add_dataBinding((sender, args) => this._Grid_OnDataBinding(sender, args));
-			grid.add_dataBound((sender, args) => this._Grid_OnDataBound(sender, args));
-		}
 		private _Grid_OnDataBinding(sender, args) {
 			this.FinishSaveGroupingCheck();
 		}
@@ -150,7 +187,7 @@ module eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 		//#endregion
 
 		get_Grid() {
-			return <Telerik.Web.UI.RadGrid>($find(this._Options.gridClientID));
+			return <Telerik.Web.UI.RadGrid>($find(this.options.gridClientID));
 		}
 		get_GridMasterTableView(grid?: Telerik.Web.UI.RadGrid): Telerik.Web.UI.GridTableView {
 			if (this._restoreInProgress_GridView) {
@@ -172,7 +209,7 @@ module eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 		//#region Scroll Position
 		get_$GridDataElement(): JQuery {
 			//Note: this element is available only when the grid has static headers and scrolling enabled in the grid
-			var gridDataElement = $("#" + this._Options.gridClientID + "_GridData");
+			var gridDataElement = $("#" + this.options.gridClientID + "_GridData");
 			if (gridDataElement.length === 1) {
 				return gridDataElement;
 			}
@@ -181,8 +218,8 @@ module eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 		private _scrollPosition_Save() {
 			if (this.get_Options().saveGridScrollPosition) {
 				var $containerElement: JQuery;
-				if (this._Options.gridContainerSelector) {
-					$containerElement = $(this._Options.gridContainerSelector);
+				if (this.options.gridContainerSelector) {
+					$containerElement = $(this.options.gridContainerSelector);
 				} else {
 					$containerElement = this.get_$GridDataElement();
 				}
@@ -196,8 +233,8 @@ module eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 		private _scrollPosition_Restore() {
 			if (this.get_Options().saveGridScrollPosition) {
 				var $containerElement: JQuery;
-				if (this._Options.gridContainerSelector) {
-					$containerElement = $(this._Options.gridContainerSelector);
+				if (this.options.gridContainerSelector) {
+					$containerElement = $(this.options.gridContainerSelector);
 				} else {
 					$containerElement = this.get_$GridDataElement();
 				}

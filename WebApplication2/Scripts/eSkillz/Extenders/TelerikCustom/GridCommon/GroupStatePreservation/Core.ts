@@ -197,6 +197,9 @@ module eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation {
 			Mode: SaveRestoreModes, elementIndex: number, groupHeaderElement: Element): void {
 			var $groupHeaderElement = $(groupHeaderElement);
 			var groupState = this._get_GroupState($groupHeaderElement);
+			if (!groupState) {
+				return;
+			}
 			this._groupHeader_GroupLevelProcessing(groupState);
 			groupState.parentGroupText = this._getCurrentParentGroupPath();
 

@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="AJAXWebForm.aspx.cs" Inherits="WebApplication2.WebForm1" %>
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="AjaxWebForm.aspx.cs" Inherits="WebApplication2.AjaxWebForm" %>
 
 <!DOCTYPE html>
 
@@ -43,7 +43,7 @@
 					<ClientSettings AllowDragToGroup="true">
 						<Scrolling AllowScroll="true" UseStaticHeaders="true" ScrollHeight="400" />
 					</ClientSettings>
-					
+
 					<GroupingSettings GroupByFieldsSeparator=" | " />
 					<MasterTableView GroupLoadMode="Client" GroupsDefaultExpanded="false">
 						<Columns>
@@ -78,13 +78,13 @@
 			</div>
 			<div>
 				<p>Note that group state is also preserved when changing pages (very handy when groups continue to the next page).</p>
-				<p>It doesn't seem possible to track the page change event client-side (at least not with AJAX), so it's important to set the RadGrid as an AjaxSetting with itself as an updated control.  See the wiki for more details.</p>
+				<p>It doesn't seem possible to track the page change event client-side (at least not with AJAX), so it's important to set the RadGrid as an AjaxSetting with itself as an updated control. See the wiki for more details.</p>
 			</div>
 
 			<%--NOTE: Typically, you may want to combine all TypeScript into a single file (which can be configured in Project Settings).
-				In that case, include only the combined JS file here.
-				These JS files have been kept separate only for demonstration purposes.--%>
-				
+			In that case, include only the combined JS file here.
+			These JS files have been kept separate only for demonstration purposes.--%>
+
 			<script type="text/javascript" src="/Scripts/eSkillz/Extenders/TelerikCustom/GridCommon/GroupStatePreservation/Core.js"></script>
 			<script type="text/javascript" src="/Scripts/eSkillz/Extenders/TelerikCustom/RadGrid/GroupStatePreservation/Core.js"></script>
 			<telerik:RadCodeBlock ID="cbInit" runat="server">
@@ -95,10 +95,10 @@
 						Sys.Application.remove_load(appLoadedHandler);
 						var GroupStatePreservationOptions =
 							new eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation.Options(
-								"<%= RadGrid1.ClientID%>",
+								"<%= this.RadGrid1.ClientID%>",
 								//Change the following option to StateTrackingModes.ClientDataSource for client data sources
 								eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation.RefreshModes.AJAX,
-								true, "Random Number Sum");
+								true);
 						GroupStatePreservationOptions.saveGridScrollPosition = true;
 						GridGroupStatePreservation = new eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation.Core(
 							GroupStatePreservationOptions);

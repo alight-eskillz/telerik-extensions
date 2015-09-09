@@ -4,7 +4,7 @@ using WebApplication2.Extenders.TelerikCustom.RadGrid.Helpers;
 
 namespace WebApplication2
 {
-	public partial class WebForm1 : System.Web.UI.Page
+	public partial class AjaxWebForm : System.Web.UI.Page
 	{
 		protected void RadGrid1_NeedDataSource(object sender, Telerik.Web.UI.GridNeedDataSourceEventArgs e)
 		{

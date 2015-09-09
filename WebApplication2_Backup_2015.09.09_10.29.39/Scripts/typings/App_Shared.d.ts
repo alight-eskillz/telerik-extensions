@@ -1,24 +1,8 @@
-﻿declare module Telerik.Web.UI {
-	interface GridTableView_Corrected extends GridTableView {
-		get_dataItems(): Array<GridDataItem>;
-	}
-	interface GridTableViewInternal extends GridTableView_Corrected {
-		_data: {
-			GroupByExpressions: Array<{
-				/**
-				 * Display name.
-				 */
-				alias: string;
-				/**
-				 * asc or desc
-				 */
-				dir: string;
-				/**
-				 * Field name.
-				 */
-				field: string;
-			}>;
-		};
+﻿declare module TelerikInternalProps.Web.UI {
+	interface RadGrid extends Telerik.Web.UI.RadGrid {
+		_groupingSettings: {
+			GroupByFieldsSeparator: string;
+		}
 	}
 }
 
