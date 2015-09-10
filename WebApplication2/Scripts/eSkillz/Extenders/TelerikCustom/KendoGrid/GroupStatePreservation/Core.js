@@ -40,7 +40,7 @@ var eSkillz;
                             this._Initialize_BindEventHandlers();
                         };
                         Core.prototype.GetGroupDataByRow = function ($groupHeaderElement) {
-                            var grid = this.get_Grid(), nextData = $groupHeaderElement.nextUntil("[data-uid]").next(), dataItem = grid.dataItem(nextData.length ? nextData : $groupHeaderElement.next()), groupLevel = $groupHeaderElement.children(".k-group-cell").length, groups = grid.dataSource.group(), fieldName = groups[groupLevel].field, fieldValue = dataItem ? dataItem[fieldName] : null;
+                            var grid = this.get_Grid(), nextDataRow = $groupHeaderElement.nextUntil("[data-uid]").last().next(), dataItem = grid.dataItem(nextDataRow.length === 1 ? nextDataRow : $groupHeaderElement.next()), groupLevel = $groupHeaderElement.children(".k-group-cell").length, groups = grid.dataSource.group(), fieldName = groups[groupLevel].field, fieldValue = dataItem ? dataItem[fieldName] : null;
                             if (typeof fieldValue === "undefined") {
                                 return null;
                             }

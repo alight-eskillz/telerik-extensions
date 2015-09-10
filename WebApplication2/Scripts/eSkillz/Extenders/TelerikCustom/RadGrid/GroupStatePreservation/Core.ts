@@ -59,23 +59,23 @@ module eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 			switch (this.options.RefreshMode) {
 				case RefreshModes.ClientDataSource:
 					var grid = this.get_Grid(),
-						masterTableView = <Telerik.Web.UI.GridTableViewInternal>(grid.get_masterTableView());
-					
-					var groupLevel = $groupHeaderElement.children(".rgGroupCol").length,
-						groupByExpressions = masterTableView._data.GroupByExpressions,
-						fieldName = groupByExpressions[groupLevel - 1].field;
+						masterTableView = <Telerik.Web.UI.GridTableViewInternal>(grid.get_masterTableView()),
+						kendoDataSourceWidget = (<Telerik.Web.UI.RadClientDataSource_Corrected>$find(
+							(<Telerik.Web.UI.RadGridInternal>grid)._clientDataSourceID)).get_kendoWidget();
 
-					var nextDataRow = $groupHeaderElement.nextUntil("tr.rgRow").last().next();
-					if (nextDataRow.length !== 1) {
-						nextDataRow = $groupHeaderElement.nextUntil("tr.rgAltRow").last().next();
-					}
-					
+					var groupLevel = $groupHeaderElement.children(".rgGroupCol").length,
+						groups = kendoDataSourceWidget.group(),
+						fieldName = groups[groupLevel - 1].field;
+
+					var nextDataRow = $groupHeaderElement.nextUntil("tr.rgRow,tr.rgAltRow").last().next();
+					nextDataRow = (nextDataRow.length === 1 ? nextDataRow : $groupHeaderElement.next());
+
 					var dataItems = masterTableView.get_dataItems();
-					var fieldValue: any;
+					var fieldValue: any, nextDataRowElement = nextDataRow.get(0);
 					if (nextDataRow.length === 1) {
 						for (var i = 0, itemCount = dataItems.length; i < itemCount; i++) {
 							var dataItem = dataItems[i];
-							if (dataItem.get_element() === nextDataRow.get(0)) {
+							if (dataItem.get_element() === nextDataRowElement) {
 								fieldValue = dataItem.get_dataItem()[fieldName];
 								break;
 							}
@@ -84,7 +84,7 @@ module eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 					if (typeof fieldValue === "undefined") {
 						return null;
 					}
-					
+
 					return {
 						key: groupLevel.toString() + fieldName + fieldValue,
 						level: groupLevel,

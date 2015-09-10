@@ -1,4 +1,28 @@
-﻿declare module Telerik.Web.UI {
+﻿declare module kendo {
+	module data {
+		interface DataSource_Corrected extends DataSource {
+			group(): Array<{
+				aggregates: any;
+				/**
+				 * asc or desc
+				 */
+				dir: string;
+				/**
+				 * Field name.
+				 */
+				field: string;
+			}>;
+		}
+	}
+}
+
+declare module Telerik.Web.UI {
+	interface RadGridInternal extends RadGrid {
+		_clientDataSourceID: string;
+	}
+	interface RadClientDataSource_Corrected extends RadClientDataSource {
+		get_kendoWidget(): kendo.data.DataSource_Corrected;
+	}
 	interface GridTableView_Corrected extends GridTableView {
 		get_dataItems(): Array<GridDataItem>;
 	}
