@@ -9,7 +9,7 @@ module eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation {
 			public saveGridScrollPosition: boolean = false,
 			public gridContainerSelector: string = null,
 			public defaultGroupState = eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.None
-			) {
+		) {
 		}
 	}
 	export class Core
@@ -26,18 +26,18 @@ module eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation {
 		private _commonGroupState: eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Core;
 		private _Initialize() {
 			this._commonGroupState =
-			new eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Core(
-				new eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Options(
-					"tr.k-grouping-row",
-					"td a",
-					":last",
-					"td",
-					":last",
-					"k-i-expand",
-					"k-i-collapse",
-					($groupHeaderElement) => this.GetGroupDataByRow($groupHeaderElement),
-					($groupHeaderElement, toggleAction) =>
-						this.ToggleGroupByRow($groupHeaderElement, toggleAction)));
+				new eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Core(
+					new eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Options(
+						"tr.k-grouping-row",
+						"td a",
+						":last",
+						"td",
+						":last",
+						"k-i-expand",
+						"k-i-collapse",
+						($groupHeaderElement) => this.GetGroupDataByRow($groupHeaderElement),
+						($groupHeaderElement, toggleAction) =>
+							this.ToggleGroupByRow($groupHeaderElement, toggleAction)));
 
 			this._Initialize_BindEventHandlers();
 		}
@@ -79,8 +79,8 @@ module eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation {
 		private _Initialize_BindEventHandlers() {
 			var grid = this.get_Grid();
 
-			grid.bind("dataBinding",(sender, args) => this._Grid_OnDataBinding(sender, args));
-			grid.bind("dataBound",(sender, args) => this._Grid_OnDataBound(sender, args));
+			grid.bind("dataBinding", (sender, args) => { this.SaveGroupStateFinishCheck(); });
+			grid.bind("dataBound", (sender, args) => { this.RestoreGroupState(this._Options.defaultGroupState); });
 
 			this._gridAddToggleButtonClickHandlers();
 		}
@@ -90,17 +90,10 @@ module eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation {
 			grid.table.on(
 				"click",
 				commonOptions.get_ExpandAndCollapseToggleElementsSelector(),
-				(e) => this._gridGroupToggleClicked(e));
-		}
-		private _gridGroupToggleClicked(event: JQueryEventObject) {
-			if (this._commonGroupState.get_pauseGroupStateChangeEventHandlers()) { return; }
-			this.SaveGroupingAsync();
-		}
-		private _Grid_OnDataBinding(sender, args) {
-			this.FinishSaveGroupingCheck();
-		}
-		private _Grid_OnDataBound(sender, args) {
-			this.RestoreGrouping(this._Options.defaultGroupState);
+				(e) => {
+					if (this._commonGroupState.get_pauseGroupStateChangeEventHandlers()) { return; }
+					this.SaveGroupStateAsync();
+				});
 		}
 		//#endregion
 
@@ -147,24 +140,24 @@ module eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation {
 		}
 		//#endregion
 
-		SaveGroupingAsync(): void {
+		SaveGroupStateAsync(): void {
 			this._scrollPosition_Save();
-			this._commonGroupState.SaveGroupingAsync(this.get_Grid().table);
+			this._commonGroupState.SaveGroupStateAsync(this.get_Grid().table);
 		}
-		FinishSaveGroupingCheck(forceSave = false): void {
-			this._commonGroupState.FinishSaveGroupingCheck(this.get_Grid().table, forceSave);
+		SaveGroupStateFinishCheck(forceSave = false): void {
+			this._commonGroupState.SaveGroupStateFinishCheck(this.get_Grid().table, forceSave);
 		}
 		private _restoreInProgress_Grid: kendo.ui.Grid = null;
-		RestoreGrouping(
+		RestoreGroupState(
 			defaultGroupToggleAction =
-			eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.None): void {
+				eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.None): void {
 			this._restoreInProgress_Grid = this.get_Grid();
-			this._commonGroupState.RestoreGrouping(this.get_Grid().table, defaultGroupToggleAction);
+			this._commonGroupState.RestoreGroupState(this.get_Grid().table, defaultGroupToggleAction);
 			setTimeout(() => this._scrollPosition_Restore(), 0);
 			this._restoreInProgress_Grid = null;
 		}
-		ResetGrouping(): void {
-			this._commonGroupState.ResetGrouping();
+		ResetGroupState(): void {
+			this._commonGroupState.ResetGroupState();
 		}
 	}
 }

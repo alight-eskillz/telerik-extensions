@@ -118,10 +118,10 @@
 
 					//** If you wanted to control when group states are saved/restored, this is one way to do it:
 					function RadAjaxManager1_requestStart(sender, eventArgs) {
-						//GridGroupStatePreservation.SaveGrouping();
+					    //GridGroupStatePreservation.SaveGroupState();
 					}
 					function RadAjaxManager1_responseEnd(sender, eventArgs) {
-						//GridGroupStatePreservation.RestoreGrouping();
+					    //GridGroupStatePreservation.RestoreGroupState();
 					}
 				</script>
 			</telerik:RadCodeBlock>

@@ -17,7 +17,14 @@
 }
 
 declare module Telerik.Web.UI {
-	interface RadGridInternal extends RadGrid {
+	interface RadGrid_Corrected extends RadGrid {
+		add_groupCollapsed(handler: Function): void;
+		remove_groupCollapsed(handler: Function): void;
+		add_groupExpanded(handler: Function): void;
+		remove_groupExpanded(handler: Function): void;
+		add_dataBound(handler: Function): void;
+	}
+	interface RadGridInternal extends RadGrid_Corrected {
 		_clientDataSourceID: string;
 	}
 	interface RadClientDataSource_Corrected extends RadClientDataSource {

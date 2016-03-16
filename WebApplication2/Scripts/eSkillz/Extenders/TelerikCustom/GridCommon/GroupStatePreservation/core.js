@@ -12,11 +12,6 @@ var eSkillz;
             (function (GridCommon) {
                 var GroupStatePreservation;
                 (function (GroupStatePreservation) {
-                    var SaveRestoreModes;
-                    (function (SaveRestoreModes) {
-                        SaveRestoreModes[SaveRestoreModes["Save"] = 1] = "Save";
-                        SaveRestoreModes[SaveRestoreModes["Restore"] = 2] = "Restore";
-                    })(SaveRestoreModes || (SaveRestoreModes = {}));
                     var ToggleButtonState = (function () {
                         function ToggleButtonState(isExpanded, buttonElement) {
                             this.isExpanded = isExpanded;
@@ -56,10 +51,14 @@ var eSkillz;
                         }
                         //#region Toggle Elements
                         Options.prototype.get_ExpandToggleElementSelector = function () {
-                            return this.groupHeaderElementSelector + " " + this.groupHeaderChildren_ToggleElementSelector + "." + this.groupToggleElementClass_Expand;
+                            return this.groupHeaderElementSelector
+                                + " " + this.groupHeaderChildren_ToggleElementSelector
+                                + "." + this.groupToggleElementClass_Expand;
                         };
                         Options.prototype.get_CollapseToggleElementSelector = function () {
-                            return this.groupHeaderElementSelector + " " + this.groupHeaderChildren_ToggleElementSelector + "." + this.groupToggleElementClass_Collapse;
+                            return this.groupHeaderElementSelector
+                                + " " + this.groupHeaderChildren_ToggleElementSelector
+                                + "." + this.groupToggleElementClass_Collapse;
                         };
                         Options.prototype.get_ExpandAndCollapseToggleElementsSelector = function () {
                             return this.get_ExpandToggleElementSelector() + ", " + this.get_CollapseToggleElementSelector();
@@ -67,7 +66,8 @@ var eSkillz;
                         //#endregion
                         //#region Text Elements
                         Options.prototype.get_TextElementSelector = function () {
-                            var selector = this.groupHeaderElementSelector + " " + this.groupHeaderChildren_TextElementSelector;
+                            var selector = this.groupHeaderElementSelector
+                                + " " + this.groupHeaderChildren_TextElementSelector;
                             return selector;
                         };
                         return Options;
@@ -79,16 +79,17 @@ var eSkillz;
                             //#endregion
                             //#endregion
                             //#region Group Expanded/Collapsed State Tracking
-                            this._groupsExpanded = [];
-                            this._groupsCollapsed = [];
+                            this.groupsExpanded = [];
+                            this.groupsCollapsed = [];
                             //#region Pause Processing
-                            this._pauseGroupStateChangeEventHandlers = false;
-                            this._currentTopLevelGroupName = null;
+                            this.pauseGroupStateChangeEventHandlers = false;
+                            this.currentTopLevelGroupName = null;
+                            this.currentParentGroupPathArray = [];
                             //#endregion
                             //#endregion
-                            //#region Save Grouping
+                            //#region Save Group State
                             //#region Asynchronous
-                            this._saveGroupingElementInterval = null;
+                            this._saveGroupStateElementInterval = null;
                             //#endregion
                             //#region Scroll Position
                             this._scrollPositionsByPageIndex = [];
@@ -97,16 +98,16 @@ var eSkillz;
                         Core.prototype.get_Options = function () {
                             return this._Options;
                         };
-                        Core.prototype.set_tableElement = function ($element) {
-                            this._$tableElement = $element;
+                        Core.prototype.set_$TableElement = function ($element) {
+                            this.$tableElement = $element;
                         };
                         Core.prototype._get_$GroupHeaderElements = function () {
-                            if (!this._$tableElement || this._$tableElement.length === 0) {
+                            if (!this.$tableElement || this.$tableElement.length === 0) {
                                 return null;
                             }
-                            return this._$tableElement.find(this._Options.groupHeaderElementSelector);
+                            return this.$tableElement.find(this._Options.groupHeaderElementSelector);
                         };
-                        Core.prototype._get_$groupHeaderChildElements = function (selector, selectorFilter) {
+                        Core.prototype._get_$GroupHeaderChildElements = function (selector, selectorFilter) {
                             var $elements = this._get_$GroupHeaderElements().find(selector);
                             if (selectorFilter && selectorFilter !== "") {
                                 return $elements.filter(selectorFilter);
@@ -126,7 +127,7 @@ var eSkillz;
                         };
                         //#region Expand/Collapse Elements
                         Core.prototype._get_$groupToggleElementsAll = function () {
-                            return this._get_$groupHeaderChildElements(this._Options.groupHeaderChildren_ToggleElementSelector, this._Options.groupHeaderChildren_ToggleElementSelectorFilter);
+                            return this._get_$GroupHeaderChildElements(this._Options.groupHeaderChildren_ToggleElementSelector, this._Options.groupHeaderChildren_ToggleElementSelectorFilter);
                         };
                         Core.prototype._get_$groupToggleElementInHeader = function ($groupHeaderElement) {
                             return this._get_$GroupHeaderChildElementWithinHeader($groupHeaderElement, this._Options.groupHeaderChildren_ToggleElementSelector, this._Options.groupHeaderChildren_ToggleElementSelectorFilter);
@@ -134,51 +135,51 @@ var eSkillz;
                         //#endregion
                         //#region Text Elements
                         Core.prototype._get_$GroupTextElementsAll = function () {
-                            return this._get_$groupHeaderChildElements(this._Options.groupHeaderChildren_TextElementSelector, this._Options.groupHeaderChildren_TextElementSelectorFilter);
+                            return this._get_$GroupHeaderChildElements(this._Options.groupHeaderChildren_TextElementSelector, this._Options.groupHeaderChildren_TextElementSelectorFilter);
                         };
-                        Core.prototype._groupItemAdd = function (list, value) {
+                        Core.prototype._groupItem_Add = function (list, value) {
                             if (list.indexOf(value) === -1) {
                                 list.push(value);
                             }
                         };
-                        Core.prototype._groupItemRemove = function (list, value) {
+                        Core.prototype._groupItem_Remove = function (list, value) {
                             var itemIndex = list.indexOf(value);
                             if (itemIndex > -1) {
                                 list.splice(itemIndex, 1);
                             }
                         };
                         Core.prototype.set_pauseGroupStateChangeEventHandlers = function (value) {
-                            this._pauseGroupStateChangeEventHandlers = value;
+                            this.pauseGroupStateChangeEventHandlers = value;
                         };
                         Core.prototype.get_pauseGroupStateChangeEventHandlers = function () {
-                            return this._pauseGroupStateChangeEventHandlers;
+                            return this.pauseGroupStateChangeEventHandlers;
                         };
                         Core.prototype._beginSaveRestore = function () {
-                            this._lastGroupLevel = -1;
-                            this._lastGroupKey = "";
-                            this._groupLevelRootValue = -1;
-                            this._currentParentGroupPathArray = [];
+                            this.lastGroupLevel = -1;
+                            this.lastGroupKey = "";
+                            this.groupLevelRootValue = -1;
+                            this.currentParentGroupPathArray.length = 0;
                         };
-                        Core.prototype._getCurrentParentGroupPath = function () {
-                            if (this._currentParentGroupPathArray.length === 0) {
+                        Core.prototype._get_GroupPathParentCurrent = function () {
+                            if (this.currentParentGroupPathArray.length === 0) {
                                 return "";
                             }
-                            return this._currentParentGroupPathArray.join("/");
+                            return this.currentParentGroupPathArray.join("/");
                         };
-                        Core.prototype._SaveRestoreGroupHeaderLoopHandler = function (Mode, elementIndex, groupHeaderElement) {
+                        Core.prototype._saveRestoreGroupHeaderLoopHandler = function (Mode, elementIndex, groupHeaderElement) {
                             var $groupHeaderElement = $(groupHeaderElement);
                             var groupState = this._get_GroupState($groupHeaderElement);
                             if (!groupState) {
                                 return;
                             }
                             this._groupHeader_GroupLevelProcessing(groupState);
-                            groupState.parentGroupText = this._getCurrentParentGroupPath();
+                            groupState.parentGroupText = this._get_GroupPathParentCurrent();
                             switch (Mode) {
                                 case 1 /* Save */:
-                                    this._saveGroupingForHeaderElement(groupState);
+                                    this._saveGroupStateForHeaderElement(groupState);
                                     break;
                                 case 2 /* Restore */:
-                                    this._restoreGroupingForHeaderElement(groupState, $groupHeaderElement);
+                                    this._restoreGroupStateForHeaderElement(groupState, $groupHeaderElement);
                                     break;
                             }
                         };
@@ -187,13 +188,13 @@ var eSkillz;
                          */
                         Core.prototype._trackTopLevelGroupChanges = function (groupState) {
                             if (groupState.groupData.level === 0) {
-                                if (!this._currentTopLevelGroupName) {
-                                    this._currentTopLevelGroupName = groupState.groupData.fieldName;
+                                if (!this.currentTopLevelGroupName) {
+                                    this.currentTopLevelGroupName = groupState.groupData.fieldName;
                                 }
                                 else {
-                                    if (this._currentTopLevelGroupName !== groupState.groupData.fieldName) {
-                                        this._currentTopLevelGroupName = groupState.groupData.fieldName;
-                                        this.ResetGrouping();
+                                    if (this.currentTopLevelGroupName !== groupState.groupData.fieldName) {
+                                        this.currentTopLevelGroupName = groupState.groupData.fieldName;
+                                        this.ResetGroupState();
                                     }
                                 }
                             }
@@ -202,32 +203,33 @@ var eSkillz;
                          * Determine nesting level/changes.
                          */
                         Core.prototype._groupHeader_GroupLevelProcessing = function (groupState) {
-                            if (this._lastGroupLevel === -1) {
-                                this._groupLevelRootValue = groupState.groupData.level;
+                            if (this.lastGroupLevel === -1) {
+                                this.groupLevelRootValue = groupState.groupData.level;
                             }
                             var groupLevel = groupState.groupData.level;
-                            if (groupLevel !== this._lastGroupLevel) {
-                                var groupLevelChange = this._lastGroupLevel - groupLevel;
-                                if (groupLevel === this._groupLevelRootValue) {
-                                    this._currentParentGroupPathArray = [];
+                            if (groupLevel !== this.lastGroupLevel) {
+                                var groupLevelChange = this.lastGroupLevel - groupLevel;
+                                if (groupLevel === this.groupLevelRootValue) {
+                                    this.currentParentGroupPathArray.length = 0;
                                 }
-                                else if (groupLevel < this._lastGroupLevel) {
+                                else if (groupLevel < this.lastGroupLevel) {
                                     for (var i = 0; i < groupLevelChange; i++) {
-                                        this._currentParentGroupPathArray.pop();
+                                        this.currentParentGroupPathArray.pop();
                                     }
                                 }
-                                else if (groupLevel > this._lastGroupLevel) {
-                                    this._currentParentGroupPathArray.push(this._lastGroupKey);
+                                else if (groupLevel > this.lastGroupLevel) {
+                                    this.currentParentGroupPathArray.push(this.lastGroupKey);
                                 }
                             }
-                            this._lastGroupLevel = groupLevel;
-                            this._lastGroupKey = groupState.groupData.key;
+                            this.lastGroupLevel = groupLevel;
+                            this.lastGroupKey = groupState.groupData.key;
                             this._trackTopLevelGroupChanges(groupState);
                         };
                         Core.prototype._checkToggleButton = function ($groupHeaderElement) {
                             var $toggleButtonElement = this._get_$groupToggleElementInHeader($groupHeaderElement);
                             if ($toggleButtonElement.length > 0) {
-                                if ($toggleButtonElement.hasClass(this._Options.groupToggleElementClass_Expand) || $toggleButtonElement.hasClass(this._Options.groupToggleElementClass_Collapse)) {
+                                if ($toggleButtonElement.hasClass(this._Options.groupToggleElementClass_Expand)
+                                    || $toggleButtonElement.hasClass(this._Options.groupToggleElementClass_Collapse)) {
                                     return {
                                         isExpanded: $toggleButtonElement.hasClass(this._Options.groupToggleElementClass_Collapse),
                                         buttonElement: $toggleButtonElement
@@ -250,40 +252,41 @@ var eSkillz;
                         };
                         //#endregion
                         //#region Save
-                        Core.prototype._saveGroupingForHeaderElement = function (groupState) {
+                        Core.prototype._saveGroupStateForHeaderElement = function (groupState) {
                             if (groupState) {
                                 if (groupState.toggleButtonState.isExpanded) {
-                                    this._groupItemAdd(this._groupsExpanded, groupState.FullGroupText());
-                                    this._groupItemRemove(this._groupsCollapsed, groupState.FullGroupText());
+                                    this._groupItem_Add(this.groupsExpanded, groupState.FullGroupText());
+                                    this._groupItem_Remove(this.groupsCollapsed, groupState.FullGroupText());
                                 }
                                 else {
-                                    this._groupItemAdd(this._groupsCollapsed, groupState.FullGroupText());
-                                    this._groupItemRemove(this._groupsExpanded, groupState.FullGroupText());
+                                    this._groupItem_Add(this.groupsCollapsed, groupState.FullGroupText());
+                                    this._groupItem_Remove(this.groupsExpanded, groupState.FullGroupText());
                                 }
                             }
                         };
                         //#endregion
                         //#region Restore
-                        Core.prototype._restoreGroupingForHeaderElement = function (groupState, $groupHeaderElement) {
+                        Core.prototype._restoreGroupStateForHeaderElement = function (groupState, $groupHeaderElement) {
                             if (groupState) {
                                 //NOTE: If a default toggle action is specified, it will execute only if the group was never in an expanded or collapsed state, e.g. when the grid first loads or is initially grouped.
                                 var Action = this._defaultGroupToggleAction;
                                 var fullGroupText = groupState.FullGroupText();
-                                var previousGroupStateExpanded = this._groupsExpanded.indexOf(fullGroupText) !== -1;
-                                var previousGroupStateCollapsed = this._groupsCollapsed.indexOf(fullGroupText) !== -1;
+                                var previousGroupStateExpanded = this.groupsExpanded.indexOf(fullGroupText) !== -1;
+                                var previousGroupStateCollapsed = this.groupsCollapsed.indexOf(fullGroupText) !== -1;
                                 var groupIsExpanded = groupState.toggleButtonState.isExpanded;
-                                if (Action !== 0 /* None */) {
-                                    if ((groupIsExpanded && previousGroupStateExpanded) || (!groupIsExpanded && previousGroupStateCollapsed)) {
-                                        Action = 0 /* None */;
+                                if (Action !== GroupToggleActions.None) {
+                                    if ((groupIsExpanded && previousGroupStateExpanded)
+                                        || (!groupIsExpanded && previousGroupStateCollapsed)) {
+                                        Action = GroupToggleActions.None;
                                     }
                                 }
                                 if (groupIsExpanded && previousGroupStateCollapsed) {
-                                    Action = 1 /* Collapse */;
+                                    Action = GroupToggleActions.Collapse;
                                 }
                                 else if (!groupIsExpanded && previousGroupStateExpanded) {
-                                    Action = 2 /* Expand */;
+                                    Action = GroupToggleActions.Expand;
                                 }
-                                if (Action !== 0 /* None */) {
+                                if (Action !== GroupToggleActions.None) {
                                     if (typeof this._Options.delegateToggleGroupByRow === "function") {
                                         this._Options.delegateToggleGroupByRow($groupHeaderElement, Action);
                                     }
@@ -293,22 +296,22 @@ var eSkillz;
                                 }
                             }
                         };
-                        Core.prototype.SaveGroupingAsync = function ($tableElement, resetGrouping) {
-                            if (resetGrouping === void 0) { resetGrouping = false; }
-                            //console.log("Begin save grouping...");
-                            this.set_tableElement($tableElement);
-                            if (resetGrouping) {
-                                this.ResetGrouping();
+                        Core.prototype.SaveGroupStateAsync = function ($tableElement, resetGroupState) {
+                            if (resetGroupState === void 0) { resetGroupState = false; }
+                            //console.log("Begin save group state...");
+                            this.set_$TableElement($tableElement);
+                            if (resetGroupState) {
+                                this.ResetGroupState();
                             }
-                            this._saveGroupingWaitCheck();
+                            this._saveGroupStateWaitCheck();
                         };
-                        Core.prototype._saveGroupingWaitCheck = function () {
-                            if (this._saveGroupingElementInterval) {
-                                this._saveGroupingAsyncStop();
+                        Core.prototype._saveGroupStateWaitCheck = function () {
+                            if (this._saveGroupStateElementInterval) {
+                                this._saveGroupStateAsyncStop();
                             }
-                            this._saveGroupingContinue();
+                            this._saveGroupStateContinue();
                         };
-                        Core.prototype._saveGroupingContinue = function () {
+                        Core.prototype._saveGroupStateContinue = function () {
                             var _this = this;
                             this._beginSaveRestore();
                             var $groupHeaderElements = this._get_$GroupHeaderElements();
@@ -317,85 +320,94 @@ var eSkillz;
                             }
                             var elementIndex = 0;
                             var elementsLength = $groupHeaderElements.length;
-                            this._saveGroupingElementInterval = setInterval(function () {
+                            this._saveGroupStateElementInterval = setInterval(function () {
                                 for (var batchIndex = 0; batchIndex < 20 && elementIndex < elementsLength; batchIndex++) {
-                                    _this._SaveRestoreGroupHeaderLoopHandler(1 /* Save */, elementIndex, $groupHeaderElements.get(elementIndex));
+                                    _this._saveRestoreGroupHeaderLoopHandler(1 /* Save */, elementIndex, $groupHeaderElements.get(elementIndex));
                                     elementIndex++;
                                 }
                                 if (elementIndex >= elementsLength) {
-                                    _this._saveGroupingAsyncStop();
+                                    _this._saveGroupStateAsyncStop();
                                 }
                             }, 0);
                         };
-                        Core.prototype._saveGroupingAsyncStop = function () {
-                            clearInterval(this._saveGroupingElementInterval);
-                            this._saveGroupingElementInterval = null;
+                        Core.prototype._saveGroupStateAsyncStop = function () {
+                            clearInterval(this._saveGroupStateElementInterval);
+                            this._saveGroupStateElementInterval = null;
                         };
                         //#endregion
                         //#region Synchronous
-                        Core.prototype._saveGrouping = function () {
+                        Core.prototype._saveGroupState = function () {
                             this._beginSaveRestore();
                             var thisClass = this;
                             var $groupHeaderElements = this._get_$GroupHeaderElements();
                             if ($groupHeaderElements) {
-                                $groupHeaderElements.each(function (elementIndex, groupHeaderElement) { return thisClass._SaveRestoreGroupHeaderLoopHandler(1 /* Save */, elementIndex, groupHeaderElement); });
+                                $groupHeaderElements.each(function (elementIndex, groupHeaderElement) {
+                                    return thisClass._saveRestoreGroupHeaderLoopHandler(1 /* Save */, elementIndex, groupHeaderElement);
+                                });
                             }
                         };
-                        Core.prototype.FinishSaveGroupingCheck = function ($tableElement, forceSave, resetGrouping) {
+                        Core.prototype.SaveGroupStateFinishCheck = function ($tableElement, forceSave, resetGroupState) {
                             if (forceSave === void 0) { forceSave = false; }
-                            if (resetGrouping === void 0) { resetGrouping = false; }
-                            this.set_tableElement($tableElement);
-                            if (resetGrouping) {
-                                this.ResetGrouping();
+                            if (resetGroupState === void 0) { resetGroupState = false; }
+                            this.set_$TableElement($tableElement);
+                            if (resetGroupState) {
+                                this.ResetGroupState();
                             }
-                            if (this._saveGroupingElementInterval || forceSave) {
-                                this._saveGroupingAsyncStop();
-                                this._saveGrouping();
+                            if (this._saveGroupStateElementInterval || forceSave) {
+                                this._saveGroupStateAsyncStop();
+                                this._saveGroupState();
                             }
                         };
                         //#endregion
                         //#endregion
-                        //#region Restore Grouping
-                        Core.prototype.RestoreGrouping = function ($tableElement, defaultGroupToggleAction) {
-                            if (defaultGroupToggleAction === void 0) { defaultGroupToggleAction = 0 /* None */; }
-                            if (this._groupsExpanded.length === 0 && this._groupsCollapsed.length === 0 && this._defaultGroupToggleAction === 0 /* None */) {
+                        //#region Restore Group State
+                        Core.prototype.RestoreGroupState = function ($tableElement, defaultGroupToggleAction) {
+                            if (defaultGroupToggleAction === void 0) { defaultGroupToggleAction = GroupToggleActions.None; }
+                            if (this.groupsExpanded.length === 0
+                                && this.groupsCollapsed.length === 0
+                                && this._defaultGroupToggleAction === GroupToggleActions.None) {
                                 return;
                             }
-                            this._restoreGroupingInner($tableElement, defaultGroupToggleAction);
+                            this._restoreGroupStateInner($tableElement, defaultGroupToggleAction);
                         };
-                        Core.prototype._restoreGroupingInner = function ($tableElement, defaultGroupToggleAction) {
-                            if (defaultGroupToggleAction === void 0) { defaultGroupToggleAction = 0 /* None */; }
-                            if (this._saveGroupingElementInterval) {
-                                clearInterval(this._saveGroupingElementInterval);
+                        Core.prototype._restoreGroupStateInner = function ($tableElement, defaultGroupToggleAction) {
+                            if (defaultGroupToggleAction === void 0) { defaultGroupToggleAction = GroupToggleActions.None; }
+                            if (this._saveGroupStateElementInterval) {
+                                clearInterval(this._saveGroupStateElementInterval);
                             }
-                            this.set_tableElement($tableElement);
+                            this.set_$TableElement($tableElement);
                             this._defaultGroupToggleAction = defaultGroupToggleAction;
                             var thisClass = this;
-                            this._pauseGroupStateChangeEventHandlers = true;
+                            this.pauseGroupStateChangeEventHandlers = true;
                             this._beginSaveRestore();
                             var $groupHeaderElements = this._get_$GroupHeaderElements();
                             if ($groupHeaderElements) {
-                                $groupHeaderElements.each(function (elementIndex, groupHeaderElement) { return thisClass._SaveRestoreGroupHeaderLoopHandler(2 /* Restore */, elementIndex, groupHeaderElement); });
+                                $groupHeaderElements.each(function (elementIndex, groupHeaderElement) {
+                                    return thisClass._saveRestoreGroupHeaderLoopHandler(2 /* Restore */, elementIndex, groupHeaderElement);
+                                });
                             }
-                            this._pauseGroupStateChangeEventHandlers = false;
+                            this.pauseGroupStateChangeEventHandlers = false;
                         };
                         //#endregion
-                        Core.prototype.ResetGrouping = function () {
-                            this._groupsExpanded = [];
-                            this._groupsCollapsed = [];
+                        Core.prototype.ResetGroupState = function () {
+                            this.groupsExpanded.length = 0;
+                            this.groupsCollapsed.length = 0;
+                            this._scrollPositionsByPageIndex.length = 0;
+                            this._lastPageIndex = null;
                         };
                         //#endregion
                         //#region Actions
                         Core.prototype.ToggleAllGroups = function ($tableElement, action) {
-                            this.set_tableElement($tableElement);
-                            this.ResetGrouping();
-                            this._restoreGroupingInner($tableElement, action);
+                            this.set_$TableElement($tableElement);
+                            this.ResetGroupState();
+                            this._restoreGroupStateInner($tableElement, action);
                         };
                         Core.prototype.SaveScrollPosition = function ($scrollElement, pageIndex) {
-                            if ($scrollElement && $scrollElement.length === 1 && typeof pageIndex === "number") {
+                            if ($scrollElement && $scrollElement.length === 1
+                                && typeof pageIndex === "number") {
                                 this._scrollPositionsByPageIndex[pageIndex] = $scrollElement.get(0).scrollTop;
                                 //Check if scroll is at bottom
-                                if ($scrollElement[0].scrollHeight - $scrollElement.scrollTop() === $scrollElement.outerHeight()) {
+                                if ($scrollElement[0].scrollHeight - $scrollElement.scrollTop() == $scrollElement.outerHeight()) {
                                     this._scrollPositionsByPageIndex[pageIndex + 1] = 0;
                                     this._scrollPositionsByPageIndex[pageIndex - 1] = 10000;
                                 }
@@ -403,7 +415,8 @@ var eSkillz;
                             }
                         };
                         Core.prototype.RestoreScrollPosition = function ($scrollElement, pageIndex) {
-                            if ($scrollElement && $scrollElement.length === 1 && typeof pageIndex === "number") {
+                            if ($scrollElement && $scrollElement.length === 1
+                                && typeof pageIndex === "number") {
                                 var savedScrollTop = this._scrollPositionsByPageIndex[pageIndex];
                                 if (!savedScrollTop) {
                                     savedScrollTop = 0;

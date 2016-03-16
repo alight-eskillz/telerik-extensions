@@ -46,13 +46,14 @@ var eSkillz;
                                 }
                                 return;
                             }
-                            this._commonGroupState = new eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Core(new eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Options("tr.rgGroupHeader", "td button", ":last", "td", ":last", "rgExpand", "rgCollapse", function ($groupHeaderElement) { return _this.GetGroupDataByRow($groupHeaderElement); }));
+                            this._commonGroupState =
+                                new eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Core(new eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Options("tr.rgGroupHeader", "td button", ":last", "td", ":last", "rgExpand", "rgCollapse", function ($groupHeaderElement) { return _this.GetGroupDataByRow($groupHeaderElement); }));
                             this._addGroupStateChangeEventHandlers();
                             this._InitializeStateTrackingMode();
                         };
                         Core.prototype.GetGroupDataByRow = function ($groupHeaderElement) {
                             switch (this.options.RefreshMode) {
-                                case 1 /* ClientDataSource */:
+                                case RefreshModes.ClientDataSource:
                                     var grid = this.get_Grid(), masterTableView = (grid.get_masterTableView()), kendoDataSourceWidget = $find(grid._clientDataSourceID).get_kendoWidget();
                                     var groupLevel = $groupHeaderElement.children(".rgGroupCol").length, groups = kendoDataSourceWidget.group(), fieldName = groups[groupLevel - 1].field;
                                     var nextDataRow = $groupHeaderElement.nextUntil("tr.rgRow,tr.rgAltRow").last().next();
@@ -76,7 +77,7 @@ var eSkillz;
                                         level: groupLevel,
                                         fieldName: fieldName
                                     };
-                                case 2 /* AJAX */:
+                                case RefreshModes.AJAX:
                                     var groupDataString = $groupHeaderElement.attr("data-gdata");
                                     if (!groupDataString || groupDataString === "") {
                                         if (console && typeof console.log === "function") {
@@ -110,7 +111,12 @@ var eSkillz;
                         Core.prototype._addGroupStateChangeEventHandlers = function () {
                             var _this = this;
                             var grid = this.get_Grid();
-                            this.gridGroupStateChangedHandler = function (sender, args) { return _this._gridGroupStateChanged(sender, args); };
+                            this.gridGroupStateChangedHandler = function (sender, args) {
+                                if (_this._commonGroupState.get_pauseGroupStateChangeEventHandlers()) {
+                                    return;
+                                }
+                                _this.SaveGroupStateAsync();
+                            };
                             grid.add_groupExpanded(this.gridGroupStateChangedHandler);
                             grid.add_groupCollapsed(this.gridGroupStateChangedHandler);
                         };
@@ -119,22 +125,16 @@ var eSkillz;
                             grid.remove_groupExpanded(this.gridGroupStateChangedHandler);
                             grid.remove_groupCollapsed(this.gridGroupStateChangedHandler);
                         };
-                        Core.prototype._gridGroupStateChanged = function (sender, args) {
-                            if (this._commonGroupState.get_pauseGroupStateChangeEventHandlers()) {
-                                return;
-                            }
-                            this.SaveGroupingAsync();
-                        };
                         //#endregion
                         Core.prototype._InitializeStateTrackingMode = function () {
                             var _this = this;
                             switch (this.options.RefreshMode) {
-                                case 1 /* ClientDataSource */:
+                                case RefreshModes.ClientDataSource:
                                     var grid = this.get_Grid();
-                                    grid.add_dataBinding(function (sender, args) { return _this._Grid_OnDataBinding(sender, args); });
-                                    grid.add_dataBound(function (sender, args) { return _this._Grid_OnDataBound(sender, args); });
+                                    grid.add_dataBinding(function (sender, args) { _this.SaveGroupStateFinishCheck(); });
+                                    grid.add_dataBound(function (sender, args) { _this.RestoreGroupState(); });
                                     break;
-                                case 2 /* AJAX */:
+                                case RefreshModes.AJAX:
                                     var prmInstance = Sys.WebForms.PageRequestManager.getInstance();
                                     if (!prmInstance) {
                                         if (console && typeof console.log === "function") {
@@ -142,29 +142,17 @@ var eSkillz;
                                         }
                                         return;
                                     }
-                                    prmInstance.add_beginRequest(function (sender, args) { return _this._PageRequestManager_BeginRequest(sender, args); });
-                                    prmInstance.add_endRequest(function (sender, args) { return _this._PageRequestManager_EndRequest(sender, args); });
+                                    prmInstance.add_beginRequest(function (sender, args) {
+                                        _this._removeGroupStateChangeEventHandlers();
+                                        _this.SaveGroupStateFinishCheck();
+                                    });
+                                    prmInstance.add_endRequest(function (sender, args) {
+                                        _this.RestoreGroupState();
+                                        _this._addGroupStateChangeEventHandlers();
+                                    });
                                     break;
                             }
                         };
-                        //#region AJAX Refresh Event Handlers
-                        Core.prototype._PageRequestManager_BeginRequest = function (sender, args) {
-                            this._removeGroupStateChangeEventHandlers();
-                            this.FinishSaveGroupingCheck();
-                        };
-                        Core.prototype._PageRequestManager_EndRequest = function (sender, args) {
-                            this.RestoreGrouping();
-                            this._addGroupStateChangeEventHandlers();
-                        };
-                        //#endregion
-                        //#region Client Data Source Event Handlers
-                        Core.prototype._Grid_OnDataBinding = function (sender, args) {
-                            this.FinishSaveGroupingCheck();
-                        };
-                        Core.prototype._Grid_OnDataBound = function (sender, args) {
-                            this.RestoreGrouping();
-                        };
-                        //#endregion
                         Core.prototype.get_Grid = function () {
                             return ($find(this.options.gridClientID));
                         };
@@ -233,25 +221,25 @@ var eSkillz;
                             }
                             return $(masterTableView.get_element());
                         };
-                        Core.prototype.SaveGroupingAsync = function () {
+                        Core.prototype.SaveGroupStateAsync = function () {
                             this._scrollPosition_Save();
-                            this._commonGroupState.SaveGroupingAsync(this._get_$MasterTableViewElement());
+                            this._commonGroupState.SaveGroupStateAsync(this._get_$MasterTableViewElement());
                         };
-                        Core.prototype.FinishSaveGroupingCheck = function (forceSave) {
+                        Core.prototype.SaveGroupStateFinishCheck = function (forceSave) {
                             if (forceSave === void 0) { forceSave = false; }
                             this._scrollPosition_Save();
-                            this._commonGroupState.FinishSaveGroupingCheck(this._get_$MasterTableViewElement(), forceSave);
+                            this._commonGroupState.SaveGroupStateFinishCheck(this._get_$MasterTableViewElement(), forceSave);
                         };
-                        Core.prototype.RestoreGrouping = function (defaultGroupToggleAction) {
+                        Core.prototype.RestoreGroupState = function (defaultGroupToggleAction) {
                             var _this = this;
-                            if (defaultGroupToggleAction === void 0) { defaultGroupToggleAction = 0 /* None */; }
+                            if (defaultGroupToggleAction === void 0) { defaultGroupToggleAction = eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.None; }
                             this._restoreInProgress_GridView = this.get_GridMasterTableView();
-                            this._commonGroupState.RestoreGrouping(this._get_$MasterTableViewElement(), defaultGroupToggleAction);
+                            this._commonGroupState.RestoreGroupState(this._get_$MasterTableViewElement(), defaultGroupToggleAction);
                             setTimeout(function () { return _this._scrollPosition_Restore(); }, 0);
                             this._restoreInProgress_GridView = null;
                         };
-                        Core.prototype.ResetGrouping = function () {
-                            this._commonGroupState.ResetGrouping();
+                        Core.prototype.ResetGroupState = function () {
+                            this._commonGroupState.ResetGroupState();
                         };
                         return Core;
                     })();

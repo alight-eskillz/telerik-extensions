@@ -15,7 +15,7 @@ var eSkillz;
                             if (addEventHandlers === void 0) { addEventHandlers = true; }
                             if (saveGridScrollPosition === void 0) { saveGridScrollPosition = false; }
                             if (gridContainerSelector === void 0) { gridContainerSelector = null; }
-                            if (defaultGroupState === void 0) { defaultGroupState = 0 /* None */; }
+                            if (defaultGroupState === void 0) { defaultGroupState = eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.None; }
                             this.gridClientID = gridClientID;
                             this.addEventHandlers = addEventHandlers;
                             this.saveGridScrollPosition = saveGridScrollPosition;
@@ -36,7 +36,10 @@ var eSkillz;
                         };
                         Core.prototype._Initialize = function () {
                             var _this = this;
-                            this._commonGroupState = new eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Core(new eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Options("tr.k-grouping-row", "td a", ":last", "td", ":last", "k-i-expand", "k-i-collapse", function ($groupHeaderElement) { return _this.GetGroupDataByRow($groupHeaderElement); }, function ($groupHeaderElement, toggleAction) { return _this.ToggleGroupByRow($groupHeaderElement, toggleAction); }));
+                            this._commonGroupState =
+                                new eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Core(new eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Options("tr.k-grouping-row", "td a", ":last", "td", ":last", "k-i-expand", "k-i-collapse", function ($groupHeaderElement) { return _this.GetGroupDataByRow($groupHeaderElement); }, function ($groupHeaderElement, toggleAction) {
+                                    return _this.ToggleGroupByRow($groupHeaderElement, toggleAction);
+                                }));
                             this._Initialize_BindEventHandlers();
                         };
                         Core.prototype.GetGroupDataByRow = function ($groupHeaderElement) {
@@ -53,10 +56,10 @@ var eSkillz;
                         Core.prototype.ToggleGroupByRow = function ($groupHeaderElement, toggleAction) {
                             var grid = this.get_Grid();
                             switch (toggleAction) {
-                                case 2 /* Expand */:
+                                case eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.Expand:
                                     grid.expandGroup($groupHeaderElement.get(0));
                                     break;
-                                case 1 /* Collapse */:
+                                case eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.Collapse:
                                     grid.collapseGroup($groupHeaderElement.get(0));
                                     break;
                             }
@@ -65,26 +68,19 @@ var eSkillz;
                         Core.prototype._Initialize_BindEventHandlers = function () {
                             var _this = this;
                             var grid = this.get_Grid();
-                            grid.bind("dataBinding", function (sender, args) { return _this._Grid_OnDataBinding(sender, args); });
-                            grid.bind("dataBound", function (sender, args) { return _this._Grid_OnDataBound(sender, args); });
+                            grid.bind("dataBinding", function (sender, args) { _this.SaveGroupStateFinishCheck(); });
+                            grid.bind("dataBound", function (sender, args) { _this.RestoreGroupState(_this._Options.defaultGroupState); });
                             this._gridAddToggleButtonClickHandlers();
                         };
                         Core.prototype._gridAddToggleButtonClickHandlers = function () {
                             var _this = this;
                             var grid = this.get_Grid(), commonOptions = this._commonGroupState.get_Options();
-                            grid.table.on("click", commonOptions.get_ExpandAndCollapseToggleElementsSelector(), function (e) { return _this._gridGroupToggleClicked(e); });
-                        };
-                        Core.prototype._gridGroupToggleClicked = function (event) {
-                            if (this._commonGroupState.get_pauseGroupStateChangeEventHandlers()) {
-                                return;
-                            }
-                            this.SaveGroupingAsync();
-                        };
-                        Core.prototype._Grid_OnDataBinding = function (sender, args) {
-                            this.FinishSaveGroupingCheck();
-                        };
-                        Core.prototype._Grid_OnDataBound = function (sender, args) {
-                            this.RestoreGrouping(this._Options.defaultGroupState);
+                            grid.table.on("click", commonOptions.get_ExpandAndCollapseToggleElementsSelector(), function (e) {
+                                if (_this._commonGroupState.get_pauseGroupStateChangeEventHandlers()) {
+                                    return;
+                                }
+                                _this.SaveGroupStateAsync();
+                            });
                         };
                         //#endregion
                         Core.prototype.get_Grid = function () {
@@ -129,24 +125,24 @@ var eSkillz;
                             }
                         };
                         //#endregion
-                        Core.prototype.SaveGroupingAsync = function () {
+                        Core.prototype.SaveGroupStateAsync = function () {
                             this._scrollPosition_Save();
-                            this._commonGroupState.SaveGroupingAsync(this.get_Grid().table);
+                            this._commonGroupState.SaveGroupStateAsync(this.get_Grid().table);
                         };
-                        Core.prototype.FinishSaveGroupingCheck = function (forceSave) {
+                        Core.prototype.SaveGroupStateFinishCheck = function (forceSave) {
                             if (forceSave === void 0) { forceSave = false; }
-                            this._commonGroupState.FinishSaveGroupingCheck(this.get_Grid().table, forceSave);
+                            this._commonGroupState.SaveGroupStateFinishCheck(this.get_Grid().table, forceSave);
                         };
-                        Core.prototype.RestoreGrouping = function (defaultGroupToggleAction) {
+                        Core.prototype.RestoreGroupState = function (defaultGroupToggleAction) {
                             var _this = this;
-                            if (defaultGroupToggleAction === void 0) { defaultGroupToggleAction = 0 /* None */; }
+                            if (defaultGroupToggleAction === void 0) { defaultGroupToggleAction = eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.None; }
                             this._restoreInProgress_Grid = this.get_Grid();
-                            this._commonGroupState.RestoreGrouping(this.get_Grid().table, defaultGroupToggleAction);
+                            this._commonGroupState.RestoreGroupState(this.get_Grid().table, defaultGroupToggleAction);
                             setTimeout(function () { return _this._scrollPosition_Restore(); }, 0);
                             this._restoreInProgress_Grid = null;
                         };
-                        Core.prototype.ResetGrouping = function () {
-                            this._commonGroupState.ResetGrouping();
+                        Core.prototype.ResetGroupState = function () {
+                            this._commonGroupState.ResetGroupState();
                         };
                         return Core;
                     })();

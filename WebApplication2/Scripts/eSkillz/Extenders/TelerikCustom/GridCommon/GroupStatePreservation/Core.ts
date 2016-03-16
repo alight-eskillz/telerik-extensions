@@ -4,7 +4,7 @@
 /// <reference path="../../../../../typings/jquery/jquery.d.ts" />
 
 module eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation {
-	enum SaveRestoreModes {
+	const enum SaveRestoreModes {
 		Save = 1,
 		Restore = 2
 	}
@@ -44,10 +44,10 @@ module eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation {
 	export interface IImplementation {
 		GetGroupDataByRow: typeDelegateGetGroupDataByRow;
 		ToggleGroupByRow: typeDelegateToggleGroupByRow;
-		SaveGroupingAsync: () => void;
-		FinishSaveGroupingCheck: (forceSave?: boolean) => void;
-		RestoreGrouping: (defaultGroupToggleAction: GroupToggleActions) => void;
-		ResetGrouping: () => void;
+		SaveGroupStateAsync: () => void;
+		SaveGroupStateFinishCheck: (forceSave?: boolean) => void;
+		RestoreGroupState: (defaultGroupToggleAction: GroupToggleActions) => void;
+		ResetGroupState: () => void;
 	}
 
 	export type GroupHeaderElementChildType = HTMLTableCellElement;
@@ -98,15 +98,15 @@ module eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation {
 		}
 
 		//#region Selectors
-		private _$tableElement: JQuery;
-		set_tableElement($element: JQuery): void {
-			this._$tableElement = $element;
+		private $tableElement: JQuery;
+		set_$TableElement($element: JQuery): void {
+			this.$tableElement = $element;
 		}
 		private _get_$GroupHeaderElements(): JQuery {
-			if (!this._$tableElement || this._$tableElement.length === 0) { return null; }
-			return this._$tableElement.find(this._Options.groupHeaderElementSelector);
+			if (!this.$tableElement || this.$tableElement.length === 0) { return null; }
+			return this.$tableElement.find(this._Options.groupHeaderElementSelector);
 		}
-		private _get_$groupHeaderChildElements(selector: string, selectorFilter?: string): JQuery {
+		private _get_$GroupHeaderChildElements(selector: string, selectorFilter?: string): JQuery {
 			var $elements = this._get_$GroupHeaderElements().find(selector);
 			if (selectorFilter && selectorFilter !== "") {
 				return $elements.filter(selectorFilter);
@@ -126,7 +126,7 @@ module eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation {
 
 		//#region Expand/Collapse Elements
 		private _get_$groupToggleElementsAll(): JQuery {
-			return this._get_$groupHeaderChildElements(
+			return this._get_$GroupHeaderChildElements(
 				this._Options.groupHeaderChildren_ToggleElementSelector,
 				this._Options.groupHeaderChildren_ToggleElementSelectorFilter);
 		}
@@ -141,7 +141,7 @@ module eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation {
 
 		//#region Text Elements
 		private _get_$GroupTextElementsAll(): JQuery {
-			return this._get_$groupHeaderChildElements(
+			return this._get_$GroupHeaderChildElements(
 				this._Options.groupHeaderChildren_TextElementSelector,
 				this._Options.groupHeaderChildren_TextElementSelectorFilter);
 		}
@@ -150,15 +150,15 @@ module eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation {
 		//#endregion
 
 		//#region Group Expanded/Collapsed State Tracking
-		private _groupsExpanded: Array<string> = [];
-		private _groupsCollapsed: Array<string> = [];
+		private groupsExpanded: Array<string> = [];
+		private groupsCollapsed: Array<string> = [];
 
-		private _groupItemAdd(list: Array<string>, value: string) {
+		private _groupItem_Add(list: Array<string>, value: string) {
 			if (list.indexOf(value) === -1) {
 				list.push(value);
 			}
 		}
-		private _groupItemRemove(list: Array<string>, value: string) {
+		private _groupItem_Remove(list: Array<string>, value: string) {
 			var itemIndex = list.indexOf(value);
 			if (itemIndex > -1) {
 				list.splice(itemIndex, 1);
@@ -166,34 +166,34 @@ module eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation {
 		}
 
 		//#region Pause Processing
-		private _pauseGroupStateChangeEventHandlers = false;
+		private pauseGroupStateChangeEventHandlers = false;
 		set_pauseGroupStateChangeEventHandlers(value: boolean): void {
-			this._pauseGroupStateChangeEventHandlers = value;
+			this.pauseGroupStateChangeEventHandlers = value;
 		}
 		get_pauseGroupStateChangeEventHandlers(): boolean {
-			return this._pauseGroupStateChangeEventHandlers;
+			return this.pauseGroupStateChangeEventHandlers;
 		}
 		//#endregion
 
 		//#region Helpers
 
 		//#region Common
-		private _lastGroupLevel: number;
-		private _lastGroupKey: string;
-		private _groupLevelRootValue: number;
-		private _currentTopLevelGroupName: string = null;
-		private _currentParentGroupPathArray: Array<string>;
+		private lastGroupLevel: number;
+		private lastGroupKey: string;
+		private groupLevelRootValue: number;
+		private currentTopLevelGroupName: string = null;
+		private currentParentGroupPathArray: Array<string> = [];
 		private _beginSaveRestore() {
-			this._lastGroupLevel = -1;
-			this._lastGroupKey = "";
-			this._groupLevelRootValue = -1;
-			this._currentParentGroupPathArray = [];
+			this.lastGroupLevel = -1;
+			this.lastGroupKey = "";
+			this.groupLevelRootValue = -1;
+			this.currentParentGroupPathArray.length = 0;
 		}
-		private _getCurrentParentGroupPath(): string {
-			if (this._currentParentGroupPathArray.length === 0) { return ""; }
-			return this._currentParentGroupPathArray.join("/");
+		private _get_GroupPathParentCurrent(): string {
+			if (this.currentParentGroupPathArray.length === 0) { return ""; }
+			return this.currentParentGroupPathArray.join("/");
 		}
-		private _SaveRestoreGroupHeaderLoopHandler(
+		private _saveRestoreGroupHeaderLoopHandler(
 			Mode: SaveRestoreModes, elementIndex: number, groupHeaderElement: Element): void {
 			var $groupHeaderElement = $(groupHeaderElement);
 			var groupState = this._get_GroupState($groupHeaderElement);
@@ -201,14 +201,14 @@ module eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation {
 				return;
 			}
 			this._groupHeader_GroupLevelProcessing(groupState);
-			groupState.parentGroupText = this._getCurrentParentGroupPath();
+			groupState.parentGroupText = this._get_GroupPathParentCurrent();
 
 			switch (Mode) {
 				case SaveRestoreModes.Save:
-					this._saveGroupingForHeaderElement(groupState);
+					this._saveGroupStateForHeaderElement(groupState);
 					break;
 				case SaveRestoreModes.Restore:
-					this._restoreGroupingForHeaderElement(groupState, $groupHeaderElement);
+					this._restoreGroupStateForHeaderElement(groupState, $groupHeaderElement);
 					break;
 			}
 		}
@@ -218,12 +218,12 @@ module eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation {
 		 */
 		private _trackTopLevelGroupChanges(groupState: GroupState): void {
 			if (groupState.groupData.level === 0) {
-				if (!this._currentTopLevelGroupName) {
-					this._currentTopLevelGroupName = groupState.groupData.fieldName;
+				if (!this.currentTopLevelGroupName) {
+					this.currentTopLevelGroupName = groupState.groupData.fieldName;
 				} else {
-					if (this._currentTopLevelGroupName !== groupState.groupData.fieldName) {
-						this._currentTopLevelGroupName = groupState.groupData.fieldName;
-						this.ResetGrouping();
+					if (this.currentTopLevelGroupName !== groupState.groupData.fieldName) {
+						this.currentTopLevelGroupName = groupState.groupData.fieldName;
+						this.ResetGroupState();
 					}
 				}
 			}
@@ -232,25 +232,25 @@ module eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation {
 		 * Determine nesting level/changes.
 		 */
 		private _groupHeader_GroupLevelProcessing(groupState: GroupState): void {
-			if (this._lastGroupLevel === -1) {
-				this._groupLevelRootValue = groupState.groupData.level;
+			if (this.lastGroupLevel === -1) {
+				this.groupLevelRootValue = groupState.groupData.level;
 			}
 			var groupLevel = groupState.groupData.level;
 
-			if (groupLevel !== this._lastGroupLevel) {
-				var groupLevelChange: number = this._lastGroupLevel - groupLevel;
-				if (groupLevel === this._groupLevelRootValue) {
-					this._currentParentGroupPathArray = [];
-				} else if (groupLevel < this._lastGroupLevel) {
+			if (groupLevel !== this.lastGroupLevel) {
+				var groupLevelChange: number = this.lastGroupLevel - groupLevel;
+				if (groupLevel === this.groupLevelRootValue) {
+					this.currentParentGroupPathArray.length = 0;
+				} else if (groupLevel < this.lastGroupLevel) {
 					for (var i = 0; i < groupLevelChange; i++) {
-						this._currentParentGroupPathArray.pop();
+						this.currentParentGroupPathArray.pop();
 					}
-				} else if (groupLevel > this._lastGroupLevel) {
-					this._currentParentGroupPathArray.push(this._lastGroupKey);
+				} else if (groupLevel > this.lastGroupLevel) {
+					this.currentParentGroupPathArray.push(this.lastGroupKey);
 				}
 			}
-			this._lastGroupLevel = groupLevel;
-			this._lastGroupKey = groupState.groupData.key;
+			this.lastGroupLevel = groupLevel;
+			this.lastGroupKey = groupState.groupData.key;
 			this._trackTopLevelGroupChanges(groupState);
 		}
 		private _checkToggleButton($groupHeaderElement: JQuery): ToggleButtonState {
@@ -286,28 +286,28 @@ module eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation {
 		//#endregion
 
 		//#region Save
-		private _saveGroupingForHeaderElement(groupState: GroupState) {
+		private _saveGroupStateForHeaderElement(groupState: GroupState) {
 			if (groupState) {
 				if (groupState.toggleButtonState.isExpanded) {
-					this._groupItemAdd(this._groupsExpanded, groupState.FullGroupText());
-					this._groupItemRemove(this._groupsCollapsed, groupState.FullGroupText());
+					this._groupItem_Add(this.groupsExpanded, groupState.FullGroupText());
+					this._groupItem_Remove(this.groupsCollapsed, groupState.FullGroupText());
 				} else {
-					this._groupItemAdd(this._groupsCollapsed, groupState.FullGroupText());
-					this._groupItemRemove(this._groupsExpanded, groupState.FullGroupText());
+					this._groupItem_Add(this.groupsCollapsed, groupState.FullGroupText());
+					this._groupItem_Remove(this.groupsExpanded, groupState.FullGroupText());
 				}
 			}
 		}
 		//#endregion
 
 		//#region Restore
-		private _restoreGroupingForHeaderElement(groupState: GroupState, $groupHeaderElement: JQuery) {
+		private _restoreGroupStateForHeaderElement(groupState: GroupState, $groupHeaderElement: JQuery) {
 			if (groupState) {
 				//NOTE: If a default toggle action is specified, it will execute only if the group was never in an expanded or collapsed state, e.g. when the grid first loads or is initially grouped.
 				var Action = this._defaultGroupToggleAction;
 
 				var fullGroupText = groupState.FullGroupText();
-				var previousGroupStateExpanded = this._groupsExpanded.indexOf(fullGroupText) !== -1;
-				var previousGroupStateCollapsed = this._groupsCollapsed.indexOf(fullGroupText) !== -1;
+				var previousGroupStateExpanded = this.groupsExpanded.indexOf(fullGroupText) !== -1;
+				var previousGroupStateCollapsed = this.groupsCollapsed.indexOf(fullGroupText) !== -1;
 
 				var groupIsExpanded = groupState.toggleButtonState.isExpanded;
 				if (Action !== GroupToggleActions.None) {
@@ -336,26 +336,26 @@ module eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation {
 
 		//#endregion
 
-		//#region Save Grouping
+		//#region Save Group State
 
 		//#region Asynchronous
-		private _saveGroupingElementInterval: number = null;
-		SaveGroupingAsync($tableElement: JQuery, resetGrouping = false): void {
-			//console.log("Begin save grouping...");
-			this.set_tableElement($tableElement);
-			if (resetGrouping) {
-				this.ResetGrouping();
+		private _saveGroupStateElementInterval: number = null;
+		SaveGroupStateAsync($tableElement: JQuery, resetGroupState = false): void {
+			//console.log("Begin save group state...");
+			this.set_$TableElement($tableElement);
+			if (resetGroupState) {
+				this.ResetGroupState();
 			}
 
-			this._saveGroupingWaitCheck();
+			this._saveGroupStateWaitCheck();
 		}
-		private _saveGroupingWaitCheck() {
-			if (this._saveGroupingElementInterval) {
-				this._saveGroupingAsyncStop();
+		private _saveGroupStateWaitCheck() {
+			if (this._saveGroupStateElementInterval) {
+				this._saveGroupStateAsyncStop();
 			}
-			this._saveGroupingContinue();
+			this._saveGroupStateContinue();
 		}
-		private _saveGroupingContinue() {
+		private _saveGroupStateContinue() {
 			this._beginSaveRestore();
 
 			var $groupHeaderElements = this._get_$GroupHeaderElements();
@@ -363,28 +363,28 @@ module eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation {
 
 			var elementIndex = 0;
 			var elementsLength = $groupHeaderElements.length;
-			this._saveGroupingElementInterval = setInterval(() => {
+			this._saveGroupStateElementInterval = setInterval(() => {
 				for (var batchIndex = 0;
 					batchIndex < 20 && elementIndex < elementsLength;
 					batchIndex++) {
-					this._SaveRestoreGroupHeaderLoopHandler(
+					this._saveRestoreGroupHeaderLoopHandler(
 						SaveRestoreModes.Save, elementIndex, $groupHeaderElements.get(elementIndex));
 					elementIndex++;
 				}
 				if (elementIndex >= elementsLength) {
-					this._saveGroupingAsyncStop();
+					this._saveGroupStateAsyncStop();
 					//console.log("Save complete, processed " + (elementIndex + 1).toString() + " elements.");
 				}
 			}, 0);
 		}
-		private _saveGroupingAsyncStop() {
-			clearInterval(this._saveGroupingElementInterval);
-			this._saveGroupingElementInterval = null;
+		private _saveGroupStateAsyncStop() {
+			clearInterval(this._saveGroupStateElementInterval);
+			this._saveGroupStateElementInterval = null;
 		}
 		//#endregion
 
 		//#region Synchronous
-		private _saveGrouping() {
+		private _saveGroupState() {
 			this._beginSaveRestore();
 
 			var thisClass = this;
@@ -392,74 +392,77 @@ module eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation {
 			if ($groupHeaderElements) {
 				$groupHeaderElements.each(
 					(elementIndex, groupHeaderElement) =>
-						thisClass._SaveRestoreGroupHeaderLoopHandler(
+						thisClass._saveRestoreGroupHeaderLoopHandler(
 							SaveRestoreModes.Save, elementIndex, groupHeaderElement));
 			}
 		}
-		FinishSaveGroupingCheck($tableElement: JQuery, forceSave = false, resetGrouping = false) {
-			this.set_tableElement($tableElement);
-			if (resetGrouping) {
-				this.ResetGrouping();
+		SaveGroupStateFinishCheck($tableElement: JQuery, forceSave = false, resetGroupState = false) {
+			this.set_$TableElement($tableElement);
+			if (resetGroupState) {
+				this.ResetGroupState();
 			}
 
-			if (this._saveGroupingElementInterval || forceSave) {
-				this._saveGroupingAsyncStop();
-				this._saveGrouping();
+			if (this._saveGroupStateElementInterval || forceSave) {
+				this._saveGroupStateAsyncStop();
+				this._saveGroupState();
 			}
 		}
 		//#endregion
 
 		//#endregion
 
-		//#region Restore Grouping
+		//#region Restore Group State
 
-		RestoreGrouping($tableElement: JQuery,
+		RestoreGroupState(
+			$tableElement: JQuery,
 			defaultGroupToggleAction: GroupToggleActions = GroupToggleActions.None): void {
-			if (this._groupsExpanded.length === 0
-				&& this._groupsCollapsed.length === 0
+			if (this.groupsExpanded.length === 0
+				&& this.groupsCollapsed.length === 0
 				&& this._defaultGroupToggleAction === GroupToggleActions.None) {
 				return;
 			}
-			this._restoreGroupingInner($tableElement, defaultGroupToggleAction);
+			this._restoreGroupStateInner($tableElement, defaultGroupToggleAction);
 		}
 		private _defaultGroupToggleAction: GroupToggleActions;
-		private _restoreGroupingInner($tableElement: JQuery,
+		private _restoreGroupStateInner($tableElement: JQuery,
 			defaultGroupToggleAction: GroupToggleActions = GroupToggleActions.None) {
-			if (this._saveGroupingElementInterval) {
-				clearInterval(this._saveGroupingElementInterval);
+			if (this._saveGroupStateElementInterval) {
+				clearInterval(this._saveGroupStateElementInterval);
 			}
-			this.set_tableElement($tableElement);
+			this.set_$TableElement($tableElement);
 			this._defaultGroupToggleAction = defaultGroupToggleAction;
 
 			var thisClass = this;
-			this._pauseGroupStateChangeEventHandlers = true;
+			this.pauseGroupStateChangeEventHandlers = true;
 			this._beginSaveRestore();
 
 			var $groupHeaderElements = this._get_$GroupHeaderElements();
 			if ($groupHeaderElements) {
 				$groupHeaderElements.each(
 					(elementIndex, groupHeaderElement) =>
-						thisClass._SaveRestoreGroupHeaderLoopHandler(
+						thisClass._saveRestoreGroupHeaderLoopHandler(
 							SaveRestoreModes.Restore, elementIndex, groupHeaderElement));
 			}
 
-			this._pauseGroupStateChangeEventHandlers = false;
+			this.pauseGroupStateChangeEventHandlers = false;
 		}
 
 		//#endregion
 
-		ResetGrouping(): void {
-			this._groupsExpanded = [];
-			this._groupsCollapsed = [];
+		ResetGroupState(): void {
+			this.groupsExpanded.length = 0;
+			this.groupsCollapsed.length = 0;
+			this._scrollPositionsByPageIndex.length = 0;
+			this._lastPageIndex = null;
 		}
 
 		//#endregion
 
 		//#region Actions
 		ToggleAllGroups($tableElement: JQuery, action: GroupToggleActions): void {
-			this.set_tableElement($tableElement);
-			this.ResetGrouping();
-			this._restoreGroupingInner($tableElement, action);
+			this.set_$TableElement($tableElement);
+			this.ResetGroupState();
+			this._restoreGroupStateInner($tableElement, action);
 		}
 		//#endregion
 
@@ -471,7 +474,7 @@ module eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation {
 				&& typeof pageIndex === "number") {
 				this._scrollPositionsByPageIndex[pageIndex] = $scrollElement.get(0).scrollTop;
 				//Check if scroll is at bottom
-				if ($scrollElement[0].scrollHeight - $scrollElement.scrollTop() === $scrollElement.outerHeight()) {
+				if ($scrollElement[0].scrollHeight - $scrollElement.scrollTop() == $scrollElement.outerHeight()) {
 					this._scrollPositionsByPageIndex[pageIndex + 1] = 0;
 					this._scrollPositionsByPageIndex[pageIndex - 1] = 10000;
 				}
