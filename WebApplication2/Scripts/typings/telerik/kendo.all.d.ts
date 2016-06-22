@@ -1,6 +1,8 @@
-// type definitions for Kendo UI
+// Type definitions for Kendo UI Professional v2016.1.314
+// Project: http://www.telerik.com/kendo-ui
+// Definitions by: Telerik <https://github.com/telerik/>
 
-declare module kendo {
+declare namespace kendo {
     function culture(): {
         name: string;
         calendar: {
@@ -84,88 +86,90 @@ declare module kendo {
         };
     };
 
-    var cultures: {[culture: string] : {
-        name?: string;
-        calendar?: {
-            AM: string[];
-            PM: string[];
-            days: {
-                names: string[];
-                namesAbbr: string[];
-                namesShort: string[];
-                firstDay: number;
-            };
-            months: {
-                names: string[];
-                namesAbbr: string[];
-            };
-            patterns: {
-                D: string;
-                F: string;
-                G: string;
-                M: string;
-                T: string;
-                Y: string;
-                d: string;
-                g: string;
-                m: string;
-                s: string;
-                t: string;
-                u: string;
-                y: string;
-            };
-            twoDigitYearMax: number;
-        };
-        calendars?: {
-            standard: {
-                AM: string[];
-                PM: string[];
-                days: {
-                    names: string[];
-                    namesAbbr: string[];
-                    namesShort: string[];
-                    firstDay: number;
-                };
-                months: {
-                    names: string[];
-                    namesAbbr: string[];
-                };
-                patterns: {
-                    D: string;
-                    F: string;
-                    G: string;
-                    M: string;
-                    T: string;
-                    Y: string;
-                    d: string;
-                    g: string;
-                    m: string;
-                    s: string;
-                    t: string;
-                    u: string;
-                    y: string;
-                };
-                twoDigitYearMax: number;
-            };
-        };
-        numberFormat?: {
-            currency: {
-                decimals: number;
-                groupSize: number[];
-                pattern: string[];
-                symbol: string;
-            };
-            decimals: number;
-            groupSize: number[];
-            pattern: string[];
-            percent: {
-                decimals: number;
-                groupSize: number[];
-                pattern: string[];
-                symbol: string;
-            };
-        };
-    }};
+    var cultures: {
+		[culture: string]: {
+			name?: string;
+			calendar?: {
+				AM: string[];
+				PM: string[];
+				days: {
+					names: string[];
+					namesAbbr: string[];
+					namesShort: string[];
+					firstDay: number;
+				};
+				months: {
+					names: string[];
+					namesAbbr: string[];
+				};
+				patterns: {
+					D: string;
+					F: string;
+					G: string;
+					M: string;
+					T: string;
+					Y: string;
+					d: string;
+					g: string;
+					m: string;
+					s: string;
+					t: string;
+					u: string;
+					y: string;
+				};
+				twoDigitYearMax: number;
+			};
+			calendars?: {
+				standard: {
+					AM: string[];
+					PM: string[];
+					days: {
+						names: string[];
+						namesAbbr: string[];
+						namesShort: string[];
+						firstDay: number;
+					};
+					months: {
+						names: string[];
+						namesAbbr: string[];
+					};
+					patterns: {
+						D: string;
+						F: string;
+						G: string;
+						M: string;
+						T: string;
+						Y: string;
+						d: string;
+						g: string;
+						m: string;
+						s: string;
+						t: string;
+						u: string;
+						y: string;
+					};
+					twoDigitYearMax: number;
+				};
+			};
+			numberFormat?: {
+				currency: {
+					decimals: number;
+					groupSize: number[];
+					pattern: string[];
+					symbol: string;
+				};
+				decimals: number;
+				groupSize: number[];
+				pattern: string[];
+				percent: {
+					decimals: number;
+					groupSize: number[];
+					pattern: string[];
+					symbol: string;
+				};
+			};
+		}
+	};
 
     function format(format: string, ...values: any[]): string;
 
@@ -241,6 +245,8 @@ declare module kendo {
         };
     };
 
+    var version: string;
+
     interface TemplateOptions {
         paramName?: string;
         useWithBlock?: boolean;
@@ -255,8 +261,10 @@ declare module kendo {
         static fn: Observable;
         static extend(prototype: Object): Observable;
 
+        init(...args: any[]): void;
         bind(eventName: string, handler: Function): Observable;
         one(eventName: string, handler: Function): Observable;
+        first(eventName: string, handler: Function): Observable;
         trigger(eventName: string, e?: any): boolean;
         unbind(eventName: string, handler?: any): Observable;
     }
@@ -291,12 +299,12 @@ declare module kendo {
     }
 
     class ViewContainer extends Observable {
-       view: View;
+		view: View;
     }
 
     class Layout extends View {
         containers: { [selector: string]: ViewContainer; };
-        showIn(selector: string, view: View): void;
+        showIn(selector: string, view: View, transitionClass?: string): void;
     }
 
     class History extends Observable {
@@ -312,8 +320,13 @@ declare module kendo {
 
     interface RouterOptions {
         init?: (e: RouterEvent) => void;
-        routeMissing?: (e: RouterEvent) => void;
-        change?: (e: RouterEvent) => void;
+        pushState?: boolean;
+        hashBang?: boolean;
+        root?: string;
+        ignoreCase?: boolean;
+        change?(e: RouterChangeEvent): void;
+        routeMissing?(e: RouterRouteMissingEvent): void;
+        same?(e: RouterEvent): void;
     }
 
     interface RouterEvent {
@@ -321,6 +334,15 @@ declare module kendo {
         url: string;
         preventDefault: Function;
         isDefaultPrevented(): boolean;
+    }
+
+    interface RouterChangeEvent extends RouterEvent {
+        params: any;
+        backButtonPressed: boolean;
+    }
+
+    interface RouterRouteMissingEvent extends RouterEvent {
+        params: any;
     }
 
     class Route extends Class {
@@ -342,7 +364,10 @@ declare module kendo {
 
 }
 
-declare module kendo.effects {
+declare namespace kendo.effects {
+    function enable(): void;
+    function disable(): void;
+
     interface Element {
         expand(direction: string): effects.Expand;
         expandHorizontal(): effects.Expand;
@@ -440,7 +465,7 @@ declare module kendo.effects {
     }
 }
 
-declare module kendo.data {
+declare namespace kendo.data {
     interface ObservableObjectEvent {
         sender?: ObservableObject;
         field?: string;
@@ -462,8 +487,8 @@ declare module kendo.data {
         change(e: Object): void;
         start(source: kendo.Observable): void;
         stop(source: kendo.Observable): void;
-        get (): any;
-        set (value: any): void;
+        get(): any;
+        set(value: any): void;
         destroy(): void;
     }
 
@@ -474,7 +499,7 @@ declare module kendo.data {
     }
 
     class EventBinding extends Binding {
-        get (): void;
+        get(): void;
     }
 
     class TemplateBinding extends Binding {
@@ -482,7 +507,7 @@ declare module kendo.data {
         render(value: Object): string;
     }
 
-    module binders { }
+    namespace binders { }
 
     interface Bindings {
         [key: string]: Binding;
@@ -505,7 +530,7 @@ declare module kendo.data {
     interface BinderOptions {
     }
 
-    class ObservableObject extends Observable{
+    class ObservableObject extends Observable {
         constructor(value?: any);
         uid: string;
         init(value?: any): void;
@@ -813,7 +838,7 @@ declare module kendo.data {
         columns: PivotSchemaColumnAxis;
     }
 
-    interface PivotSchema extends DataSourceSchema{
+    interface PivotSchema extends DataSourceSchema {
         axes?: any;
         catalogs?: any;
         cubes?: any;
@@ -921,12 +946,13 @@ declare module kendo.data {
     }
 
     interface DataSourceSchemaWithConstructorModel extends DataSourceSchema {
-        model?:  typeof Model;
+        model?: typeof Model;
     }
 
     interface DataSourceSchemaModel {
         id?: string;
         fields?: any;
+        [index: string]: any;
     }
 
     interface DataSourceSchemaModelWithFieldsArray extends DataSourceSchemaModel {
@@ -968,7 +994,7 @@ declare module kendo.data {
         every(callback: (item: Object, index: number, source: ObservableArray) => boolean): boolean;
         filter(callback: (item: Object, index: number, source: ObservableArray) => boolean): any[];
         find(callback: (item: Object, index: number, source: ObservableArray) => boolean): any;
-        forEach(callback: (item: Object, index: number, source: ObservableArray) => void ): void;
+        forEach(callback: (item: Object, index: number, source: ObservableArray) => void): void;
         indexOf(item: any): number;
         join(separator: string): string;
         map(callback: (item: Object, index: number, source: ObservableArray) => any): any[];
@@ -994,7 +1020,7 @@ declare module kendo.data {
         items?: kendo.data.Model[];
     }
 
-    class DataSource extends Observable{
+    class DataSource extends Observable {
         options: DataSourceOptions;
 
         static create(options?: DataSourceOptions): DataSource;
@@ -1047,6 +1073,31 @@ declare module kendo.data {
         total(): number;
         totalPages(): number;
         view(): kendo.data.ObservableArray;
+    }
+
+    class Query {
+        data: any[];
+
+        static process(data: any[], options: DataSourceTransportReadOptionsData): QueryResult;
+
+        constructor(data: any[]);
+        toArray(): any[];
+        range(intex: number, count: number): kendo.data.Query;
+        skip(count: number): kendo.data.Query;
+        take(count: number): kendo.data.Query;
+        select(selector: Function): kendo.data.Query;
+        order(selector: string, dir?: string): kendo.data.Query;
+        order(selector: Function, dir?: string): kendo.data.Query;
+        filter(filters: DataSourceFilterItem): kendo.data.Query;
+        filter(filters: DataSourceFilterItem[]): kendo.data.Query;
+        filter(filters: DataSourceFilters): kendo.data.Query;
+        group(descriptors: DataSourceGroupItem): kendo.data.Query;
+        group(descriptors: DataSourceGroupItem[]): kendo.data.Query;
+    }
+
+    interface QueryResult {
+        total?: number;
+        data?: any[];
     }
 
     interface DataSourceAggregateItem {
@@ -1189,7 +1240,7 @@ declare module kendo.data {
         sort?: any;
         transport?: DataSourceTransport;
         type?: string;
-        change? (e: DataSourceChangeEvent): void;
+        change?(e: DataSourceChangeEvent): void;
         error?(e: DataSourceErrorEvent): void;
         sync?(e: DataSourceEvent): void;
         requestStart?(e: DataSourceRequestStartEvent): void;
@@ -1237,11 +1288,11 @@ declare module kendo.data {
     }
 }
 
-declare module kendo.data.transports {
+declare namespace kendo.data.transports {
     var odata: DataSourceTransport;
 }
 
-declare module kendo.ui {
+declare namespace kendo.ui {
     function progress(container: JQuery, toggle: boolean): void;
 
     class Widget extends Observable {
@@ -1271,7 +1322,7 @@ declare module kendo.ui {
     function plugin(widget: typeof kendo.ui.Widget, register?: typeof kendo.dataviz.ui, prefix?: String): void;
     function plugin(widget: any, register?: typeof kendo.dataviz.ui, prefix?: String): void;
 
-    class Draggable extends kendo.ui.Widget{
+    class Draggable extends kendo.ui.Widget {
         element: JQuery;
         currentTarget: JQuery;
         constructor(element: Element, options?: DraggableOptions);
@@ -1282,7 +1333,7 @@ declare module kendo.ui {
         sender?: Draggable;
     }
 
-    class DropTarget extends kendo.ui.Widget{
+    class DropTarget extends kendo.ui.Widget {
         element: JQuery;
         constructor(element: Element, options?: DropTargetOptions);
         options: DropTargetOptions;
@@ -1312,7 +1363,7 @@ declare module kendo.ui {
         draggable?: kendo.ui.Draggable;
     }
 
-    class DropTargetArea extends kendo.ui.Widget{
+    class DropTargetArea extends kendo.ui.Widget {
         element: JQuery;
         constructor(element: Element, options?: DropTargetAreaOptions);
         options: DropTargetAreaOptions;
@@ -1383,7 +1434,7 @@ declare module kendo.ui {
     }
 }
 
-declare module kendo.mobile {
+declare namespace kendo.mobile {
     function init(selector: string): void;
     function init(element: JQuery): void;
     function init(element: Element): void;
@@ -1404,14 +1455,20 @@ declare module kendo.mobile {
     }
 
     interface ApplicationOptions {
+        browserHistory?: boolean;
         hideAddressBar?: boolean;
         updateDocumentTitle?: boolean;
         initial?: string;
         layout?: string;
         loading?: string;
+        modelScope?: Object;
         platform?: string;
+        retina?: boolean;
         serverNavigation?: boolean;
+        skin?: string;
+        statusBarStyle?: string;
         transition?: string;
+        useNativeScrolling?: boolean;
     }
 
     interface ApplicationEvent {
@@ -1419,7 +1476,7 @@ declare module kendo.mobile {
     }
 }
 
-declare module kendo.mobile.ui {
+declare namespace kendo.mobile.ui {
 
     class Widget extends kendo.ui.Widget {
     }
@@ -1443,24 +1500,24 @@ declare module kendo.mobile.ui {
         y?: number;
     }
 }
-declare module kendo.dataviz.ui {
+declare namespace kendo.dataviz.ui {
     function registerTheme(name: string, options: any): void;
 
     function plugin(widget: typeof kendo.ui.Widget): void;
     function plugin(widget: any): void;
 }
 
-declare module kendo.dataviz.map.layer {
+declare namespace kendo.dataviz.map.layer {
     class Shape {
     }
 }
 
-declare module kendo.drawing.pdf {
+declare namespace kendo.drawing.pdf {
     function saveAs(group: kendo.drawing.Group, fileName: string,
-                    proxyUrl?: string, callback?: Function): void;
+		proxyUrl?: string, callback?: Function): void;
 }
 
-declare module kendo.geometry {
+declare namespace kendo.geometry {
     class Arc extends Observable {
 
 
@@ -1630,7 +1687,7 @@ declare module kendo.geometry {
         origin: kendo.geometry.Point;
         size: kendo.geometry.Size;
 
-        constructor(origin: kendo.geometry.Point, size: kendo.geometry.Size);
+        constructor(origin: kendo.geometry.Point | any, size: kendo.geometry.Size | any);
 
         static fromPoints(pointA: kendo.geometry.Point, pointB: kendo.geometry.Point): kendo.geometry.Rect;
         static union(rectA: kendo.geometry.Rect, rectB: kendo.geometry.Rect): kendo.geometry.Rect;
@@ -1726,7 +1783,7 @@ declare module kendo.geometry {
 
 
 }
-declare module kendo.drawing {
+declare namespace kendo.drawing {
     class Arc extends kendo.drawing.Element {
 
 
@@ -1740,6 +1797,7 @@ declare module kendo.drawing {
         clip(): kendo.drawing.Path;
         clip(clip: kendo.drawing.Path): void;
         clippedBBox(): kendo.geometry.Rect;
+        containsPoint(point: kendo.geometry.Point): boolean;
         geometry(): kendo.geometry.Arc;
         geometry(value: kendo.geometry.Arc): void;
         fill(color: string, opacity?: number): kendo.drawing.Arc;
@@ -1760,6 +1818,7 @@ declare module kendo.drawing {
         fill?: kendo.drawing.FillOptions;
         opacity?: number;
         stroke?: kendo.drawing.StrokeOptions;
+        tooltip?: kendo.drawing.TooltipOptions;
         transform?: kendo.geometry.Transformation;
         visible?: boolean;
     }
@@ -1783,6 +1842,7 @@ declare module kendo.drawing {
         clip(): kendo.drawing.Path;
         clip(clip: kendo.drawing.Path): void;
         clippedBBox(): kendo.geometry.Rect;
+        containsPoint(point: kendo.geometry.Point): boolean;
         geometry(): kendo.geometry.Circle;
         geometry(value: kendo.geometry.Circle): void;
         fill(color: string, opacity?: number): kendo.drawing.Circle;
@@ -1803,6 +1863,7 @@ declare module kendo.drawing {
         fill?: kendo.drawing.FillOptions;
         opacity?: number;
         stroke?: kendo.drawing.StrokeOptions;
+        tooltip?: kendo.drawing.TooltipOptions;
         transform?: kendo.geometry.Transformation;
         visible?: boolean;
     }
@@ -1818,6 +1879,7 @@ declare module kendo.drawing {
 
         options: ElementOptions;
 
+        parent: kendo.drawing.Group;
 
         constructor(options?: ElementOptions);
 
@@ -1826,6 +1888,7 @@ declare module kendo.drawing {
         clip(): kendo.drawing.Path;
         clip(clip: kendo.drawing.Path): void;
         clippedBBox(): kendo.geometry.Rect;
+        containsPoint(point: kendo.geometry.Point): boolean;
         opacity(): number;
         opacity(opacity: number): void;
         transform(): kendo.geometry.Transformation;
@@ -1850,7 +1913,7 @@ declare module kendo.drawing {
     }
 
 
-    interface FillOptions  {
+    interface FillOptions {
 
 
 
@@ -1930,6 +1993,7 @@ declare module kendo.drawing {
         clip(): kendo.drawing.Path;
         clip(clip: kendo.drawing.Path): void;
         clippedBBox(): kendo.geometry.Rect;
+        containsPoint(point: kendo.geometry.Point): boolean;
         insert(position: number, element: kendo.drawing.Element): void;
         opacity(): number;
         opacity(opacity: number): void;
@@ -1946,6 +2010,7 @@ declare module kendo.drawing {
         cursor?: string;
         opacity?: number;
         pdf?: kendo.drawing.PDFOptions;
+        tooltip?: kendo.drawing.TooltipOptions;
         transform?: kendo.geometry.Transformation;
         visible?: boolean;
     }
@@ -1969,6 +2034,7 @@ declare module kendo.drawing {
         clip(): kendo.drawing.Path;
         clip(clip: kendo.drawing.Path): void;
         clippedBBox(): kendo.geometry.Rect;
+        containsPoint(point: kendo.geometry.Point): boolean;
         opacity(): number;
         opacity(opacity: number): void;
         src(): string;
@@ -1987,6 +2053,7 @@ declare module kendo.drawing {
         clip?: kendo.drawing.Path;
         cursor?: string;
         opacity?: number;
+        tooltip?: kendo.drawing.TooltipOptions;
         transform?: kendo.geometry.Transformation;
         visible?: boolean;
     }
@@ -2076,6 +2143,7 @@ declare module kendo.drawing {
         clip(clip: kendo.drawing.Path): void;
         clippedBBox(): kendo.geometry.Rect;
         close(): kendo.drawing.MultiPath;
+        containsPoint(point: kendo.geometry.Point): boolean;
         curveTo(controlOut: any, controlIn: any, endPoint: any): kendo.drawing.MultiPath;
         curveTo(controlOut: any, controlIn: any, endPoint: kendo.geometry.Point): kendo.drawing.MultiPath;
         curveTo(controlOut: any, controlIn: kendo.geometry.Point, endPoint: any): kendo.drawing.MultiPath;
@@ -2108,6 +2176,7 @@ declare module kendo.drawing {
         fill?: kendo.drawing.FillOptions;
         opacity?: number;
         stroke?: kendo.drawing.StrokeOptions;
+        tooltip?: kendo.drawing.TooltipOptions;
         transform?: kendo.geometry.Transformation;
         visible?: boolean;
     }
@@ -2143,7 +2212,7 @@ declare module kendo.drawing {
     }
 
 
-    interface PDFOptions  {
+    interface PDFOptions {
 
 
 
@@ -2181,6 +2250,7 @@ declare module kendo.drawing {
         clip(clip: kendo.drawing.Path): void;
         clippedBBox(): kendo.geometry.Rect;
         close(): kendo.drawing.Path;
+        containsPoint(point: kendo.geometry.Point): boolean;
         curveTo(controlOut: any, controlIn: any, endPoint: any): kendo.drawing.Path;
         curveTo(controlOut: any, controlIn: any, endPoint: kendo.geometry.Point): kendo.drawing.Path;
         curveTo(controlOut: any, controlIn: kendo.geometry.Point, endPoint: any): kendo.drawing.Path;
@@ -2213,6 +2283,7 @@ declare module kendo.drawing {
         fill?: kendo.drawing.FillOptions;
         opacity?: number;
         stroke?: kendo.drawing.StrokeOptions;
+        tooltip?: kendo.drawing.TooltipOptions;
         transform?: kendo.geometry.Transformation;
         visible?: boolean;
     }
@@ -2245,7 +2316,7 @@ declare module kendo.drawing {
 
     interface RadialGradientOptions {
         name?: string;
-        center?: any|kendo.geometry.Point;
+        center?: any | kendo.geometry.Point;
         radius?: number;
         stops?: any;
     }
@@ -2269,6 +2340,7 @@ declare module kendo.drawing {
         clip(): kendo.drawing.Path;
         clip(clip: kendo.drawing.Path): void;
         clippedBBox(): kendo.geometry.Rect;
+        containsPoint(point: kendo.geometry.Point): boolean;
         geometry(): kendo.geometry.Rect;
         geometry(value: kendo.geometry.Rect): void;
         fill(color: string, opacity?: number): kendo.drawing.Rect;
@@ -2289,6 +2361,7 @@ declare module kendo.drawing {
         fill?: kendo.drawing.FillOptions;
         opacity?: number;
         stroke?: kendo.drawing.StrokeOptions;
+        tooltip?: kendo.drawing.TooltipOptions;
         transform?: kendo.geometry.Transformation;
         visible?: boolean;
     }
@@ -2327,7 +2400,7 @@ declare module kendo.drawing {
     }
 
 
-    interface StrokeOptions  {
+    interface StrokeOptions {
 
 
 
@@ -2359,8 +2432,30 @@ declare module kendo.drawing {
         clear(): void;
         draw(element: kendo.drawing.Element): void;
         eventTarget(e: any): kendo.drawing.Element;
+        hideTooltip(): void;
         resize(force?: boolean): void;
+        showTooltip(element: kendo.drawing.Element, options?: any): void;
 
+    }
+
+    interface SurfaceTooltipAnimationClose {
+        effects?: string;
+        duration?: number;
+    }
+
+    interface SurfaceTooltipAnimationOpen {
+        effects?: string;
+        duration?: number;
+    }
+
+    interface SurfaceTooltipAnimation {
+        close?: SurfaceTooltipAnimationClose;
+        open?: SurfaceTooltipAnimationOpen;
+    }
+
+    interface SurfaceTooltip {
+        animation?: boolean | SurfaceTooltipAnimation;
+        appendTo?: string | JQuery;
     }
 
     interface SurfaceOptions {
@@ -2368,9 +2463,12 @@ declare module kendo.drawing {
         type?: string;
         height?: string;
         width?: string;
+        tooltip?: SurfaceTooltip;
         click?(e: SurfaceClickEvent): void;
         mouseenter?(e: SurfaceMouseenterEvent): void;
         mouseleave?(e: SurfaceMouseleaveEvent): void;
+        tooltipClose?(e: SurfaceTooltipCloseEvent): void;
+        tooltipOpen?(e: SurfaceTooltipOpenEvent): void;
     }
     interface SurfaceEvent {
         sender: Surface;
@@ -2393,6 +2491,16 @@ declare module kendo.drawing {
         originalEvent?: any;
     }
 
+    interface SurfaceTooltipCloseEvent extends SurfaceEvent {
+        element?: kendo.drawing.Element;
+        target?: kendo.drawing.Element;
+    }
+
+    interface SurfaceTooltipOpenEvent extends SurfaceEvent {
+        element?: kendo.drawing.Element;
+        target?: kendo.drawing.Element;
+    }
+
 
     class Text extends kendo.drawing.Element {
 
@@ -2407,6 +2515,7 @@ declare module kendo.drawing {
         clip(): kendo.drawing.Path;
         clip(clip: kendo.drawing.Path): void;
         clippedBBox(): kendo.geometry.Rect;
+        containsPoint(point: kendo.geometry.Point): boolean;
         content(): string;
         content(value: string): void;
         fill(color: string, opacity?: number): kendo.drawing.Text;
@@ -2430,6 +2539,7 @@ declare module kendo.drawing {
         font?: string;
         opacity?: number;
         stroke?: kendo.drawing.StrokeOptions;
+        tooltip?: kendo.drawing.TooltipOptions;
         transform?: kendo.geometry.Transformation;
         visible?: boolean;
     }
@@ -2440,8 +2550,30 @@ declare module kendo.drawing {
     }
 
 
+    interface TooltipOptions {
+
+
+
+        autoHide?: boolean;
+        content?: string | Function;
+        position?: string;
+        height?: number | string;
+        hideDelay?: number;
+        offset?: number;
+        shared?: boolean;
+        showAfter?: number;
+        showOn?: string;
+        width?: number | string;
+
+
+
+
+    }
+
+
+
 }
-declare module kendo.ui {
+declare namespace kendo.ui {
     class AutoComplete extends kendo.ui.Widget {
 
         static fn: AutoComplete;
@@ -2501,14 +2633,14 @@ declare module kendo.ui {
 
     interface AutoCompleteOptions {
         name?: string;
-        animation?: AutoCompleteAnimation;
-        dataSource?: any|any|kendo.data.DataSource;
+        animation?: boolean | AutoCompleteAnimation;
+        dataSource?: any | any | kendo.data.DataSource;
         dataTextField?: string;
         delay?: number;
         enable?: boolean;
         filter?: string;
-        fixedGroupTemplate?: string|Function;
-        groupTemplate?: string|Function;
+        fixedGroupTemplate?: string | Function;
+        groupTemplate?: string | Function;
         height?: number;
         highlightFirst?: boolean;
         ignoreCase?: boolean;
@@ -2517,10 +2649,10 @@ declare module kendo.ui {
         popup?: any;
         separator?: string;
         suggest?: boolean;
-        headerTemplate?: string|Function;
-        template?: string|Function;
+        headerTemplate?: string | Function;
+        template?: string | Function;
         valuePrimitive?: boolean;
-        virtual?: AutoCompleteVirtual;
+        virtual?: boolean | AutoCompleteVirtual;
         change?(e: AutoCompleteChangeEvent): void;
         close?(e: AutoCompleteCloseEvent): void;
         dataBound?(e: AutoCompleteDataBoundEvent): void;
@@ -2638,8 +2770,8 @@ declare module kendo.ui {
         culture?: string;
         dates?: any;
         depth?: string;
-        disableDates?: any|Function;
-        footer?: string|Function;
+        disableDates?: any | Function;
+        footer?: string | Function;
         format?: string;
         max?: Date;
         min?: Date;
@@ -2686,7 +2818,7 @@ declare module kendo.ui {
 
     interface ColorPaletteOptions {
         name?: string;
-        palette?: string|any;
+        palette?: string | any;
         columns?: number;
         tileSize?: ColorPaletteTileSize;
         value?: string;
@@ -2741,7 +2873,7 @@ declare module kendo.ui {
         columns?: number;
         tileSize?: ColorPickerTileSize;
         messages?: ColorPickerMessages;
-        palette?: string|any;
+        palette?: string | any;
         opacity?: boolean;
         preview?: boolean;
         toolIcon?: string;
@@ -2841,14 +2973,14 @@ declare module kendo.ui {
         autoBind?: boolean;
         cascadeFrom?: string;
         cascadeFromField?: string;
-        dataSource?: any|any|kendo.data.DataSource;
+        dataSource?: any | any | kendo.data.DataSource;
         dataTextField?: string;
         dataValueField?: string;
         delay?: number;
         enable?: boolean;
         filter?: string;
-        fixedGroupTemplate?: string|Function;
-        groupTemplate?: string|Function;
+        fixedGroupTemplate?: string | Function;
+        groupTemplate?: string | Function;
         height?: number;
         highlightFirst?: boolean;
         ignoreCase?: boolean;
@@ -2857,12 +2989,12 @@ declare module kendo.ui {
         placeholder?: string;
         popup?: ComboBoxPopup;
         suggest?: boolean;
-        headerTemplate?: string|Function;
-        template?: string|Function;
+        headerTemplate?: string | Function;
+        template?: string | Function;
         text?: string;
         value?: string;
         valuePrimitive?: boolean;
-        virtual?: ComboBoxVirtual;
+        virtual?: boolean | ComboBoxVirtual;
         change?(e: ComboBoxChangeEvent): void;
         close?(e: ComboBoxCloseEvent): void;
         dataBound?(e: ComboBoxDataBoundEvent): void;
@@ -2957,16 +3089,16 @@ declare module kendo.ui {
     interface ContextMenuOptions {
         name?: string;
         alignToAnchor?: boolean;
-        animation?: ContextMenuAnimation;
+        animation?: boolean | ContextMenuAnimation;
         closeOnClick?: boolean;
-        dataSource?: any|any;
+        dataSource?: any | any;
         direction?: string;
         filter?: string;
         hoverDelay?: number;
         orientation?: string;
         popupCollision?: string;
         showOn?: string;
-        target?: string|JQuery;
+        target?: string | JQuery;
         close?(e: ContextMenuCloseEvent): void;
         open?(e: ContextMenuOpenEvent): void;
         activate?(e: ContextMenuActivateEvent): void;
@@ -3067,13 +3199,13 @@ declare module kendo.ui {
 
     interface DatePickerOptions {
         name?: string;
-        animation?: DatePickerAnimation;
+        animation?: boolean | DatePickerAnimation;
         ARIATemplate?: string;
         culture?: string;
         dates?: any;
         depth?: string;
-        disableDates?: any|Function;
-        footer?: string|Function;
+        disableDates?: any | Function;
+        footer?: string | Function;
         format?: string;
         max?: Date;
         min?: Date;
@@ -3157,12 +3289,12 @@ declare module kendo.ui {
 
     interface DateTimePickerOptions {
         name?: string;
-        animation?: DateTimePickerAnimation;
+        animation?: boolean | DateTimePickerAnimation;
         ARIATemplate?: string;
         culture?: string;
         dates?: any;
         depth?: string;
-        disableDates?: any|Function;
+        disableDates?: any | Function;
         footer?: string;
         format?: string;
         interval?: number;
@@ -3267,32 +3399,32 @@ declare module kendo.ui {
 
     interface DropDownListOptions {
         name?: string;
-        animation?: DropDownListAnimation;
+        animation?: boolean | DropDownListAnimation;
         autoBind?: boolean;
         cascadeFrom?: string;
         cascadeFromField?: string;
-        dataSource?: any|any|kendo.data.DataSource;
+        dataSource?: any | any | kendo.data.DataSource;
         dataTextField?: string;
         dataValueField?: string;
         delay?: number;
         enable?: boolean;
         filter?: string;
-        fixedGroupTemplate?: string|Function;
-        groupTemplate?: string|Function;
+        fixedGroupTemplate?: string | Function;
+        groupTemplate?: string | Function;
         height?: number;
         ignoreCase?: boolean;
         index?: number;
         minLength?: number;
         popup?: DropDownListPopup;
-        optionLabel?: string|any;
-        optionLabelTemplate?: string|Function;
-        headerTemplate?: string|Function;
-        template?: string|Function;
-        valueTemplate?: string|Function;
+        optionLabel?: string | any;
+        optionLabelTemplate?: string | Function;
+        headerTemplate?: string | Function;
+        template?: string | Function;
+        valueTemplate?: string | Function;
         text?: string;
         value?: string;
         valuePrimitive?: boolean;
-        virtual?: DropDownListVirtual;
+        virtual?: boolean | DropDownListVirtual;
         change?(e: DropDownListChangeEvent): void;
         close?(e: DropDownListCloseEvent): void;
         dataBound?(e: DropDownListDataBoundEvent): void;
@@ -3366,6 +3498,10 @@ declare module kendo.ui {
 
     }
 
+    interface EditorDeserialization {
+        custom?: Function;
+    }
+
     interface EditorFileBrowserMessages {
         uploadFile?: string;
         orderBy?: string;
@@ -3410,32 +3546,32 @@ declare module kendo.ui {
 
     interface EditorFileBrowserTransportCreate {
         contentType?: string;
-        data?: any|string|Function;
+        data?: any | string | Function;
         dataType?: string;
         type?: string;
-        url?: string|Function;
+        url?: string | Function;
     }
 
     interface EditorFileBrowserTransportDestroy {
         contentType?: string;
-        data?: any|string|Function;
+        data?: any | string | Function;
         dataType?: string;
         type?: string;
-        url?: string|Function;
+        url?: string | Function;
     }
 
     interface EditorFileBrowserTransportRead {
         contentType?: string;
-        data?: any|string|Function;
+        data?: any | string | Function;
         dataType?: string;
         type?: string;
-        url?: string|Function;
+        url?: string | Function;
     }
 
     interface EditorFileBrowserTransport {
         read?: EditorFileBrowserTransportRead;
         uploadUrl?: string;
-        fileUrl?: string|Function;
+        fileUrl?: string | Function;
         destroy?: EditorFileBrowserTransportDestroy;
         create?: EditorFileBrowserTransportCreate;
     }
@@ -3492,33 +3628,33 @@ declare module kendo.ui {
 
     interface EditorImageBrowserTransportCreate {
         contentType?: string;
-        data?: any|string|Function;
+        data?: any | string | Function;
         dataType?: string;
         type?: string;
-        url?: string|Function;
+        url?: string | Function;
     }
 
     interface EditorImageBrowserTransportDestroy {
         contentType?: string;
-        data?: any|string|Function;
+        data?: any | string | Function;
         dataType?: string;
         type?: string;
-        url?: string|Function;
+        url?: string | Function;
     }
 
     interface EditorImageBrowserTransportRead {
         contentType?: string;
-        data?: any|string|Function;
+        data?: any | string | Function;
         dataType?: string;
         type?: string;
-        url?: string|Function;
+        url?: string | Function;
     }
 
     interface EditorImageBrowserTransport {
         read?: EditorImageBrowserTransportRead;
-        thumbnailUrl?: string|Function;
+        thumbnailUrl?: string | Function;
         uploadUrl?: string;
-        imageUrl?: string|Function;
+        imageUrl?: string | Function;
         destroy?: EditorImageBrowserTransportDestroy;
         create?: EditorImageBrowserTransportCreate;
     }
@@ -3594,16 +3730,28 @@ declare module kendo.ui {
         deleteColumn?: string;
     }
 
+    interface EditorPasteCleanup {
+        all?: boolean;
+        css?: boolean;
+        custom?: Function;
+        keepNewLines?: boolean;
+        msAllFormatting?: boolean;
+        msConvertLists?: boolean;
+        msTags?: boolean;
+        none?: boolean;
+        span?: boolean;
+    }
+
     interface EditorPdfMargin {
-        bottom?: number|string;
-        left?: number|string;
-        right?: number|string;
-        top?: number|string;
+        bottom?: number | string;
+        left?: number | string;
+        right?: number | string;
+        top?: number | string;
     }
 
     interface EditorPdf {
         author?: string;
-        avoidLinks?: boolean|string;
+        avoidLinks?: boolean | string;
         creator?: string;
         date?: Date;
         fileName?: string;
@@ -3611,7 +3759,7 @@ declare module kendo.ui {
         keywords?: string;
         landscape?: boolean;
         margin?: EditorPdfMargin;
-        paperSize?: string|any;
+        paperSize?: string | any;
         proxyURL?: string;
         proxyTarget?: string;
         subject?: string;
@@ -3626,6 +3774,7 @@ declare module kendo.ui {
     }
 
     interface EditorSerialization {
+        custom?: Function;
         entities?: boolean;
         scripts?: boolean;
         semantic?: boolean;
@@ -3655,11 +3804,13 @@ declare module kendo.ui {
 
     interface EditorOptions {
         name?: string;
+        deserialization?: EditorDeserialization;
         domain?: string;
         encoded?: boolean;
         messages?: EditorMessages;
+        pasteCleanup?: EditorPasteCleanup;
         pdf?: EditorPdf;
-        resizable?: EditorResizable;
+        resizable?: boolean | EditorResizable;
         serialization?: EditorSerialization;
         stylesheets?: any;
         tools?: EditorTool[];
@@ -3690,6 +3841,101 @@ declare module kendo.ui {
 
     interface EditorPdfExportEvent extends EditorEvent {
         promise?: JQueryPromise<any>;
+    }
+
+
+    class FilterMenu extends kendo.ui.Widget {
+
+        static fn: FilterMenu;
+
+        options: FilterMenuOptions;
+
+        field: string;
+
+        element: JQuery;
+        wrapper: JQuery;
+
+        static extend(proto: Object): FilterMenu;
+
+        constructor(element: Element, options?: FilterMenuOptions);
+
+
+        clear(): void;
+
+    }
+
+    interface FilterMenuMessages {
+        and?: string;
+        clear?: string;
+        filter?: string;
+        info?: string;
+        isFalse?: string;
+        isTrue?: string;
+        or?: string;
+        selectValue?: string;
+    }
+
+    interface FilterMenuOperatorsDate {
+        eq?: string;
+        neq?: string;
+        isnull?: string;
+        isnotnull?: string;
+        gte?: string;
+        gt?: string;
+        lte?: string;
+        lt?: string;
+    }
+
+    interface FilterMenuOperatorsEnums {
+        eq?: string;
+        neq?: string;
+        isnull?: string;
+        isnotnull?: string;
+    }
+
+    interface FilterMenuOperatorsNumber {
+        eq?: string;
+        neq?: string;
+        isnull?: string;
+        isnotnull?: string;
+        gte?: string;
+        gt?: string;
+        lte?: string;
+        lt?: string;
+    }
+
+    interface FilterMenuOperatorsString {
+        eq?: string;
+        neq?: string;
+        isnull?: string;
+        isnotnull?: string;
+        isempty?: string;
+        isnotempty?: string;
+        startswith?: string;
+        contains?: string;
+        doesnotcontain?: string;
+        endswith?: string;
+    }
+
+    interface FilterMenuOperators {
+        string?: FilterMenuOperatorsString;
+        number?: FilterMenuOperatorsNumber;
+        date?: FilterMenuOperatorsDate;
+        enums?: FilterMenuOperatorsEnums;
+    }
+
+    interface FilterMenuOptions {
+        name?: string;
+        dataSource?: any | any | kendo.data.DataSource;
+        extra?: boolean;
+        field?: string;
+        messages?: FilterMenuMessages;
+        operators?: FilterMenuOperators;
+    }
+    interface FilterMenuEvent {
+        sender: FilterMenu;
+        preventDefault: Function;
+        isDefaultPrevented(): boolean;
     }
 
 
@@ -3784,7 +4030,7 @@ declare module kendo.ui {
     }
 
     interface GanttAssignments {
-        dataSource?: any|any|kendo.data.DataSource;
+        dataSource?: any | any | kendo.data.DataSource;
         dataResourceIdField?: string;
         dataTaskIdField?: string;
         dataValueField?: string;
@@ -3794,7 +4040,7 @@ declare module kendo.ui {
         field?: string;
         title?: string;
         format?: string;
-        width?: string|number;
+        width?: string | number;
         editable?: boolean;
         sortable?: boolean;
     }
@@ -3805,7 +4051,7 @@ declare module kendo.ui {
 
     interface GanttEditable {
         confirmation?: boolean;
-        template?: string|Function;
+        template?: string | Function;
     }
 
     interface GanttMessagesActions {
@@ -3852,15 +4098,15 @@ declare module kendo.ui {
     }
 
     interface GanttPdfMargin {
-        bottom?: number|string;
-        left?: number|string;
-        right?: number|string;
-        top?: number|string;
+        bottom?: number | string;
+        left?: number | string;
+        right?: number | string;
+        top?: number | string;
     }
 
     interface GanttPdf {
         author?: string;
-        avoidLinks?: boolean|string;
+        avoidLinks?: boolean | string;
         creator?: string;
         date?: Date;
         fileName?: string;
@@ -3868,7 +4114,7 @@ declare module kendo.ui {
         keywords?: string;
         landscape?: boolean;
         margin?: GanttPdfMargin;
-        paperSize?: string|any;
+        paperSize?: string | any;
         proxyURL?: string;
         proxyTarget?: string;
         subject?: string;
@@ -3878,31 +4124,31 @@ declare module kendo.ui {
     interface GanttResources {
         dataFormatField?: string;
         dataColorField?: string;
-        dataSource?: any|any|kendo.data.DataSource;
+        dataSource?: any | any | kendo.data.DataSource;
         dataTextField?: string;
         field?: string;
     }
 
     interface GanttToolbarItem {
         name?: string;
-        template?: string|Function;
+        template?: string | Function;
         text?: string;
     }
 
     interface GanttTooltip {
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
     }
 
     interface GanttView {
         type?: string;
         selected?: boolean;
-        slotSize?: number|string;
-        timeHeaderTemplate?: string|Function;
-        dayHeaderTemplate?: string|Function;
-        weekHeaderTemplate?: string|Function;
-        monthHeaderTemplate?: string|Function;
-        yearHeaderTemplate?: string|Function;
+        slotSize?: number | string;
+        timeHeaderTemplate?: string | Function;
+        dayHeaderTemplate?: string | Function;
+        weekHeaderTemplate?: string | Function;
+        monthHeaderTemplate?: string | Function;
+        yearHeaderTemplate?: string | Function;
         resizeTooltipFormat?: string;
     }
 
@@ -3912,10 +4158,10 @@ declare module kendo.ui {
         autoBind?: boolean;
         columnResizeHandleWidth?: number;
         columns?: GanttColumn[];
-        currentTimeMarker?: GanttCurrentTimeMarker;
-        dataSource?: any|any|kendo.data.GanttDataSource;
-        dependencies?: any|any|kendo.data.GanttDependencyDataSource;
-        editable?: GanttEditable;
+        currentTimeMarker?: boolean | GanttCurrentTimeMarker;
+        dataSource?: any | any | kendo.data.GanttDataSource;
+        dependencies?: any | any | kendo.data.GanttDependencyDataSource;
+        editable?: boolean | GanttEditable;
         navigatable?: boolean;
         workDayStart?: Date;
         workDayEnd?: Date;
@@ -3923,20 +4169,20 @@ declare module kendo.ui {
         workWeekEnd?: number;
         hourSpan?: number;
         snap?: boolean;
-        height?: number|string;
-        listWidth?: string|number;
+        height?: number | string;
+        listWidth?: string | number;
         messages?: GanttMessages;
         pdf?: GanttPdf;
         resizable?: boolean;
         selectable?: boolean;
         showWorkDays?: boolean;
         showWorkHours?: boolean;
-        taskTemplate?: string|Function;
+        taskTemplate?: string | Function;
         toolbar?: GanttToolbarItem[];
         tooltip?: GanttTooltip;
         views?: GanttView[];
         resources?: GanttResources;
-        rowHeight?: number|string;
+        rowHeight?: number | string;
         dataBinding?(e: GanttDataBindingEvent): void;
         dataBound?(e: GanttDataBoundEvent): void;
         add?(e: GanttAddEvent): void;
@@ -4130,7 +4376,7 @@ declare module kendo.ui {
     }
 
     interface GridAllowCopy {
-        delimeter?: string|any;
+        delimeter?: string | any;
     }
 
     interface GridColumnMenuMessages {
@@ -4165,7 +4411,7 @@ declare module kendo.ui {
     }
 
     interface GridColumnFilterableCell {
-        dataSource?: any|kendo.data.DataSource;
+        dataSource?: any | kendo.data.DataSource;
         dataTextField?: string;
         delay?: number;
         inputWidth?: number;
@@ -4180,12 +4426,13 @@ declare module kendo.ui {
     interface GridColumnFilterable {
         cell?: GridColumnFilterableCell;
         multi?: boolean;
-        dataSource?: any|any|kendo.data.DataSource;
+        dataSource?: any | any | kendo.data.DataSource;
         checkAll?: boolean;
         itemTemplate?: Function;
+        operators?: any;
         search?: boolean;
         ignoreCase?: boolean;
-        ui?: string|Function;
+        ui?: string | Function;
     }
 
     interface GridColumnSortable {
@@ -4199,34 +4446,34 @@ declare module kendo.ui {
         command?: GridColumnCommandItem[];
         encoded?: boolean;
         field?: string;
-        filterable?: GridColumnFilterable;
-        footerTemplate?: string|Function;
+        filterable?: boolean | GridColumnFilterable;
+        footerTemplate?: string | Function;
         format?: string;
         groupable?: boolean;
-        groupHeaderTemplate?: string|Function;
-        groupFooterTemplate?: string|Function;
+        groupHeaderTemplate?: string | Function;
+        groupFooterTemplate?: string | Function;
         headerAttributes?: any;
-        headerTemplate?: string|Function;
+        headerTemplate?: string | Function;
         hidden?: boolean;
         locked?: boolean;
         lockable?: boolean;
         minScreenWidth?: number;
-        sortable?: GridColumnSortable;
-        template?: string|Function;
+        sortable?: boolean | GridColumnSortable;
+        template?: string | Function;
         title?: string;
-        width?: string|number;
+        width?: string | number;
         values?: any;
         menu?: boolean;
     }
 
     interface GridEditable {
-        confirmation?: boolean|string|Function;
+        confirmation?: boolean | string | Function;
         cancelDelete?: string;
         confirmDelete?: string;
         createAt?: string;
         destroy?: boolean;
         mode?: string;
-        template?: string|Function;
+        template?: string | Function;
         update?: boolean;
         window?: any;
     }
@@ -4247,8 +4494,10 @@ declare module kendo.ui {
         isFalse?: string;
         isTrue?: string;
         or?: string;
+        search?: string;
         selectValue?: string;
         cancel?: string;
+        selectedItemsFormat?: string;
         operator?: string;
         value?: string;
         checkAll?: string;
@@ -4337,7 +4586,7 @@ declare module kendo.ui {
     }
 
     interface GridNoRecords {
-        template?: string|Function;
+        template?: string | Function;
     }
 
     interface GridPageableMessages {
@@ -4360,23 +4609,23 @@ declare module kendo.ui {
         numeric?: boolean;
         buttonCount?: number;
         input?: boolean;
-        pageSizes?: boolean|any;
+        pageSizes?: boolean | any;
         refresh?: boolean;
         info?: boolean;
         messages?: GridPageableMessages;
     }
 
     interface GridPdfMargin {
-        bottom?: number|string;
-        left?: number|string;
-        right?: number|string;
-        top?: number|string;
+        bottom?: number | string;
+        left?: number | string;
+        right?: number | string;
+        top?: number | string;
     }
 
     interface GridPdf {
         allPages?: boolean;
         author?: string;
-        avoidLinks?: boolean|string;
+        avoidLinks?: boolean | string;
         creator?: string;
         date?: Date;
         fileName?: string;
@@ -4384,7 +4633,10 @@ declare module kendo.ui {
         keywords?: string;
         landscape?: boolean;
         margin?: GridPdfMargin;
-        paperSize?: string|any;
+        paperSize?: string | any;
+        template?: string;
+        repeatHeaders?: boolean;
+        scale?: number;
         proxyURL?: string;
         proxyTarget?: string;
         subject?: string;
@@ -4402,38 +4654,38 @@ declare module kendo.ui {
 
     interface GridToolbarItem {
         name?: string;
-        template?: string|Function;
+        template?: string | Function;
         text?: string;
     }
 
     interface GridOptions {
         name?: string;
-        allowCopy?: GridAllowCopy;
-        altRowTemplate?: string|Function;
+        allowCopy?: boolean | GridAllowCopy;
+        altRowTemplate?: string | Function;
         autoBind?: boolean;
         columnResizeHandleWidth?: number;
         columns?: GridColumn[];
-        columnMenu?: GridColumnMenu;
-        dataSource?: any|any|kendo.data.DataSource;
-        detailTemplate?: string|Function;
-        editable?: GridEditable;
+        columnMenu?: boolean | GridColumnMenu;
+        dataSource?: any | any | kendo.data.DataSource;
+        detailTemplate?: string | Function;
+        editable?: boolean | GridEditable;
         excel?: GridExcel;
-        filterable?: GridFilterable;
-        groupable?: GridGroupable;
-        height?: number|string;
+        filterable?: boolean | GridFilterable;
+        groupable?: boolean | GridGroupable;
+        height?: number | string;
         messages?: GridMessages;
-        mobile?: boolean|string;
+        mobile?: boolean | string;
         navigatable?: boolean;
-        noRecords?: GridNoRecords;
-        pageable?: GridPageable;
+        noRecords?: boolean | GridNoRecords;
+        pageable?: boolean | GridPageable;
         pdf?: GridPdf;
         reorderable?: boolean;
         resizable?: boolean;
-        rowTemplate?: string|Function;
-        scrollable?: GridScrollable;
-        selectable?: boolean|string;
-        sortable?: GridSortable;
-        toolbar?: GridToolbarItem[];
+        rowTemplate?: string | Function;
+        scrollable?: boolean | GridScrollable;
+        selectable?: boolean | string;
+        sortable?: boolean | GridSortable;
+        toolbar?: GridToolbarItem[] | any;
         cancel?(e: GridCancelEvent): void;
         change?(e: GridChangeEvent): void;
         columnHide?(e: GridColumnHideEvent): void;
@@ -4607,10 +4859,10 @@ declare module kendo.ui {
     interface ListViewOptions {
         name?: string;
         autoBind?: boolean;
-        dataSource?: any|any|kendo.data.DataSource;
+        dataSource?: any | any | kendo.data.DataSource;
         editTemplate?: Function;
         navigatable?: boolean;
-        selectable?: boolean|string;
+        selectable?: boolean | string;
         template?: Function;
         altTemplate?: Function;
         cancel?(e: ListViewCancelEvent): void;
@@ -4749,9 +5001,9 @@ declare module kendo.ui {
 
     interface MenuOptions {
         name?: string;
-        animation?: MenuAnimation;
+        animation?: boolean | MenuAnimation;
         closeOnClick?: boolean;
-        dataSource?: any|any;
+        dataSource?: any | any;
         direction?: string;
         hoverDelay?: number;
         openOnClick?: boolean;
@@ -4856,17 +5108,17 @@ declare module kendo.ui {
 
     interface MultiSelectOptions {
         name?: string;
-        animation?: MultiSelectAnimation;
+        animation?: boolean | MultiSelectAnimation;
         autoBind?: boolean;
         autoClose?: boolean;
-        dataSource?: any|any|kendo.data.DataSource;
+        dataSource?: any | any | kendo.data.DataSource;
         dataTextField?: string;
         dataValueField?: string;
         delay?: number;
         enable?: boolean;
         filter?: string;
-        fixedGroupTemplate?: string|Function;
-        groupTemplate?: string|Function;
+        fixedGroupTemplate?: string | Function;
+        groupTemplate?: string | Function;
         height?: number;
         highlightFirst?: boolean;
         ignoreCase?: boolean;
@@ -4874,13 +5126,13 @@ declare module kendo.ui {
         maxSelectedItems?: number;
         placeholder?: string;
         popup?: MultiSelectPopup;
-        headerTemplate?: string|Function;
-        itemTemplate?: string|Function;
+        headerTemplate?: string | Function;
+        itemTemplate?: string | Function;
         tagTemplate?: string;
         tagMode?: string;
         value?: any;
         valuePrimitive?: boolean;
-        virtual?: MultiSelectVirtual;
+        virtual?: boolean | MultiSelectVirtual;
         change?(e: MultiSelectChangeEvent): void;
         close?(e: MultiSelectCloseEvent): void;
         dataBound?(e: MultiSelectDataBoundEvent): void;
@@ -4969,16 +5221,16 @@ declare module kendo.ui {
     interface NotificationOptions {
         name?: string;
         allowHideAfter?: number;
-        animation?: any|boolean;
-        appendTo?: string|JQuery;
+        animation?: any | boolean;
+        appendTo?: string | JQuery;
         autoHideAfter?: number;
         button?: boolean;
-        height?: number|string;
+        height?: number | string;
         hideOnClick?: boolean;
         position?: NotificationPosition;
         stacking?: string;
         templates?: NotificationTemplate[];
-        width?: number|string;
+        width?: number | string;
         hide?(e: NotificationHideEvent): void;
         show?(e: NotificationShowEvent): void;
     }
@@ -5103,13 +5355,13 @@ declare module kendo.ui {
         name?: string;
         autoBind?: boolean;
         buttonCount?: number;
-        dataSource?: any|kendo.data.DataSource;
+        dataSource?: any | kendo.data.DataSource;
         selectTemplate?: string;
         linkTemplate?: string;
         info?: boolean;
         input?: boolean;
         numeric?: boolean;
-        pageSizes?: boolean|any;
+        pageSizes?: boolean | any;
         previousNext?: boolean;
         refresh?: boolean;
         messages?: PagerMessages;
@@ -5217,9 +5469,9 @@ declare module kendo.ui {
 
     interface PanelBarOptions {
         name?: string;
-        animation?: PanelBarAnimation;
+        animation?: boolean | PanelBarAnimation;
         contentUrls?: any;
-        dataSource?: any|any;
+        dataSource?: any | any;
         expandMode?: string;
         activate?(e: PanelBarActivateEvent): void;
         collapse?(e: PanelBarCollapseEvent): void;
@@ -5323,10 +5575,10 @@ declare module kendo.ui {
 
     interface PivotConfiguratorOptions {
         name?: string;
-        dataSource?: any|kendo.data.PivotDataSource;
+        dataSource?: any | kendo.data.PivotDataSource;
         filterable?: boolean;
-        sortable?: PivotConfiguratorSortable;
-        height?: number|string;
+        sortable?: boolean | PivotConfiguratorSortable;
+        height?: number | string;
         messages?: PivotConfiguratorMessages;
     }
     interface PivotConfiguratorEvent {
@@ -5402,15 +5654,15 @@ declare module kendo.ui {
     }
 
     interface PivotGridPdfMargin {
-        bottom?: number|string;
-        left?: number|string;
-        right?: number|string;
-        top?: number|string;
+        bottom?: number | string;
+        left?: number | string;
+        right?: number | string;
+        top?: number | string;
     }
 
     interface PivotGridPdf {
         author?: string;
-        avoidLinks?: boolean|string;
+        avoidLinks?: boolean | string;
         creator?: string;
         date?: Date;
         fileName?: string;
@@ -5418,7 +5670,7 @@ declare module kendo.ui {
         keywords?: string;
         landscape?: boolean;
         margin?: PivotGridPdfMargin;
-        paperSize?: string|any;
+        paperSize?: string | any;
         proxyURL?: string;
         proxyTarget?: string;
         subject?: string;
@@ -5431,20 +5683,20 @@ declare module kendo.ui {
 
     interface PivotGridOptions {
         name?: string;
-        dataSource?: any|kendo.data.PivotDataSource;
+        dataSource?: any | kendo.data.PivotDataSource;
         autoBind?: boolean;
         reorderable?: boolean;
         excel?: PivotGridExcel;
         pdf?: PivotGridPdf;
         filterable?: boolean;
-        sortable?: PivotGridSortable;
+        sortable?: boolean | PivotGridSortable;
         columnWidth?: number;
-        height?: number|string;
-        columnHeaderTemplate?: string|Function;
-        dataCellTemplate?: string|Function;
-        kpiStatusTemplate?: string|Function;
-        kpiTrendTemplate?: string|Function;
-        rowHeaderTemplate?: string|Function;
+        height?: number | string;
+        columnHeaderTemplate?: string | Function;
+        dataCellTemplate?: string | Function;
+        kpiStatusTemplate?: string | Function;
+        kpiTrendTemplate?: string | Function;
+        rowHeaderTemplate?: string | Function;
         messages?: PivotGridMessages;
         dataBinding?(e: PivotGridDataBindingEvent): void;
         dataBound?(e: PivotGridDataBoundEvent): void;
@@ -5525,9 +5777,11 @@ declare module kendo.ui {
 
     interface PopupOptions {
         name?: string;
-        animation?: PopupAnimation;
-        anchor?: string|JQuery;
-        appendTo?: string|JQuery;
+        adjustSize?: any;
+        animation?: boolean | PopupAnimation;
+        anchor?: string | JQuery;
+        appendTo?: string | JQuery;
+        collision?: string;
         origin?: string;
         position?: string;
         activate?(e: PopupActivateEvent): void;
@@ -5757,19 +6011,19 @@ declare module kendo.ui {
     }
 
     interface SchedulerEditable {
-        confirmation?: boolean|string;
+        confirmation?: boolean | string;
         create?: boolean;
         destroy?: boolean;
         editRecurringMode?: string;
         move?: boolean;
         resize?: boolean;
-        template?: string|Function;
+        template?: string | Function;
         update?: boolean;
         window?: any;
     }
 
     interface SchedulerFooter {
-        command?: string|boolean;
+        command?: string | boolean;
     }
 
     interface SchedulerGroup {
@@ -5906,15 +6160,15 @@ declare module kendo.ui {
     }
 
     interface SchedulerPdfMargin {
-        bottom?: number|string;
-        left?: number|string;
-        right?: number|string;
-        top?: number|string;
+        bottom?: number | string;
+        left?: number | string;
+        right?: number | string;
+        top?: number | string;
     }
 
     interface SchedulerPdf {
         author?: string;
-        avoidLinks?: boolean|string;
+        avoidLinks?: boolean | string;
         creator?: string;
         date?: Date;
         fileName?: string;
@@ -5922,7 +6176,7 @@ declare module kendo.ui {
         keywords?: string;
         landscape?: boolean;
         margin?: SchedulerPdfMargin;
-        paperSize?: string|any;
+        paperSize?: string | any;
         proxyURL?: string;
         proxyTarget?: string;
         subject?: string;
@@ -5931,7 +6185,7 @@ declare module kendo.ui {
 
     interface SchedulerResource {
         dataColorField?: string;
-        dataSource?: any|any|kendo.data.DataSource;
+        dataSource?: any | any | kendo.data.DataSource;
         dataTextField?: string;
         dataValueField?: string;
         field?: string;
@@ -5956,26 +6210,26 @@ declare module kendo.ui {
     }
 
     interface SchedulerView {
-        allDayEventTemplate?: string|Function;
+        allDayEventTemplate?: string | Function;
         allDaySlot?: boolean;
-        allDaySlotTemplate?: string|Function;
+        allDaySlotTemplate?: string | Function;
         columnWidth?: number;
-        dateHeaderTemplate?: string|Function;
-        dayTemplate?: string|Function;
-        editable?: SchedulerViewEditable;
+        dateHeaderTemplate?: string | Function;
+        dayTemplate?: string | Function;
+        editable?: boolean | SchedulerViewEditable;
         endTime?: Date;
         eventHeight?: number;
-        eventTemplate?: string|Function;
-        eventTimeTemplate?: string|Function;
+        eventTemplate?: string | Function;
+        eventTimeTemplate?: string | Function;
         group?: SchedulerViewGroup;
         majorTick?: number;
-        majorTimeHeaderTemplate?: string|Function;
+        majorTimeHeaderTemplate?: string | Function;
         minorTickCount?: number;
-        minorTimeHeaderTemplate?: string|Function;
+        minorTimeHeaderTemplate?: string | Function;
         selected?: boolean;
         selectedDateFormat?: string;
         showWorkHours?: boolean;
-        slotTemplate?: string|Function;
+        slotTemplate?: string | Function;
         startTime?: Date;
         title?: string;
         type?: string;
@@ -5993,27 +6247,27 @@ declare module kendo.ui {
 
     interface SchedulerOptions {
         name?: string;
-        allDayEventTemplate?: string|Function;
+        allDayEventTemplate?: string | Function;
         allDaySlot?: boolean;
         autoBind?: boolean;
-        currentTimeMarker?: SchedulerCurrentTimeMarker;
-        dataSource?: any|any|kendo.data.SchedulerDataSource;
+        currentTimeMarker?: boolean | SchedulerCurrentTimeMarker;
+        dataSource?: any | any | kendo.data.SchedulerDataSource;
         date?: Date;
-        dateHeaderTemplate?: string|Function;
-        editable?: SchedulerEditable;
+        dateHeaderTemplate?: string | Function;
+        editable?: boolean | SchedulerEditable;
         endTime?: Date;
-        eventTemplate?: string|Function;
-        footer?: SchedulerFooter;
+        eventTemplate?: string | Function;
+        footer?: boolean | SchedulerFooter;
         group?: SchedulerGroup;
-        height?: number|string;
+        height?: number | string;
         majorTick?: number;
-        majorTimeHeaderTemplate?: string|Function;
+        majorTimeHeaderTemplate?: string | Function;
         max?: Date;
         messages?: SchedulerMessages;
         min?: Date;
         minorTickCount?: number;
-        minorTimeHeaderTemplate?: string|Function;
-        mobile?: boolean|string;
+        minorTimeHeaderTemplate?: string | Function;
+        mobile?: boolean | string;
         pdf?: SchedulerPdf;
         resources?: SchedulerResource[];
         selectable?: boolean;
@@ -6023,8 +6277,8 @@ declare module kendo.ui {
         timezone?: string;
         toolbar?: SchedulerToolbarItem[];
         views?: SchedulerView[];
-        groupHeaderTemplate?: string|Function;
-        width?: number|string;
+        groupHeaderTemplate?: string | Function;
+        width?: number | string;
         workDayStart?: Date;
         workDayEnd?: Date;
         workWeekStart?: number;
@@ -6220,17 +6474,17 @@ declare module kendo.ui {
         name?: string;
         axis?: string;
         autoScroll?: boolean;
-        container?: string|JQuery;
+        container?: string | JQuery;
         connectWith?: string;
         cursor?: string;
         cursorOffset?: SortableCursorOffset;
         disabled?: string;
         filter?: string;
         handler?: string;
-        hint?: Function|string|JQuery;
+        hint?: Function | string | JQuery;
         holdToDrag?: boolean;
         ignore?: string;
-        placeholder?: Function|string|JQuery;
+        placeholder?: Function | string | JQuery;
         start?(e: SortableStartEvent): void;
         move?(e: SortableMoveEvent): void;
         end?(e: SortableEndEvent): void;
@@ -6417,10 +6671,10 @@ declare module kendo.ui {
     }
 
     interface SpreadsheetPdfMargin {
-        bottom?: number|string;
-        left?: number|string;
-        right?: number|string;
-        top?: number|string;
+        bottom?: number | string;
+        left?: number | string;
+        right?: number | string;
+        top?: number | string;
     }
 
     interface SpreadsheetPdf {
@@ -6436,7 +6690,7 @@ declare module kendo.ui {
         keywords?: string;
         landscape?: boolean;
         margin?: SpreadsheetPdfMargin;
-        paperSize?: string|any;
+        paperSize?: string | any;
         proxyURL?: string;
         proxyTarget?: string;
         subject?: string;
@@ -6460,7 +6714,7 @@ declare module kendo.ui {
         index?: number;
         logic?: string;
         type?: string;
-        value?: number|string|Date;
+        value?: number | string | Date;
         values?: any;
     }
 
@@ -6515,9 +6769,10 @@ declare module kendo.ui {
         format?: string;
         formula?: string;
         index?: number;
+        link?: string;
         textAlign?: string;
         underline?: boolean;
-        value?: number|string|boolean|Date;
+        value?: number | string | boolean | Date;
         validation?: SpreadsheetSheetRowCellValidation;
         verticalAlign?: string;
         wrap?: boolean;
@@ -6550,7 +6805,14 @@ declare module kendo.ui {
         mergedCells?: any;
         rows?: SpreadsheetSheetRow[];
         selection?: string;
+        showGridLines?: boolean;
         sort?: SpreadsheetSheetSort;
+    }
+
+    interface SpreadsheetToolbar {
+        home?: boolean | any;
+        insert?: boolean | any;
+        data?: boolean | any;
     }
 
     interface SpreadsheetInsertSheetOptions {
@@ -6577,7 +6839,7 @@ declare module kendo.ui {
         rows?: number;
         sheets?: SpreadsheetSheet[];
         sheetsbar?: boolean;
-        toolbar?: boolean;
+        toolbar?: boolean | SpreadsheetToolbar;
         change?(e: SpreadsheetChangeEvent): void;
         render?(e: SpreadsheetRenderEvent): void;
         excelExport?(e: SpreadsheetExcelExportEvent): void;
@@ -6603,7 +6865,7 @@ declare module kendo.ui {
     }
 
     interface SpreadsheetExcelImportEvent extends SpreadsheetEvent {
-        file?: Blob|File;
+        file?: Blob | File;
         progress?: JQueryPromise<any>;
     }
 
@@ -6641,6 +6903,9 @@ declare module kendo.ui {
         enable(element: string, enable?: boolean): kendo.ui.TabStrip;
         enable(element: Element, enable?: boolean): kendo.ui.TabStrip;
         enable(element: JQuery, enable?: boolean): kendo.ui.TabStrip;
+        insertAfter(item: any, referenceTab: string): kendo.ui.TabStrip;
+        insertAfter(item: any, referenceTab: Element): kendo.ui.TabStrip;
+        insertAfter(item: any, referenceTab: JQuery): kendo.ui.TabStrip;
         insertAfter(item: string, referenceTab: string): kendo.ui.TabStrip;
         insertAfter(item: string, referenceTab: Element): kendo.ui.TabStrip;
         insertAfter(item: string, referenceTab: JQuery): kendo.ui.TabStrip;
@@ -6650,6 +6915,9 @@ declare module kendo.ui {
         insertAfter(item: JQuery, referenceTab: string): kendo.ui.TabStrip;
         insertAfter(item: JQuery, referenceTab: Element): kendo.ui.TabStrip;
         insertAfter(item: JQuery, referenceTab: JQuery): kendo.ui.TabStrip;
+        insertBefore(item: any, referenceTab: string): kendo.ui.TabStrip;
+        insertBefore(item: any, referenceTab: Element): kendo.ui.TabStrip;
+        insertBefore(item: any, referenceTab: JQuery): kendo.ui.TabStrip;
         insertBefore(item: string, referenceTab: string): kendo.ui.TabStrip;
         insertBefore(item: string, referenceTab: Element): kendo.ui.TabStrip;
         insertBefore(item: string, referenceTab: JQuery): kendo.ui.TabStrip;
@@ -6697,18 +6965,18 @@ declare module kendo.ui {
 
     interface TabStripOptions {
         name?: string;
-        animation?: TabStripAnimation;
+        animation?: boolean | TabStripAnimation;
         collapsible?: boolean;
         contentUrls?: any;
         dataContentField?: string;
         dataContentUrlField?: string;
         dataImageUrlField?: string;
-        dataSource?: any|any|kendo.data.DataSource;
+        dataSource?: any | any | kendo.data.DataSource;
         dataSpriteCssClass?: string;
         dataTextField?: string;
         dataUrlField?: string;
         navigatable?: boolean;
-        scrollable?: TabStripScrollable;
+        scrollable?: boolean | TabStripScrollable;
         tabPosition?: string;
         value?: string;
         activate?(e: TabStripActivateEvent): void;
@@ -6799,7 +7067,7 @@ declare module kendo.ui {
 
     interface TimePickerOptions {
         name?: string;
-        animation?: TimePickerAnimation;
+        animation?: boolean | TimePickerAnimation;
         culture?: string;
         dates?: any;
         format?: string;
@@ -6905,13 +7173,13 @@ declare module kendo.ui {
         imageUrl?: string;
         menuButtons?: ToolBarItemMenuButton[];
         overflow?: string;
-        overflowTemplate?: string|Function;
+        overflowTemplate?: string | Function;
         primary?: boolean;
         selected?: boolean;
         showIcon?: string;
         showText?: string;
         spriteCssClass?: string;
-        template?: string|Function;
+        template?: string | Function;
         text?: string;
         togglable?: boolean;
         toggle?: Function;
@@ -7006,7 +7274,7 @@ declare module kendo.ui {
     interface TooltipOptions {
         name?: string;
         autoHide?: boolean;
-        animation?: TooltipAnimation;
+        animation?: boolean | TooltipAnimation;
         content?: TooltipContent;
         callout?: boolean;
         filter?: string;
@@ -7169,6 +7437,9 @@ declare module kendo.ui {
         addRow(parentRow: string): void;
         addRow(parentRow: Element): void;
         addRow(parentRow: JQuery): void;
+        autoFitColumn(column: number): void;
+        autoFitColumn(column: string): void;
+        autoFitColumn(column: any): void;
         cancelRow(): void;
         clearSelection(): void;
         collapse(): void;
@@ -7177,7 +7448,9 @@ declare module kendo.ui {
         dataItem(row: JQuery): kendo.data.TreeListModel;
         destroy(): void;
         editRow(row: JQuery): void;
-        expand(): void;
+        expand(row: string): void;
+        expand(row: Element): void;
+        expand(row: JQuery): void;
         itemFor(model: kendo.data.TreeListModel): JQuery;
         itemFor(model: any): JQuery;
         items(): any;
@@ -7226,7 +7499,7 @@ declare module kendo.ui {
     }
 
     interface TreeListColumnFilterable {
-        ui?: string|Function;
+        ui?: string | Function;
     }
 
     interface TreeListColumnSortable {
@@ -7239,16 +7512,16 @@ declare module kendo.ui {
         encoded?: boolean;
         expandable?: boolean;
         field?: string;
-        filterable?: TreeListColumnFilterable;
-        footerTemplate?: string|Function;
+        filterable?: boolean | TreeListColumnFilterable;
+        footerTemplate?: string | Function;
         format?: string;
         headerAttributes?: any;
-        headerTemplate?: string|Function;
+        headerTemplate?: string | Function;
         minScreenWidth?: number;
-        sortable?: TreeListColumnSortable;
-        template?: string|Function;
+        sortable?: boolean | TreeListColumnSortable;
+        template?: string | Function;
         title?: string;
-        width?: string|number;
+        width?: string | number;
         hidden?: boolean;
         menu?: boolean;
         locked?: boolean;
@@ -7258,7 +7531,7 @@ declare module kendo.ui {
     interface TreeListEditable {
         mode?: string;
         move?: boolean;
-        template?: string|Function;
+        template?: string | Function;
         window?: any;
     }
 
@@ -7307,15 +7580,15 @@ declare module kendo.ui {
     }
 
     interface TreeListPdfMargin {
-        bottom?: number|string;
-        left?: number|string;
-        right?: number|string;
-        top?: number|string;
+        bottom?: number | string;
+        left?: number | string;
+        right?: number | string;
+        top?: number | string;
     }
 
     interface TreeListPdf {
         author?: string;
-        avoidLinks?: boolean|string;
+        avoidLinks?: boolean | string;
         creator?: string;
         date?: Date;
         fileName?: string;
@@ -7323,7 +7596,7 @@ declare module kendo.ui {
         keywords?: string;
         landscape?: boolean;
         margin?: TreeListPdfMargin;
-        paperSize?: string|any;
+        paperSize?: string | any;
         proxyURL?: string;
         proxyTarget?: string;
         subject?: string;
@@ -7346,17 +7619,17 @@ declare module kendo.ui {
         columns?: TreeListColumn[];
         resizable?: boolean;
         reorderable?: boolean;
-        columnMenu?: TreeListColumnMenu;
-        dataSource?: any|any|kendo.data.TreeListDataSource;
-        editable?: TreeListEditable;
+        columnMenu?: boolean | TreeListColumnMenu;
+        dataSource?: any | any | kendo.data.TreeListDataSource;
+        editable?: boolean | TreeListEditable;
         excel?: TreeListExcel;
-        filterable?: TreeListFilterable;
-        height?: number|string;
+        filterable?: boolean | TreeListFilterable;
+        height?: number | string;
         messages?: TreeListMessages;
         pdf?: TreeListPdf;
-        scrollable?: boolean|any;
-        selectable?: boolean|string;
-        sortable?: TreeListSortable;
+        scrollable?: boolean | any;
+        selectable?: boolean | string;
+        sortable?: boolean | TreeListSortable;
         toolbar?: TreeListToolbarItem[];
         cancel?(e: TreeListCancelEvent): void;
         change?(e: TreeListChangeEvent): void;
@@ -7571,14 +7844,14 @@ declare module kendo.ui {
     }
 
     interface TreeViewAnimation {
-        collapse?: TreeViewAnimationCollapse;
-        expand?: TreeViewAnimationExpand;
+        collapse?: boolean | TreeViewAnimationCollapse;
+        expand?: boolean | TreeViewAnimationExpand;
     }
 
     interface TreeViewCheckboxes {
         checkChildren?: boolean;
         name?: string;
-        template?: string|Function;
+        template?: string | Function;
     }
 
     interface TreeViewMessages {
@@ -7589,19 +7862,19 @@ declare module kendo.ui {
 
     interface TreeViewOptions {
         name?: string;
-        animation?: TreeViewAnimation;
+        animation?: boolean | TreeViewAnimation;
         autoBind?: boolean;
         autoScroll?: boolean;
-        checkboxes?: TreeViewCheckboxes;
+        checkboxes?: boolean | TreeViewCheckboxes;
         dataImageUrlField?: string;
-        dataSource?: any|any|kendo.data.HierarchicalDataSource;
+        dataSource?: any | any | kendo.data.HierarchicalDataSource;
         dataSpriteCssClassField?: string;
-        dataTextField?: string|any;
+        dataTextField?: string | any;
         dataUrlField?: string;
         dragAndDrop?: boolean;
         loadOnDemand?: boolean;
         messages?: TreeViewMessages;
-        template?: string|Function;
+        template?: string | Function;
         change?(e: TreeViewEvent): void;
         check?(e: TreeViewCheckEvent): void;
         collapse?(e: TreeViewCollapseEvent): void;
@@ -7734,7 +8007,7 @@ declare module kendo.ui {
         localization?: UploadLocalization;
         multiple?: boolean;
         showFileList?: boolean;
-        template?: string|Function;
+        template?: string | Function;
         cancel?(e: UploadCancelEvent): void;
         complete?(e: UploadEvent): void;
         error?(e: UploadErrorEvent): void;
@@ -7849,9 +8122,9 @@ declare module kendo.ui {
 
         center(): kendo.ui.Window;
         close(): kendo.ui.Window;
-        content(): any;
-        content(content?: string): void;
-        content(content?: JQuery): void;
+        content(): string;
+        content(content?: string): kendo.ui.Window;
+        content(content?: JQuery): kendo.ui.Window;
         destroy(): void;
         maximize(): kendo.ui.Window;
         minimize(): kendo.ui.Window;
@@ -7860,8 +8133,8 @@ declare module kendo.ui {
         refresh(options: any): kendo.ui.Window;
         restore(): kendo.ui.Window;
         setOptions(options: any): void;
-        title(): kendo.ui.Window;
-        title(text?: string): void;
+        title(): string;
+        title(text?: string): kendo.ui.Window;
         toFront(): kendo.ui.Window;
         toggleMaximization(): kendo.ui.Window;
         unpin(): void;
@@ -7888,12 +8161,13 @@ declare module kendo.ui {
     }
 
     interface WindowPosition {
-        top?: number|string;
-        left?: number|string;
+        top?: number | string;
+        left?: number | string;
     }
 
     interface WindowRefreshOptions {
         url?: string;
+        cache?: boolean;
         data?: any;
         type?: string;
         template?: string;
@@ -7903,12 +8177,13 @@ declare module kendo.ui {
     interface WindowOptions {
         name?: string;
         actions?: any;
-        animation?: WindowAnimation;
-        appendTo?: any|string;
+        animation?: boolean | WindowAnimation;
+        appendTo?: any | string;
         autoFocus?: boolean;
         content?: WindowContent;
         draggable?: boolean;
         iframe?: boolean;
+        height?: number | string;
         maxHeight?: number;
         maxWidth?: number;
         minHeight?: number;
@@ -7918,10 +8193,9 @@ declare module kendo.ui {
         position?: WindowPosition;
         resizable?: boolean;
         scrollable?: boolean;
-        title?: string|boolean;
+        title?: string | boolean;
         visible?: boolean;
-        width?: number|string;
-        height?: number|string;
+        width?: number | string;
         activate?(e: WindowEvent): void;
         close?(e: WindowCloseEvent): void;
         deactivate?(e: WindowEvent): void;
@@ -7951,7 +8225,7 @@ declare module kendo.ui {
 
 
 }
-declare module kendo.dataviz.ui {
+declare namespace kendo.dataviz.ui {
     class Barcode extends kendo.ui.Widget {
 
         static fn: Barcode;
@@ -8071,6 +8345,174 @@ declare module kendo.dataviz.ui {
 
     }
 
+    interface ChartAxisDefaultsCrosshairTooltipBorder {
+        color?: string;
+        dashType?: string;
+        width?: number;
+    }
+
+    interface ChartAxisDefaultsCrosshairTooltipPadding {
+        bottom?: number;
+        left?: number;
+        right?: number;
+        top?: number;
+    }
+
+    interface ChartAxisDefaultsCrosshairTooltip {
+        background?: string;
+        border?: ChartAxisDefaultsCrosshairTooltipBorder;
+        color?: string;
+        font?: string;
+        format?: string;
+        padding?: ChartAxisDefaultsCrosshairTooltipPadding;
+        template?: string | Function;
+        visible?: boolean;
+    }
+
+    interface ChartAxisDefaultsCrosshair {
+        color?: string;
+        opacity?: number;
+        tooltip?: ChartAxisDefaultsCrosshairTooltip;
+        visible?: boolean;
+        width?: number;
+    }
+
+    interface ChartAxisDefaultsLabelsMargin {
+        bottom?: number;
+        left?: number;
+        right?: number;
+        top?: number;
+    }
+
+    interface ChartAxisDefaultsLabelsPadding {
+        bottom?: number;
+        left?: number;
+        right?: number;
+        top?: number;
+    }
+
+    interface ChartAxisDefaultsLabelsRotation {
+        align?: string;
+        angle?: number | string;
+    }
+
+    interface ChartAxisDefaultsLabels {
+        font?: string;
+        format?: string;
+        margin?: ChartAxisDefaultsLabelsMargin;
+        mirror?: boolean;
+        padding?: ChartAxisDefaultsLabelsPadding;
+        rotation?: ChartAxisDefaultsLabelsRotation;
+        skip?: number;
+        step?: number;
+        template?: string | Function;
+        visible?: boolean;
+        visual?: Function;
+    }
+
+    interface ChartAxisDefaultsLine {
+        color?: string;
+        dashType?: string;
+        visible?: boolean;
+        width?: number;
+    }
+
+    interface ChartAxisDefaultsMajorGridLines {
+        color?: string;
+        dashType?: string;
+        visible?: boolean;
+        width?: number;
+        step?: number;
+        skip?: number;
+    }
+
+    interface ChartAxisDefaultsMajorTicks {
+        color?: string;
+        size?: number;
+        visible?: boolean;
+        width?: number;
+        step?: number;
+        skip?: number;
+    }
+
+    interface ChartAxisDefaultsMinorGridLines {
+        color?: string;
+        dashType?: string;
+        visible?: boolean;
+        width?: number;
+        step?: number;
+        skip?: number;
+    }
+
+    interface ChartAxisDefaultsMinorTicks {
+        color?: string;
+        size?: number;
+        visible?: boolean;
+        width?: number;
+        step?: number;
+        skip?: number;
+    }
+
+    interface ChartAxisDefaultsPlotBand {
+        color?: string;
+        from?: number;
+        opacity?: number;
+        to?: number;
+    }
+
+    interface ChartAxisDefaultsTitleBorder {
+        color?: string;
+        dashType?: string;
+        width?: number;
+    }
+
+    interface ChartAxisDefaultsTitleMargin {
+        bottom?: number;
+        left?: number;
+        right?: number;
+        top?: number;
+    }
+
+    interface ChartAxisDefaultsTitlePadding {
+        bottom?: number;
+        left?: number;
+        right?: number;
+        top?: number;
+    }
+
+    interface ChartAxisDefaultsTitle {
+        background?: string;
+        border?: ChartAxisDefaultsTitleBorder;
+        color?: string;
+        font?: string;
+        margin?: ChartAxisDefaultsTitleMargin;
+        padding?: ChartAxisDefaultsTitlePadding;
+        position?: string;
+        rotation?: number;
+        text?: string;
+        visible?: boolean;
+        visual?: Function;
+    }
+
+    interface ChartAxisDefaults {
+        background?: string;
+        color?: string;
+        crosshair?: ChartAxisDefaultsCrosshair;
+        labels?: ChartAxisDefaultsLabels;
+        line?: ChartAxisDefaultsLine;
+        majorGridLines?: ChartAxisDefaultsMajorGridLines;
+        majorTicks?: ChartAxisDefaultsMajorTicks;
+        minorGridLines?: ChartAxisDefaultsMinorGridLines;
+        minorTicks?: ChartAxisDefaultsMinorTicks;
+        narrowRange?: boolean;
+        pane?: string;
+        plotBands?: ChartAxisDefaultsPlotBand[];
+        reverse?: boolean;
+        startAngle?: number;
+        title?: ChartAxisDefaultsTitle;
+        visible?: boolean;
+    }
+
     interface ChartCategoryAxisItemAutoBaseUnitSteps {
         seconds?: any;
         minutes?: any;
@@ -8101,7 +8543,7 @@ declare module kendo.dataviz.ui {
         font?: string;
         format?: string;
         padding?: ChartCategoryAxisItemCrosshairTooltipPadding;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
     }
 
@@ -8143,7 +8585,7 @@ declare module kendo.dataviz.ui {
 
     interface ChartCategoryAxisItemLabelsRotation {
         align?: string;
-        angle?: number|string;
+        angle?: number | string;
     }
 
     interface ChartCategoryAxisItemLabels {
@@ -8160,7 +8602,7 @@ declare module kendo.dataviz.ui {
         rotation?: ChartCategoryAxisItemLabelsRotation;
         skip?: number;
         step?: number;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
         visual?: Function;
     }
@@ -8232,7 +8674,7 @@ declare module kendo.dataviz.ui {
         border?: ChartCategoryAxisItemNotesDataItemLabelBorder;
         color?: string;
         font?: string;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
         rotation?: number;
         format?: string;
@@ -8278,7 +8720,7 @@ declare module kendo.dataviz.ui {
         border?: ChartCategoryAxisItemNotesLabelBorder;
         color?: string;
         font?: string;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
         rotation?: number;
         format?: string;
@@ -8356,7 +8798,7 @@ declare module kendo.dataviz.ui {
 
     interface ChartCategoryAxisItem {
         autoBaseUnitSteps?: ChartCategoryAxisItemAutoBaseUnitSteps;
-        axisCrossingValue?: any|Date|any;
+        axisCrossingValue?: any | Date | any;
         background?: string;
         baseUnit?: string;
         baseUnitStep?: any;
@@ -8419,7 +8861,7 @@ declare module kendo.dataviz.ui {
     interface ChartLegendInactiveItemsLabels {
         color?: string;
         font?: string;
-        template?: string|Function;
+        template?: string | Function;
     }
 
     interface ChartLegendInactiveItems {
@@ -8450,7 +8892,7 @@ declare module kendo.dataviz.ui {
         font?: string;
         margin?: ChartLegendLabelsMargin;
         padding?: ChartLegendLabelsPadding;
-        template?: string|Function;
+        template?: string | Function;
     }
 
     interface ChartLegendMargin {
@@ -8548,10 +8990,10 @@ declare module kendo.dataviz.ui {
     }
 
     interface ChartPdfMargin {
-        bottom?: number|string;
-        left?: number|string;
-        right?: number|string;
-        top?: number|string;
+        bottom?: number | string;
+        left?: number | string;
+        right?: number | string;
+        top?: number | string;
     }
 
     interface ChartPdf {
@@ -8563,7 +9005,7 @@ declare module kendo.dataviz.ui {
         keywords?: string;
         landscape?: boolean;
         margin?: ChartPdfMargin;
-        paperSize?: string|any;
+        paperSize?: string | any;
         proxyURL?: string;
         proxyTarget?: string;
         subject?: string;
@@ -8599,10 +9041,10 @@ declare module kendo.dataviz.ui {
     }
 
     interface ChartSeriesItemBorder {
-        color?: string|Function;
-        dashType?: string|Function;
-        opacity?: number|Function;
-        width?: number|Function;
+        color?: string | Function;
+        dashType?: string | Function;
+        opacity?: number | Function;
+        width?: number | Function;
     }
 
     interface ChartSeriesItemConnectors {
@@ -8617,26 +9059,26 @@ declare module kendo.dataviz.ui {
     }
 
     interface ChartSeriesItemErrorBars {
-        value?: string|number|any|Function;
+        value?: string | number | any | Function;
         visual?: Function;
-        xValue?: string|number|any|Function;
-        yValue?: string|number|any|Function;
+        xValue?: string | number | any | Function;
+        yValue?: string | number | any | Function;
         endCaps?: boolean;
         color?: string;
         line?: ChartSeriesItemErrorBarsLine;
     }
 
     interface ChartSeriesItemExtremesBorder {
-        color?: string|Function;
-        width?: number|Function;
+        color?: string | Function;
+        width?: number | Function;
     }
 
     interface ChartSeriesItemExtremes {
-        background?: string|Function;
+        background?: string | Function;
         border?: ChartSeriesItemExtremesBorder;
-        size?: number|Function;
-        type?: string|Function;
-        rotation?: number|Function;
+        size?: number | Function;
+        type?: string | Function;
+        rotation?: number | Function;
     }
 
     interface ChartSeriesItemHighlightBorder {
@@ -8662,15 +9104,15 @@ declare module kendo.dataviz.ui {
     }
 
     interface ChartSeriesItemLabelsBorder {
-        color?: string|Function;
-        dashType?: string|Function;
-        width?: number|Function;
+        color?: string | Function;
+        dashType?: string | Function;
+        width?: number | Function;
     }
 
     interface ChartSeriesItemLabelsFromBorder {
-        color?: string|Function;
-        dashType?: string|Function;
-        width?: number|Function;
+        color?: string | Function;
+        dashType?: string | Function;
+        width?: number | Function;
     }
 
     interface ChartSeriesItemLabelsFromMargin {
@@ -8688,16 +9130,16 @@ declare module kendo.dataviz.ui {
     }
 
     interface ChartSeriesItemLabelsFrom {
-        background?: string|Function;
+        background?: string | Function;
         border?: ChartSeriesItemLabelsFromBorder;
-        color?: string|Function;
-        font?: string|Function;
-        format?: string|Function;
+        color?: string | Function;
+        font?: string | Function;
+        format?: string | Function;
         margin?: ChartSeriesItemLabelsFromMargin;
         padding?: ChartSeriesItemLabelsFromPadding;
-        position?: string|Function;
-        template?: string|Function;
-        visible?: boolean|Function;
+        position?: string | Function;
+        template?: string | Function;
+        visible?: boolean | Function;
     }
 
     interface ChartSeriesItemLabelsMargin {
@@ -8715,9 +9157,9 @@ declare module kendo.dataviz.ui {
     }
 
     interface ChartSeriesItemLabelsToBorder {
-        color?: string|Function;
-        dashType?: string|Function;
-        width?: number|Function;
+        color?: string | Function;
+        dashType?: string | Function;
+        width?: number | Function;
     }
 
     interface ChartSeriesItemLabelsToMargin {
@@ -8735,31 +9177,31 @@ declare module kendo.dataviz.ui {
     }
 
     interface ChartSeriesItemLabelsTo {
-        background?: string|Function;
+        background?: string | Function;
         border?: ChartSeriesItemLabelsToBorder;
-        color?: string|Function;
-        font?: string|Function;
-        format?: string|Function;
+        color?: string | Function;
+        font?: string | Function;
+        format?: string | Function;
         margin?: ChartSeriesItemLabelsToMargin;
         padding?: ChartSeriesItemLabelsToPadding;
-        position?: string|Function;
-        template?: string|Function;
-        visible?: boolean|Function;
+        position?: string | Function;
+        template?: string | Function;
+        visible?: boolean | Function;
     }
 
     interface ChartSeriesItemLabels {
         align?: string;
-        background?: string|Function;
+        background?: string | Function;
         border?: ChartSeriesItemLabelsBorder;
-        color?: string|Function;
+        color?: string | Function;
         distance?: number;
-        font?: string|Function;
-        format?: string|Function;
+        font?: string | Function;
+        format?: string | Function;
         margin?: ChartSeriesItemLabelsMargin;
         padding?: ChartSeriesItemLabelsPadding;
-        position?: string|Function;
-        template?: string|Function;
-        visible?: boolean|Function;
+        position?: string | Function;
+        template?: string | Function;
+        visible?: boolean | Function;
         visual?: Function;
         from?: ChartSeriesItemLabelsFrom;
         to?: ChartSeriesItemLabelsTo;
@@ -8780,18 +9222,18 @@ declare module kendo.dataviz.ui {
     }
 
     interface ChartSeriesItemMarkersBorder {
-        color?: string|Function;
-        width?: number|Function;
+        color?: string | Function;
+        width?: number | Function;
     }
 
     interface ChartSeriesItemMarkers {
-        background?: string|Function;
+        background?: string | Function;
         border?: ChartSeriesItemMarkersBorder;
-        size?: number|Function;
-        type?: string|Function;
-        visible?: boolean|Function;
+        size?: number | Function;
+        type?: string | Function;
+        visible?: boolean | Function;
         visual?: Function;
-        rotation?: number|Function;
+        rotation?: number | Function;
     }
 
     interface ChartSeriesItemNegativeValues {
@@ -8823,7 +9265,7 @@ declare module kendo.dataviz.ui {
         border?: ChartSeriesItemNotesLabelBorder;
         color?: string;
         font?: string;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
         rotation?: number;
         format?: string;
@@ -8845,16 +9287,16 @@ declare module kendo.dataviz.ui {
     }
 
     interface ChartSeriesItemOutliersBorder {
-        color?: string|Function;
-        width?: number|Function;
+        color?: string | Function;
+        width?: number | Function;
     }
 
     interface ChartSeriesItemOutliers {
-        background?: string|Function;
+        background?: string | Function;
         border?: ChartSeriesItemOutliersBorder;
-        size?: number|Function;
-        type?: string|Function;
-        rotation?: number|Function;
+        size?: number | Function;
+        type?: string | Function;
+        rotation?: number | Function;
     }
 
     interface ChartSeriesItemOverlay {
@@ -8867,18 +9309,18 @@ declare module kendo.dataviz.ui {
     }
 
     interface ChartSeriesItemTargetBorder {
-        color?: string|Function;
-        dashType?: string|Function;
-        width?: number|Function;
+        color?: string | Function;
+        dashType?: string | Function;
+        width?: number | Function;
     }
 
     interface ChartSeriesItemTargetLine {
-        width?: any|Function;
+        width?: any | Function;
     }
 
     interface ChartSeriesItemTarget {
         border?: ChartSeriesItemTargetBorder;
-        color?: string|Function;
+        color?: string | Function;
         line?: ChartSeriesItemTargetLine;
     }
 
@@ -8901,23 +9343,23 @@ declare module kendo.dataviz.ui {
         font?: string;
         format?: string;
         padding?: ChartSeriesItemTooltipPadding;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
     }
 
     interface ChartSeriesItem {
-        aggregate?: string|Function;
+        aggregate?: string | Function;
         axis?: string;
         border?: ChartSeriesItemBorder;
         categoryField?: string;
         closeField?: string;
-        color?: string|Function;
+        color?: string | Function;
         colorField?: string;
         connectors?: ChartSeriesItemConnectors;
         currentField?: string;
         dashType?: string;
         data?: any;
-        downColor?: string|Function;
+        downColor?: string | Function;
         downColorField?: string;
         segmentSpacing?: number;
         summaryField?: string;
@@ -8968,7 +9410,7 @@ declare module kendo.dataviz.ui {
         size?: number;
         sizeField?: string;
         spacing?: number;
-        stack?: ChartSeriesItemStack;
+        stack?: boolean | ChartSeriesItemStack;
         startAngle?: number;
         target?: ChartSeriesItemTarget;
         targetField?: string;
@@ -9027,7 +9469,7 @@ declare module kendo.dataviz.ui {
         format?: string;
         margin?: ChartSeriesDefaultsLabelsFromMargin;
         padding?: ChartSeriesDefaultsLabelsFromPadding;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
     }
 
@@ -9073,7 +9515,7 @@ declare module kendo.dataviz.ui {
         format?: string;
         margin?: ChartSeriesDefaultsLabelsToMargin;
         padding?: ChartSeriesDefaultsLabelsToPadding;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
     }
 
@@ -9085,7 +9527,7 @@ declare module kendo.dataviz.ui {
         format?: string;
         margin?: ChartSeriesDefaultsLabelsMargin;
         padding?: ChartSeriesDefaultsLabelsPadding;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
         visual?: Function;
         from?: ChartSeriesDefaultsLabelsFrom;
@@ -9116,7 +9558,7 @@ declare module kendo.dataviz.ui {
         border?: ChartSeriesDefaultsNotesLabelBorder;
         color?: string;
         font?: string;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
         rotation?: number;
         format?: string;
@@ -9163,7 +9605,7 @@ declare module kendo.dataviz.ui {
         font?: string;
         format?: string;
         padding?: ChartSeriesDefaultsTooltipPadding;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
     }
 
@@ -9184,7 +9626,7 @@ declare module kendo.dataviz.ui {
         scatter?: any;
         scatterLine?: any;
         spacing?: number;
-        stack?: ChartSeriesDefaultsStack;
+        stack?: boolean | ChartSeriesDefaultsStack;
         type?: string;
         tooltip?: ChartSeriesDefaultsTooltip;
         verticalArea?: any;
@@ -9244,10 +9686,11 @@ declare module kendo.dataviz.ui {
         color?: string;
         font?: string;
         format?: string;
+        opacity?: number;
         padding?: ChartTooltipPadding;
         shared?: boolean;
-        sharedTemplate?: string|Function;
-        template?: string|Function;
+        sharedTemplate?: string | Function;
+        template?: string | Function;
         visible?: boolean;
     }
 
@@ -9271,7 +9714,7 @@ declare module kendo.dataviz.ui {
         font?: string;
         format?: string;
         padding?: ChartValueAxisItemCrosshairTooltipPadding;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
     }
 
@@ -9305,7 +9748,7 @@ declare module kendo.dataviz.ui {
 
     interface ChartValueAxisItemLabelsRotation {
         align?: string;
-        angle?: number|string;
+        angle?: number | string;
     }
 
     interface ChartValueAxisItemLabels {
@@ -9320,7 +9763,7 @@ declare module kendo.dataviz.ui {
         rotation?: ChartValueAxisItemLabelsRotation;
         skip?: number;
         step?: number;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
         visual?: Function;
     }
@@ -9393,7 +9836,7 @@ declare module kendo.dataviz.ui {
         border?: ChartValueAxisItemNotesDataItemLabelBorder;
         color?: string;
         font?: string;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
         rotation?: number;
         format?: string;
@@ -9439,7 +9882,7 @@ declare module kendo.dataviz.ui {
         border?: ChartValueAxisItemNotesLabelBorder;
         color?: string;
         font?: string;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
         rotation?: number;
         format?: string;
@@ -9503,7 +9946,7 @@ declare module kendo.dataviz.ui {
     }
 
     interface ChartValueAxisItem {
-        axisCrossingValue?: any|Date|any;
+        axisCrossingValue?: any | Date | any;
         background?: string;
         color?: string;
         crosshair?: ChartValueAxisItemCrosshair;
@@ -9548,7 +9991,7 @@ declare module kendo.dataviz.ui {
         font?: string;
         format?: string;
         padding?: ChartXAxisItemCrosshairTooltipPadding;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
     }
 
@@ -9590,7 +10033,7 @@ declare module kendo.dataviz.ui {
 
     interface ChartXAxisItemLabelsRotation {
         align?: string;
-        angle?: number|string;
+        angle?: number | string;
     }
 
     interface ChartXAxisItemLabels {
@@ -9607,7 +10050,7 @@ declare module kendo.dataviz.ui {
         rotation?: ChartXAxisItemLabelsRotation;
         skip?: number;
         step?: number;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
         visual?: Function;
     }
@@ -9679,7 +10122,7 @@ declare module kendo.dataviz.ui {
         border?: ChartXAxisItemNotesDataItemLabelBorder;
         color?: string;
         font?: string;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
         rotation?: number;
         format?: string;
@@ -9725,7 +10168,7 @@ declare module kendo.dataviz.ui {
         border?: ChartXAxisItemNotesLabelBorder;
         color?: string;
         font?: string;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
         rotation?: number;
         format?: string;
@@ -9789,7 +10232,7 @@ declare module kendo.dataviz.ui {
     }
 
     interface ChartXAxisItem {
-        axisCrossingValue?: any|Date|any;
+        axisCrossingValue?: any | Date | any;
         background?: string;
         baseUnit?: string;
         color?: string;
@@ -9836,7 +10279,7 @@ declare module kendo.dataviz.ui {
         font?: string;
         format?: string;
         padding?: ChartYAxisItemCrosshairTooltipPadding;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
     }
 
@@ -9895,7 +10338,7 @@ declare module kendo.dataviz.ui {
         rotation?: ChartYAxisItemLabelsRotation;
         skip?: number;
         step?: number;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
         visual?: Function;
     }
@@ -9967,7 +10410,7 @@ declare module kendo.dataviz.ui {
         border?: ChartYAxisItemNotesDataItemLabelBorder;
         color?: string;
         font?: string;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
         rotation?: number;
         format?: string;
@@ -10013,7 +10456,7 @@ declare module kendo.dataviz.ui {
         border?: ChartYAxisItemNotesLabelBorder;
         color?: string;
         font?: string;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
         rotation?: number;
         format?: string;
@@ -10077,7 +10520,7 @@ declare module kendo.dataviz.ui {
     }
 
     interface ChartYAxisItem {
-        axisCrossingValue?: any|Date|any;
+        axisCrossingValue?: any | Date | any;
         background?: string;
         baseUnit?: string;
         color?: string;
@@ -10113,8 +10556,8 @@ declare module kendo.dataviz.ui {
     }
 
     interface ChartZoomable {
-        mousewheel?: ChartZoomableMousewheel;
-        selection?: ChartZoomableSelection;
+        mousewheel?: boolean | ChartZoomableMousewheel;
+        selection?: boolean | ChartZoomableSelection;
     }
 
     interface ChartExportImageOptions {
@@ -10147,13 +10590,13 @@ declare module kendo.dataviz.ui {
     interface ChartOptions {
         name?: string;
         autoBind?: boolean;
-        axisDefaults?: any;
+        axisDefaults?: ChartAxisDefaults;
         categoryAxis?: ChartCategoryAxisItem[];
         chartArea?: ChartChartArea;
-        dataSource?: any|any|kendo.data.DataSource;
+        dataSource?: any | any | kendo.data.DataSource;
         legend?: ChartLegend;
         panes?: ChartPane[];
-        pannable?: ChartPannable;
+        pannable?: boolean | ChartPannable;
         pdf?: ChartPdf;
         plotArea?: ChartPlotArea;
         renderAs?: string;
@@ -10167,7 +10610,7 @@ declare module kendo.dataviz.ui {
         valueAxis?: ChartValueAxisItem[];
         xAxis?: ChartXAxisItem[];
         yAxis?: ChartYAxisItem[];
-        zoomable?: ChartZoomable;
+        zoomable?: boolean | ChartZoomable;
         axisLabelClick?(e: ChartAxisLabelClickEvent): void;
         legendItemClick?(e: ChartLegendItemClickEvent): void;
         legendItemHover?(e: ChartLegendItemHoverEvent): void;
@@ -10178,6 +10621,7 @@ declare module kendo.dataviz.ui {
         noteClick?(e: ChartNoteClickEvent): void;
         noteHover?(e: ChartNoteHoverEvent): void;
         plotAreaClick?(e: ChartPlotAreaClickEvent): void;
+        plotAreaHover?(e: ChartPlotAreaHoverEvent): void;
         render?(e: ChartEvent): void;
         select?(e: ChartSelectEvent): void;
         selectEnd?(e: ChartSelectEndEvent): void;
@@ -10264,6 +10708,15 @@ declare module kendo.dataviz.ui {
         y?: any;
     }
 
+    interface ChartPlotAreaHoverEvent extends ChartEvent {
+        category?: any;
+        element?: any;
+        originalEvent?: any;
+        value?: any;
+        x?: any;
+        y?: any;
+    }
+
     interface ChartSelectEvent extends ChartEvent {
         axis?: any;
         from?: any;
@@ -10327,9 +10780,9 @@ declare module kendo.dataviz.ui {
         options: DiagramOptions;
 
         dataSource: kendo.data.DataSource;
-        connections: DiagramConnection[];
+        connections: kendo.dataviz.diagram.Connection[];
         connectionsDataSource: kendo.data.DataSource;
-        shapes: DiagramShape[];
+        shapes: kendo.dataviz.diagram.Shape[];
 
         element: JQuery;
         wrapper: JQuery;
@@ -10360,7 +10813,13 @@ declare module kendo.dataviz.ui {
         exportPDF(options?: kendo.drawing.PDFOptions): JQueryPromise<any>;
         exportSVG(options: any): JQueryPromise<any>;
         focus(): void;
+        getConnectionByModelId(id: string): kendo.dataviz.diagram.Connection;
+        getConnectionByModelId(id: number): kendo.dataviz.diagram.Connection;
+        getConnectionByModelUid(uid: string): kendo.dataviz.diagram.Connection;
         getShapeById(id: string): any;
+        getShapeByModelId(id: string): kendo.dataviz.diagram.Shape;
+        getShapeByModelId(id: number): kendo.dataviz.diagram.Shape;
+        getShapeByModelUid(uid: string): kendo.dataviz.diagram.Shape;
         layerToModel(point: any): any;
         layout(options: any): void;
         load(json: string): void;
@@ -10396,7 +10855,12 @@ declare module kendo.dataviz.ui {
     }
 
     interface DiagramConnectionDefaultsContent {
-        template?: string|Function;
+        color?: string;
+        fontFamily?: string;
+        fontSize?: number;
+        fontStyle?: string;
+        fontWeight?: string;
+        template?: string | Function;
         text?: string;
         visual?: Function;
     }
@@ -10477,7 +10941,7 @@ declare module kendo.dataviz.ui {
 
     interface DiagramConnectionDefaults {
         content?: DiagramConnectionDefaultsContent;
-        editable?: DiagramConnectionDefaultsEditable;
+        editable?: boolean | DiagramConnectionDefaultsEditable;
         endCap?: DiagramConnectionDefaultsEndCap;
         fromConnector?: string;
         hover?: DiagramConnectionDefaultsHover;
@@ -10490,7 +10954,12 @@ declare module kendo.dataviz.ui {
     }
 
     interface DiagramConnectionContent {
-        template?: string|Function;
+        color?: string;
+        fontFamily?: string;
+        fontSize?: number;
+        fontStyle?: string;
+        fontWeight?: string;
+        template?: string | Function;
         text?: string;
         visual?: Function;
     }
@@ -10584,7 +11053,7 @@ declare module kendo.dataviz.ui {
 
     interface DiagramConnection {
         content?: DiagramConnectionContent;
-        editable?: DiagramConnectionEditable;
+        editable?: boolean | DiagramConnectionEditable;
         endCap?: DiagramConnectionEndCap;
         from?: DiagramConnectionFrom;
         fromConnector?: string;
@@ -10603,7 +11072,7 @@ declare module kendo.dataviz.ui {
     }
 
     interface DiagramEditableDrag {
-        snap?: DiagramEditableDragSnap;
+        snap?: boolean | DiagramEditableDragSnap;
     }
 
     interface DiagramEditableResizeHandlesFill {
@@ -10666,12 +11135,12 @@ declare module kendo.dataviz.ui {
     }
 
     interface DiagramEditable {
-        connectionTemplate?: string|Function;
-        drag?: DiagramEditableDrag;
+        connectionTemplate?: string | Function;
+        drag?: boolean | DiagramEditableDrag;
         remove?: boolean;
-        resize?: DiagramEditableResize;
-        rotate?: DiagramEditableRotate;
-        shapeTemplate?: string|Function;
+        resize?: boolean | DiagramEditableResize;
+        rotate?: boolean | DiagramEditableRotate;
+        shapeTemplate?: string | Function;
         tools?: DiagramEditableTool[];
     }
 
@@ -10707,10 +11176,10 @@ declare module kendo.dataviz.ui {
     }
 
     interface DiagramPdfMargin {
-        bottom?: number|string;
-        left?: number|string;
-        right?: number|string;
-        top?: number|string;
+        bottom?: number | string;
+        left?: number | string;
+        right?: number | string;
+        top?: number | string;
     }
 
     interface DiagramPdf {
@@ -10722,7 +11191,7 @@ declare module kendo.dataviz.ui {
         keywords?: string;
         landscape?: boolean;
         margin?: DiagramPdfMargin;
-        paperSize?: string|any;
+        paperSize?: string | any;
         proxyURL?: string;
         proxyTarget?: string;
         subject?: string;
@@ -10740,9 +11209,76 @@ declare module kendo.dataviz.ui {
         stroke?: DiagramSelectableStroke;
     }
 
+    interface DiagramShapeDefaultsConnectorDefaultsFill {
+        color?: string;
+        opacity?: number;
+    }
+
+    interface DiagramShapeDefaultsConnectorDefaultsHoverFill {
+        color?: string;
+        opacity?: number;
+    }
+
+    interface DiagramShapeDefaultsConnectorDefaultsHoverStroke {
+        color?: string;
+        dashType?: string;
+        width?: number;
+    }
+
+    interface DiagramShapeDefaultsConnectorDefaultsHover {
+        fill?: DiagramShapeDefaultsConnectorDefaultsHoverFill;
+        stroke?: DiagramShapeDefaultsConnectorDefaultsHoverStroke;
+    }
+
+    interface DiagramShapeDefaultsConnectorDefaultsStroke {
+        color?: string;
+        dashType?: string;
+        width?: number;
+    }
+
+    interface DiagramShapeDefaultsConnectorDefaults {
+        width?: number;
+        height?: number;
+        hover?: DiagramShapeDefaultsConnectorDefaultsHover;
+        fill?: DiagramShapeDefaultsConnectorDefaultsFill;
+        stroke?: DiagramShapeDefaultsConnectorDefaultsStroke;
+    }
+
+    interface DiagramShapeDefaultsConnectorFill {
+        color?: string;
+        opacity?: number;
+    }
+
+    interface DiagramShapeDefaultsConnectorHoverFill {
+        color?: string;
+        opacity?: number;
+    }
+
+    interface DiagramShapeDefaultsConnectorHoverStroke {
+        color?: string;
+        dashType?: string;
+        width?: number;
+    }
+
+    interface DiagramShapeDefaultsConnectorHover {
+        fill?: DiagramShapeDefaultsConnectorHoverFill;
+        stroke?: DiagramShapeDefaultsConnectorHoverStroke;
+    }
+
+    interface DiagramShapeDefaultsConnectorStroke {
+        color?: string;
+        dashType?: string;
+        width?: number;
+    }
+
     interface DiagramShapeDefaultsConnector {
         name?: string;
         position?: Function;
+        width?: number;
+        height?: number;
+        hover?: DiagramShapeDefaultsConnectorHover;
+        fill?: DiagramShapeDefaultsConnectorFill;
+        stroke?: DiagramShapeDefaultsConnectorStroke;
     }
 
     interface DiagramShapeDefaultsContent {
@@ -10750,7 +11286,9 @@ declare module kendo.dataviz.ui {
         color?: string;
         fontFamily?: string;
         fontSize?: number;
-        template?: string|Function;
+        fontStyle?: string;
+        fontWeight?: string;
+        template?: string | Function;
         text?: string;
     }
 
@@ -10808,8 +11346,9 @@ declare module kendo.dataviz.ui {
 
     interface DiagramShapeDefaults {
         connectors?: DiagramShapeDefaultsConnector[];
+        connectorDefaults?: DiagramShapeDefaultsConnectorDefaults;
         content?: DiagramShapeDefaultsContent;
-        editable?: DiagramShapeDefaultsEditable;
+        editable?: boolean | DiagramShapeDefaultsEditable;
         fill?: DiagramShapeDefaultsFill;
         height?: number;
         hover?: DiagramShapeDefaultsHover;
@@ -10827,10 +11366,77 @@ declare module kendo.dataviz.ui {
         y?: number;
     }
 
+    interface DiagramShapeConnectorDefaultsFill {
+        color?: string;
+        opacity?: number;
+    }
+
+    interface DiagramShapeConnectorDefaultsHoverFill {
+        color?: string;
+        opacity?: number;
+    }
+
+    interface DiagramShapeConnectorDefaultsHoverStroke {
+        color?: string;
+        dashType?: string;
+        width?: number;
+    }
+
+    interface DiagramShapeConnectorDefaultsHover {
+        fill?: DiagramShapeConnectorDefaultsHoverFill;
+        stroke?: DiagramShapeConnectorDefaultsHoverStroke;
+    }
+
+    interface DiagramShapeConnectorDefaultsStroke {
+        color?: string;
+        dashType?: string;
+        width?: number;
+    }
+
+    interface DiagramShapeConnectorDefaults {
+        width?: number;
+        height?: number;
+        hover?: DiagramShapeConnectorDefaultsHover;
+        fill?: DiagramShapeConnectorDefaultsFill;
+        stroke?: DiagramShapeConnectorDefaultsStroke;
+    }
+
+    interface DiagramShapeConnectorFill {
+        color?: string;
+        opacity?: number;
+    }
+
+    interface DiagramShapeConnectorHoverFill {
+        color?: string;
+        opacity?: number;
+    }
+
+    interface DiagramShapeConnectorHoverStroke {
+        color?: string;
+        dashType?: string;
+        width?: number;
+    }
+
+    interface DiagramShapeConnectorHover {
+        fill?: DiagramShapeConnectorHoverFill;
+        stroke?: DiagramShapeConnectorHoverStroke;
+    }
+
+    interface DiagramShapeConnectorStroke {
+        color?: string;
+        dashType?: string;
+        width?: number;
+    }
+
     interface DiagramShapeConnector {
         description?: string;
         name?: string;
         position?: Function;
+        width?: number;
+        height?: number;
+        hover?: DiagramShapeConnectorHover;
+        fill?: DiagramShapeConnectorFill;
+        stroke?: DiagramShapeConnectorStroke;
     }
 
     interface DiagramShapeContent {
@@ -10838,7 +11444,9 @@ declare module kendo.dataviz.ui {
         color?: string;
         fontFamily?: string;
         fontSize?: number;
-        template?: string|Function;
+        fontStyle?: string;
+        fontWeight?: string;
+        template?: string | Function;
         text?: string;
     }
 
@@ -10894,8 +11502,9 @@ declare module kendo.dataviz.ui {
 
     interface DiagramShape {
         connectors?: DiagramShapeConnector[];
+        connectorDefaults?: DiagramShapeConnectorDefaults;
         content?: DiagramShapeContent;
-        editable?: DiagramShapeEditable;
+        editable?: boolean | DiagramShapeEditable;
         fill?: DiagramShapeFill;
         height?: number;
         hover?: DiagramShapeHover;
@@ -10932,16 +11541,16 @@ declare module kendo.dataviz.ui {
         autoBind?: boolean;
         connectionDefaults?: DiagramConnectionDefaults;
         connections?: DiagramConnection[];
-        connectionsDataSource?: any|any|kendo.data.DataSource;
-        dataSource?: any|any|kendo.data.DataSource;
-        editable?: DiagramEditable;
+        connectionsDataSource?: any | any | kendo.data.DataSource;
+        dataSource?: any | any | kendo.data.DataSource;
+        editable?: boolean | DiagramEditable;
         layout?: DiagramLayout;
-        pannable?: DiagramPannable;
+        pannable?: boolean | DiagramPannable;
         pdf?: DiagramPdf;
-        selectable?: DiagramSelectable;
+        selectable?: boolean | DiagramSelectable;
         shapeDefaults?: DiagramShapeDefaults;
         shapes?: DiagramShape[];
-        template?: string|Function;
+        template?: string | Function;
         zoom?: number;
         zoomMax?: number;
         zoomMin?: number;
@@ -10963,6 +11572,7 @@ declare module kendo.dataviz.ui {
         remove?(e: DiagramRemoveEvent): void;
         save?(e: DiagramSaveEvent): void;
         select?(e: DiagramSelectEvent): void;
+        toolBarClick?(e: DiagramToolBarClickEvent): void;
         zoomEnd?(e: DiagramZoomEndEvent): void;
         zoomStart?(e: DiagramZoomStartEvent): void;
     }
@@ -10998,16 +11608,19 @@ declare module kendo.dataviz.ui {
     }
 
     interface DiagramDragEvent extends DiagramEvent {
+        connectionHandle?: string;
         connections?: any;
         shapes?: any;
     }
 
     interface DiagramDragEndEvent extends DiagramEvent {
+        connectionHandle?: string;
         connections?: any;
         shapes?: any;
     }
 
     interface DiagramDragStartEvent extends DiagramEvent {
+        connectionHandle?: string;
         connections?: any;
         shapes?: any;
     }
@@ -11053,6 +11666,13 @@ declare module kendo.dataviz.ui {
     interface DiagramSelectEvent extends DiagramEvent {
         selected?: any;
         deselected?: any;
+    }
+
+    interface DiagramToolBarClickEvent extends DiagramEvent {
+        action?: string;
+        shapes?: any;
+        connections?: any;
+        target?: JQuery;
     }
 
     interface DiagramZoomEndEvent extends DiagramEvent {
@@ -11138,7 +11758,7 @@ declare module kendo.dataviz.ui {
     interface LinearGaugePointerItem {
         border?: LinearGaugePointerItemBorder;
         color?: string;
-        margin?: number|any;
+        margin?: number | any;
         opacity?: number;
         shape?: string;
         size?: number;
@@ -11174,7 +11794,7 @@ declare module kendo.dataviz.ui {
         format?: string;
         margin?: LinearGaugeScaleLabelsMargin;
         padding?: LinearGaugeScaleLabelsPadding;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
     }
 
@@ -11306,9 +11926,9 @@ declare module kendo.dataviz.ui {
     }
 
     interface MapControls {
-        attribution?: MapControlsAttribution;
-        navigator?: MapControlsNavigator;
-        zoom?: MapControlsZoom;
+        attribution?: boolean | MapControlsAttribution;
+        navigator?: boolean | MapControlsNavigator;
+        zoom?: boolean | MapControlsZoom;
     }
 
     interface MapLayerDefaultsBing {
@@ -11342,7 +11962,7 @@ declare module kendo.dataviz.ui {
         maxSize?: number;
         minSize?: number;
         style?: MapLayerDefaultsBubbleStyle;
-        symbol?: string|Function;
+        symbol?: string | Function;
     }
 
     interface MapLayerDefaultsMarkerTooltipAnimationClose {
@@ -11476,8 +12096,8 @@ declare module kendo.dataviz.ui {
     interface MapLayer {
         attribution?: string;
         autoBind?: boolean;
-        dataSource?: any|any|kendo.data.DataSource;
-        extent?: any|kendo.dataviz.map.Extent;
+        dataSource?: any | any | kendo.data.DataSource;
+        extent?: any | kendo.dataviz.map.Extent;
         key?: string;
         imagerySet?: string;
         culture?: string;
@@ -11490,7 +12110,7 @@ declare module kendo.dataviz.ui {
         minSize?: number;
         opacity?: number;
         subdomains?: any;
-        symbol?: string|Function;
+        symbol?: string | Function;
         type?: string;
         style?: MapLayerStyle;
         urlTemplate?: string;
@@ -11570,7 +12190,7 @@ declare module kendo.dataviz.ui {
     }
 
     interface MapMarker {
-        location?: any|kendo.dataviz.map.Location;
+        location?: any | kendo.dataviz.map.Location;
         shape?: string;
         title?: string;
         tooltip?: MapMarkerTooltip;
@@ -11578,7 +12198,7 @@ declare module kendo.dataviz.ui {
 
     interface MapOptions {
         name?: string;
-        center?: any|kendo.dataviz.map.Location;
+        center?: any | kendo.dataviz.map.Location;
         controls?: MapControls;
         layerDefaults?: MapLayerDefaults;
         layers?: MapLayer[];
@@ -11601,6 +12221,7 @@ declare module kendo.dataviz.ui {
         reset?(e: MapResetEvent): void;
         shapeClick?(e: MapShapeClickEvent): void;
         shapeCreated?(e: MapShapeCreatedEvent): void;
+        shapeFeatureCreated?(e: MapShapeFeatureCreatedEvent): void;
         shapeMouseEnter?(e: MapShapeMouseEnterEvent): void;
         shapeMouseLeave?(e: MapShapeMouseLeaveEvent): void;
         zoomStart?(e: MapZoomStartEvent): void;
@@ -11660,6 +12281,13 @@ declare module kendo.dataviz.ui {
         layer?: kendo.dataviz.map.layer.Shape;
         shape?: kendo.drawing.Element;
         originalEvent?: any;
+    }
+
+    interface MapShapeFeatureCreatedEvent extends MapEvent {
+        dataItem?: any;
+        layer?: kendo.dataviz.map.layer.Shape;
+        group?: kendo.drawing.Group;
+        properties?: any;
     }
 
     interface MapShapeMouseEnterEvent extends MapEvent {
@@ -11735,8 +12363,8 @@ declare module kendo.dataviz.ui {
         errorCorrection?: string;
         padding?: number;
         renderAs?: string;
-        size?: number|string;
-        value?: number|string;
+        size?: number | string;
+        value?: number | string;
     }
     interface QRCodeEvent {
         sender: QRCode;
@@ -11836,7 +12464,7 @@ declare module kendo.dataviz.ui {
         margin?: RadialGaugeScaleLabelsMargin;
         padding?: RadialGaugeScaleLabelsPadding;
         position?: string;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
     }
 
@@ -11941,8 +12569,8 @@ declare module kendo.dataviz.ui {
         color?: string;
         font?: string;
         format?: string;
-        padding?: number|any;
-        template?: string|Function;
+        padding?: number | any;
+        template?: string | Function;
         visible?: boolean;
     }
 
@@ -11967,13 +12595,13 @@ declare module kendo.dataviz.ui {
         color?: string;
         font?: string;
         format?: string;
-        margin?: number|any;
+        margin?: number | any;
         mirror?: boolean;
-        padding?: number|any;
+        padding?: number | any;
         rotation?: number;
         skip?: number;
         step?: number;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
         culture?: string;
         dateFormats?: any;
@@ -12046,7 +12674,7 @@ declare module kendo.dataviz.ui {
         border?: SparklineCategoryAxisItemNotesDataItemLabelBorder;
         color?: string;
         font?: string;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
         rotation?: number;
         format?: string;
@@ -12092,7 +12720,7 @@ declare module kendo.dataviz.ui {
         border?: SparklineCategoryAxisItemNotesLabelBorder;
         color?: string;
         font?: string;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
         rotation?: number;
         format?: string;
@@ -12131,7 +12759,7 @@ declare module kendo.dataviz.ui {
         border?: SparklineCategoryAxisItemTitleBorder;
         color?: string;
         font?: string;
-        margin?: number|any;
+        margin?: number | any;
         position?: string;
         rotation?: number;
         text?: string;
@@ -12139,7 +12767,7 @@ declare module kendo.dataviz.ui {
     }
 
     interface SparklineCategoryAxisItem {
-        axisCrossingValue?: any|Date|any;
+        axisCrossingValue?: any | Date | any;
         categories?: any;
         color?: string;
         field?: string;
@@ -12179,7 +12807,7 @@ declare module kendo.dataviz.ui {
         opacity?: number;
         border?: SparklineChartAreaBorder;
         height?: number;
-        margin?: number|any;
+        margin?: number | any;
         width?: number;
     }
 
@@ -12193,14 +12821,14 @@ declare module kendo.dataviz.ui {
         background?: string;
         opacity?: number;
         border?: SparklinePlotAreaBorder;
-        margin?: number|any;
+        margin?: number | any;
     }
 
     interface SparklineSeriesItemBorder {
-        color?: string|Function;
-        dashType?: string|Function;
-        opacity?: number|Function;
-        width?: number|Function;
+        color?: string | Function;
+        dashType?: string | Function;
+        opacity?: number | Function;
+        width?: number | Function;
     }
 
     interface SparklineSeriesItemConnectors {
@@ -12223,24 +12851,24 @@ declare module kendo.dataviz.ui {
     }
 
     interface SparklineSeriesItemLabelsBorder {
-        color?: string|Function;
-        dashType?: string|Function;
-        width?: number|Function;
+        color?: string | Function;
+        dashType?: string | Function;
+        width?: number | Function;
     }
 
     interface SparklineSeriesItemLabels {
         align?: string;
-        background?: string|Function;
+        background?: string | Function;
         border?: SparklineSeriesItemLabelsBorder;
-        color?: string|Function;
+        color?: string | Function;
         distance?: number;
-        font?: string|Function;
-        format?: string|Function;
-        margin?: number|any;
-        padding?: number|any;
-        position?: string|Function;
-        template?: string|Function;
-        visible?: boolean|Function;
+        font?: string | Function;
+        format?: string | Function;
+        margin?: number | any;
+        padding?: number | any;
+        position?: string | Function;
+        template?: string | Function;
+        visible?: boolean | Function;
     }
 
     interface SparklineSeriesItemLine {
@@ -12251,17 +12879,17 @@ declare module kendo.dataviz.ui {
     }
 
     interface SparklineSeriesItemMarkersBorder {
-        color?: string|Function;
-        width?: number|Function;
+        color?: string | Function;
+        width?: number | Function;
     }
 
     interface SparklineSeriesItemMarkers {
-        background?: string|Function;
+        background?: string | Function;
         border?: SparklineSeriesItemMarkersBorder;
-        size?: number|Function;
-        type?: string|Function;
-        visible?: boolean|Function;
-        rotation?: number|Function;
+        size?: number | Function;
+        type?: string | Function;
+        visible?: boolean | Function;
+        rotation?: number | Function;
     }
 
     interface SparklineSeriesItemNotesIconBorder {
@@ -12288,7 +12916,7 @@ declare module kendo.dataviz.ui {
         border?: SparklineSeriesItemNotesLabelBorder;
         color?: string;
         font?: string;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
         rotation?: number;
         format?: string;
@@ -12318,18 +12946,18 @@ declare module kendo.dataviz.ui {
     }
 
     interface SparklineSeriesItemTargetBorder {
-        color?: string|Function;
-        dashType?: string|Function;
+        color?: string | Function;
+        dashType?: string | Function;
         width?: number;
     }
 
     interface SparklineSeriesItemTargetLine {
-        width?: any|Function;
+        width?: any | Function;
     }
 
     interface SparklineSeriesItemTarget {
         line?: SparklineSeriesItemTargetLine;
-        color?: string|Function;
+        color?: string | Function;
         border?: SparklineSeriesItemTargetBorder;
     }
 
@@ -12344,8 +12972,8 @@ declare module kendo.dataviz.ui {
         color?: string;
         font?: string;
         format?: string;
-        padding?: number|any;
-        template?: string|Function;
+        padding?: number | any;
+        template?: string | Function;
         visible?: boolean;
     }
 
@@ -12359,11 +12987,11 @@ declare module kendo.dataviz.ui {
         field?: string;
         name?: string;
         highlight?: SparklineSeriesItemHighlight;
-        aggregate?: string|Function;
+        aggregate?: string | Function;
         axis?: string;
         border?: SparklineSeriesItemBorder;
         categoryField?: string;
-        color?: string|Function;
+        color?: string | Function;
         colorField?: string;
         connectors?: SparklineSeriesItemConnectors;
         gap?: number;
@@ -12379,7 +13007,7 @@ declare module kendo.dataviz.ui {
         size?: number;
         startAngle?: number;
         spacing?: number;
-        stack?: SparklineSeriesItemStack;
+        stack?: boolean | SparklineSeriesItemStack;
         tooltip?: SparklineSeriesItemTooltip;
         width?: number;
         target?: SparklineSeriesItemTarget;
@@ -12405,9 +13033,9 @@ declare module kendo.dataviz.ui {
         color?: string;
         font?: string;
         format?: string;
-        margin?: number|any;
-        padding?: number|any;
-        template?: string|Function;
+        margin?: number | any;
+        padding?: number | any;
+        template?: string | Function;
         visible?: boolean;
     }
 
@@ -12426,8 +13054,8 @@ declare module kendo.dataviz.ui {
         color?: string;
         font?: string;
         format?: string;
-        padding?: number|any;
-        template?: string|Function;
+        padding?: number | any;
+        template?: string | Function;
         visible?: boolean;
     }
 
@@ -12442,7 +13070,7 @@ declare module kendo.dataviz.ui {
         overlay?: any;
         pie?: any;
         spacing?: number;
-        stack?: SparklineSeriesDefaultsStack;
+        stack?: boolean | SparklineSeriesDefaultsStack;
         type?: string;
         tooltip?: SparklineSeriesDefaultsTooltip;
     }
@@ -12458,8 +13086,8 @@ declare module kendo.dataviz.ui {
         color?: string;
         font?: string;
         format?: string;
-        padding?: number|any;
-        template?: string|Function;
+        padding?: number | any;
+        template?: string | Function;
         visible?: boolean;
         shared?: boolean;
         sharedTemplate?: string;
@@ -12476,8 +13104,8 @@ declare module kendo.dataviz.ui {
         color?: string;
         font?: string;
         format?: string;
-        padding?: number|any;
-        template?: string|Function;
+        padding?: number | any;
+        template?: string | Function;
         visible?: boolean;
     }
 
@@ -12502,13 +13130,13 @@ declare module kendo.dataviz.ui {
         color?: string;
         font?: string;
         format?: string;
-        margin?: number|any;
+        margin?: number | any;
         mirror?: boolean;
-        padding?: number|any;
+        padding?: number | any;
         rotation?: number;
         skip?: number;
         step?: number;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
     }
 
@@ -12578,7 +13206,7 @@ declare module kendo.dataviz.ui {
         border?: SparklineValueAxisItemNotesDataItemLabelBorder;
         color?: string;
         font?: string;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
         rotation?: number;
         format?: string;
@@ -12624,7 +13252,7 @@ declare module kendo.dataviz.ui {
         border?: SparklineValueAxisItemNotesLabelBorder;
         color?: string;
         font?: string;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
         rotation?: number;
         format?: string;
@@ -12663,8 +13291,8 @@ declare module kendo.dataviz.ui {
         border?: SparklineValueAxisItemTitleBorder;
         color?: string;
         font?: string;
-        margin?: number|any;
-        padding?: number|any;
+        margin?: number | any;
+        padding?: number | any;
         position?: string;
         rotation?: number;
         text?: string;
@@ -12672,7 +13300,7 @@ declare module kendo.dataviz.ui {
     }
 
     interface SparklineValueAxisItem {
-        axisCrossingValue?: any|Date|any;
+        axisCrossingValue?: any | Date | any;
         color?: string;
         labels?: SparklineValueAxisItemLabels;
         line?: SparklineValueAxisItemLine;
@@ -12868,8 +13496,8 @@ declare module kendo.dataviz.ui {
         color?: string;
         font?: string;
         format?: string;
-        padding?: number|any;
-        template?: string|Function;
+        padding?: number | any;
+        template?: string | Function;
         visible?: boolean;
     }
 
@@ -12894,13 +13522,13 @@ declare module kendo.dataviz.ui {
         color?: string;
         font?: string;
         format?: string;
-        margin?: number|any;
+        margin?: number | any;
         mirror?: boolean;
-        padding?: number|any;
+        padding?: number | any;
         rotation?: number;
         skip?: number;
         step?: number;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
         culture?: string;
         dateFormats?: any;
@@ -12973,7 +13601,7 @@ declare module kendo.dataviz.ui {
         border?: StockChartCategoryAxisItemNotesDataItemLabelBorder;
         color?: string;
         font?: string;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
         rotation?: number;
         format?: string;
@@ -13019,7 +13647,7 @@ declare module kendo.dataviz.ui {
         border?: StockChartCategoryAxisItemNotesLabelBorder;
         color?: string;
         font?: string;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
         rotation?: number;
         format?: string;
@@ -13071,7 +13699,7 @@ declare module kendo.dataviz.ui {
         border?: StockChartCategoryAxisItemTitleBorder;
         color?: string;
         font?: string;
-        margin?: number|any;
+        margin?: number | any;
         position?: string;
         rotation?: number;
         text?: string;
@@ -13079,7 +13707,7 @@ declare module kendo.dataviz.ui {
     }
 
     interface StockChartCategoryAxisItem {
-        axisCrossingValue?: any|Date|any;
+        axisCrossingValue?: any | Date | any;
         categories?: any;
         color?: string;
         field?: string;
@@ -13122,7 +13750,7 @@ declare module kendo.dataviz.ui {
         opacity?: number;
         border?: StockChartChartAreaBorder;
         height?: number;
-        margin?: number|any;
+        margin?: number | any;
         width?: number;
     }
 
@@ -13163,10 +13791,10 @@ declare module kendo.dataviz.ui {
         border?: StockChartLegendBorder;
         item?: StockChartLegendItem;
         labels?: StockChartLegendLabels;
-        margin?: number|any;
+        margin?: number | any;
         offsetX?: number;
         offsetY?: number;
-        padding?: number|any;
+        padding?: number | any;
         position?: string;
         reverse?: boolean;
         visible?: boolean;
@@ -13203,7 +13831,7 @@ declare module kendo.dataviz.ui {
         font?: string;
         format?: string;
         padding?: StockChartNavigatorCategoryAxisItemCrosshairTooltipPadding;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
     }
 
@@ -13257,7 +13885,7 @@ declare module kendo.dataviz.ui {
         rotation?: number;
         skip?: number;
         step?: number;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
     }
 
@@ -13328,7 +13956,7 @@ declare module kendo.dataviz.ui {
         border?: StockChartNavigatorCategoryAxisItemNotesDataItemLabelBorder;
         color?: string;
         font?: string;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
         rotation?: number;
         format?: string;
@@ -13374,7 +14002,7 @@ declare module kendo.dataviz.ui {
         border?: StockChartNavigatorCategoryAxisItemNotesLabelBorder;
         color?: string;
         font?: string;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
         rotation?: number;
         format?: string;
@@ -13437,7 +14065,7 @@ declare module kendo.dataviz.ui {
 
     interface StockChartNavigatorCategoryAxisItem {
         autoBaseUnitSteps?: StockChartNavigatorCategoryAxisItemAutoBaseUnitSteps;
-        axisCrossingValue?: any|Date|any;
+        axisCrossingValue?: any | Date | any;
         background?: string;
         baseUnit?: string;
         baseUnitStep?: any;
@@ -13466,7 +14094,7 @@ declare module kendo.dataviz.ui {
 
     interface StockChartNavigatorHint {
         visible?: boolean;
-        template?: string|Function;
+        template?: string | Function;
         format?: string;
     }
 
@@ -13567,10 +14195,10 @@ declare module kendo.dataviz.ui {
         color?: string;
         font?: string;
         format?: string;
-        margin?: number|any;
-        padding?: number|any;
+        margin?: number | any;
+        padding?: number | any;
         position?: string;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
     }
 
@@ -13588,7 +14216,7 @@ declare module kendo.dataviz.ui {
     interface StockChartNavigatorSeriesItemMarkers {
         background?: string;
         border?: StockChartNavigatorSeriesItemMarkersBorder;
-        rotation?: number|Function;
+        rotation?: number | Function;
         size?: number;
         type?: string;
         visible?: boolean;
@@ -13614,8 +14242,8 @@ declare module kendo.dataviz.ui {
         color?: string;
         font?: string;
         format?: string;
-        padding?: number|any;
-        template?: string|Function;
+        padding?: number | any;
+        template?: string | Function;
         visible?: boolean;
     }
 
@@ -13628,7 +14256,7 @@ declare module kendo.dataviz.ui {
         categoryField?: string;
         name?: string;
         highlight?: StockChartNavigatorSeriesItemHighlight;
-        aggregate?: string|Function;
+        aggregate?: string | Function;
         axis?: string;
         border?: StockChartNavigatorSeriesItemBorder;
         closeField?: string;
@@ -13647,7 +14275,7 @@ declare module kendo.dataviz.ui {
         openField?: string;
         overlay?: StockChartNavigatorSeriesItemOverlay;
         spacing?: number;
-        stack?: StockChartNavigatorSeriesItemStack;
+        stack?: boolean | StockChartNavigatorSeriesItemStack;
         tooltip?: StockChartNavigatorSeriesItemTooltip;
         width?: number;
     }
@@ -13681,7 +14309,7 @@ declare module kendo.dataviz.ui {
         border?: StockChartPaneTitleBorder;
         color?: string;
         font?: string;
-        margin?: number|any;
+        margin?: number | any;
         position?: string;
         text?: string;
         visible?: boolean;
@@ -13689,8 +14317,8 @@ declare module kendo.dataviz.ui {
 
     interface StockChartPane {
         name?: string;
-        margin?: number|any;
-        padding?: number|any;
+        margin?: number | any;
+        padding?: number | any;
         background?: string;
         border?: StockChartPaneBorder;
         clip?: boolean;
@@ -13699,10 +14327,10 @@ declare module kendo.dataviz.ui {
     }
 
     interface StockChartPdfMargin {
-        bottom?: number|string;
-        left?: number|string;
-        right?: number|string;
-        top?: number|string;
+        bottom?: number | string;
+        left?: number | string;
+        right?: number | string;
+        top?: number | string;
     }
 
     interface StockChartPdf {
@@ -13714,7 +14342,7 @@ declare module kendo.dataviz.ui {
         keywords?: string;
         landscape?: boolean;
         margin?: StockChartPdfMargin;
-        paperSize?: string|any;
+        paperSize?: string | any;
         proxyURL?: string;
         proxyTarget?: string;
         subject?: string;
@@ -13731,14 +14359,14 @@ declare module kendo.dataviz.ui {
         background?: string;
         opacity?: number;
         border?: StockChartPlotAreaBorder;
-        margin?: number|any;
+        margin?: number | any;
     }
 
     interface StockChartSeriesItemBorder {
-        color?: string|Function;
-        dashType?: string|Function;
-        opacity?: number|Function;
-        width?: number|Function;
+        color?: string | Function;
+        dashType?: string | Function;
+        opacity?: number | Function;
+        width?: number | Function;
     }
 
     interface StockChartSeriesItemHighlightBorder {
@@ -13762,22 +14390,22 @@ declare module kendo.dataviz.ui {
     }
 
     interface StockChartSeriesItemLabelsBorder {
-        color?: string|Function;
-        dashType?: string|Function;
-        width?: number|Function;
+        color?: string | Function;
+        dashType?: string | Function;
+        width?: number | Function;
     }
 
     interface StockChartSeriesItemLabels {
-        background?: string|Function;
+        background?: string | Function;
         border?: StockChartSeriesItemLabelsBorder;
-        color?: string|Function;
-        font?: string|Function;
-        format?: string|Function;
-        margin?: number|any;
-        padding?: number|any;
-        position?: string|Function;
-        template?: string|Function;
-        visible?: boolean|Function;
+        color?: string | Function;
+        font?: string | Function;
+        format?: string | Function;
+        margin?: number | any;
+        padding?: number | any;
+        position?: string | Function;
+        template?: string | Function;
+        visible?: boolean | Function;
     }
 
     interface StockChartSeriesItemLine {
@@ -13788,17 +14416,17 @@ declare module kendo.dataviz.ui {
     }
 
     interface StockChartSeriesItemMarkersBorder {
-        color?: string|Function;
-        width?: number|Function;
+        color?: string | Function;
+        width?: number | Function;
     }
 
     interface StockChartSeriesItemMarkers {
-        background?: string|Function;
+        background?: string | Function;
         border?: StockChartSeriesItemMarkersBorder;
-        size?: number|Function;
-        rotation?: number|Function;
-        type?: string|Function;
-        visible?: boolean|Function;
+        size?: number | Function;
+        rotation?: number | Function;
+        type?: string | Function;
+        visible?: boolean | Function;
     }
 
     interface StockChartSeriesItemNotesIconBorder {
@@ -13825,7 +14453,7 @@ declare module kendo.dataviz.ui {
         border?: StockChartSeriesItemNotesLabelBorder;
         color?: string;
         font?: string;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
         rotation?: number;
         format?: string;
@@ -13855,18 +14483,18 @@ declare module kendo.dataviz.ui {
     }
 
     interface StockChartSeriesItemTargetBorder {
-        color?: string|Function;
-        dashType?: string|Function;
-        width?: number|Function;
+        color?: string | Function;
+        dashType?: string | Function;
+        width?: number | Function;
     }
 
     interface StockChartSeriesItemTargetLine {
-        width?: any|Function;
+        width?: any | Function;
     }
 
     interface StockChartSeriesItemTarget {
         line?: StockChartSeriesItemTargetLine;
-        color?: string|Function;
+        color?: string | Function;
         border?: StockChartSeriesItemTargetBorder;
     }
 
@@ -13881,8 +14509,8 @@ declare module kendo.dataviz.ui {
         color?: string;
         font?: string;
         format?: string;
-        padding?: number|any;
-        template?: string|Function;
+        padding?: number | any;
+        template?: string | Function;
         visible?: boolean;
     }
 
@@ -13897,13 +14525,13 @@ declare module kendo.dataviz.ui {
         targetField?: string;
         name?: string;
         highlight?: StockChartSeriesItemHighlight;
-        aggregate?: string|Function;
+        aggregate?: string | Function;
         axis?: string;
         border?: StockChartSeriesItemBorder;
         closeField?: string;
-        color?: string|Function;
+        color?: string | Function;
         colorField?: string;
-        downColor?: string|Function;
+        downColor?: string | Function;
         downColorField?: string;
         gap?: number;
         labels?: StockChartSeriesItemLabels;
@@ -13917,7 +14545,7 @@ declare module kendo.dataviz.ui {
         openField?: string;
         overlay?: StockChartSeriesItemOverlay;
         spacing?: number;
-        stack?: StockChartSeriesItemStack;
+        stack?: boolean | StockChartSeriesItemStack;
         tooltip?: StockChartSeriesItemTooltip;
         visibleInLegend?: boolean;
         width?: number;
@@ -13944,9 +14572,9 @@ declare module kendo.dataviz.ui {
         color?: string;
         font?: string;
         format?: string;
-        margin?: number|any;
-        padding?: number|any;
-        template?: string|Function;
+        margin?: number | any;
+        padding?: number | any;
+        template?: string | Function;
         visible?: boolean;
     }
 
@@ -13965,8 +14593,8 @@ declare module kendo.dataviz.ui {
         color?: string;
         font?: string;
         format?: string;
-        padding?: number|any;
-        template?: string|Function;
+        padding?: number | any;
+        template?: string | Function;
         visible?: boolean;
     }
 
@@ -13982,7 +14610,7 @@ declare module kendo.dataviz.ui {
         overlay?: any;
         pie?: any;
         spacing?: number;
-        stack?: StockChartSeriesDefaultsStack;
+        stack?: boolean | StockChartSeriesDefaultsStack;
         type?: string;
         tooltip?: StockChartSeriesDefaultsTooltip;
     }
@@ -13999,8 +14627,8 @@ declare module kendo.dataviz.ui {
         border?: StockChartTitleBorder;
         font?: string;
         color?: string;
-        margin?: number|any;
-        padding?: number|any;
+        margin?: number | any;
+        padding?: number | any;
         position?: string;
         text?: string;
         visible?: boolean;
@@ -14017,8 +14645,8 @@ declare module kendo.dataviz.ui {
         color?: string;
         font?: string;
         format?: string;
-        padding?: number|any;
-        template?: string|Function;
+        padding?: number | any;
+        template?: string | Function;
         visible?: boolean;
         shared?: boolean;
         sharedTemplate?: string;
@@ -14035,8 +14663,8 @@ declare module kendo.dataviz.ui {
         color?: string;
         font?: string;
         format?: string;
-        padding?: number|any;
-        template?: string|Function;
+        padding?: number | any;
+        template?: string | Function;
         visible?: boolean;
     }
 
@@ -14061,13 +14689,13 @@ declare module kendo.dataviz.ui {
         color?: string;
         font?: string;
         format?: string;
-        margin?: number|any;
+        margin?: number | any;
         mirror?: boolean;
-        padding?: number|any;
+        padding?: number | any;
         rotation?: number;
         skip?: number;
         step?: number;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
     }
 
@@ -14137,7 +14765,7 @@ declare module kendo.dataviz.ui {
         border?: StockChartValueAxisItemNotesDataItemLabelBorder;
         color?: string;
         font?: string;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
         rotation?: number;
         format?: string;
@@ -14183,7 +14811,7 @@ declare module kendo.dataviz.ui {
         border?: StockChartValueAxisItemNotesLabelBorder;
         color?: string;
         font?: string;
-        template?: string|Function;
+        template?: string | Function;
         visible?: boolean;
         rotation?: number;
         format?: string;
@@ -14222,8 +14850,8 @@ declare module kendo.dataviz.ui {
         border?: StockChartValueAxisItemTitleBorder;
         color?: string;
         font?: string;
-        margin?: number|any;
-        padding?: number|any;
+        margin?: number | any;
+        padding?: number | any;
         position?: string;
         rotation?: number;
         text?: string;
@@ -14231,7 +14859,7 @@ declare module kendo.dataviz.ui {
     }
 
     interface StockChartValueAxisItem {
-        axisCrossingValue?: any|Date|any;
+        axisCrossingValue?: any | Date | any;
         background?: string;
         color?: string;
         labels?: StockChartValueAxisItemLabels;
@@ -14308,6 +14936,7 @@ declare module kendo.dataviz.ui {
         noteClick?(e: StockChartNoteClickEvent): void;
         noteHover?(e: StockChartNoteHoverEvent): void;
         plotAreaClick?(e: StockChartPlotAreaClickEvent): void;
+        plotAreaHover?(e: StockChartPlotAreaHoverEvent): void;
         render?(e: StockChartEvent): void;
         seriesClick?(e: StockChartSeriesClickEvent): void;
         seriesHover?(e: StockChartSeriesHoverEvent): void;
@@ -14388,6 +15017,15 @@ declare module kendo.dataviz.ui {
         y?: any;
     }
 
+    interface StockChartPlotAreaHoverEvent extends StockChartEvent {
+        category?: any;
+        element?: any;
+        originalEvent?: any;
+        value?: any;
+        x?: any;
+        y?: any;
+    }
+
     interface StockChartSeriesClickEvent extends StockChartEvent {
         value?: any;
         category?: any;
@@ -14462,14 +15100,14 @@ declare module kendo.dataviz.ui {
 
     interface TreeMapOptions {
         name?: string;
-        dataSource?: any|any|kendo.data.HierarchicalDataSource;
+        dataSource?: any | any | kendo.data.HierarchicalDataSource;
         autoBind?: boolean;
         type?: string;
         theme?: string;
         valueField?: string;
         colorField?: string;
         textField?: string;
-        template?: string|Function;
+        template?: string | Function;
         colors?: any;
         itemCreated?(e: TreeMapItemCreatedEvent): void;
         dataBound?(e: TreeMapDataBoundEvent): void;
@@ -14481,7 +15119,7 @@ declare module kendo.dataviz.ui {
     }
 
     interface TreeMapItemCreatedEvent extends TreeMapEvent {
-        element?: JQuery|Element;
+        element?: JQuery | Element;
     }
 
     interface TreeMapDataBoundEvent extends TreeMapEvent {
@@ -14489,7 +15127,7 @@ declare module kendo.dataviz.ui {
 
 
 }
-declare module kendo.dataviz.map {
+declare namespace kendo.dataviz.map {
     class BingLayer extends kendo.dataviz.map.TileLayer {
 
 
@@ -14526,7 +15164,7 @@ declare module kendo.dataviz.map {
         nw: kendo.dataviz.map.Location;
         se: kendo.dataviz.map.Location;
 
-        constructor(nw: kendo.dataviz.map.Location, se: kendo.dataviz.map.Location);
+        constructor(nw: kendo.dataviz.map.Location | any, se: kendo.dataviz.map.Location | any);
 
         static create(a: kendo.dataviz.map.Location, b?: kendo.dataviz.map.Location): kendo.dataviz.map.Extent;
         static create(a: kendo.dataviz.map.Location, b?: any): kendo.dataviz.map.Extent;
@@ -14666,7 +15304,7 @@ declare module kendo.dataviz.map {
 
     interface MarkerOptions {
         name?: string;
-        location?: any|kendo.dataviz.map.Location;
+        location?: any | kendo.dataviz.map.Location;
         shape?: string;
         title?: string;
         tooltip?: MarkerTooltip;
@@ -14763,7 +15401,7 @@ declare module kendo.dataviz.map {
 
 
 }
-declare module kendo.dataviz {
+declare namespace kendo.dataviz {
     class ChartAxis extends Observable {
 
 
@@ -14773,15 +15411,15 @@ declare module kendo.dataviz {
 
 
         range(): any;
-        slot(from: string, to?: string): kendo.geometry.Rect;
-        slot(from: string, to?: number): kendo.geometry.Rect;
-        slot(from: string, to?: Date): kendo.geometry.Rect;
-        slot(from: number, to?: string): kendo.geometry.Rect;
-        slot(from: number, to?: number): kendo.geometry.Rect;
-        slot(from: number, to?: Date): kendo.geometry.Rect;
-        slot(from: Date, to?: string): kendo.geometry.Rect;
-        slot(from: Date, to?: number): kendo.geometry.Rect;
-        slot(from: Date, to?: Date): kendo.geometry.Rect;
+        slot(from: string, to?: string, limit?: boolean): kendo.geometry.Rect;
+        slot(from: string, to?: number, limit?: boolean): kendo.geometry.Rect;
+        slot(from: string, to?: Date, limit?: boolean): kendo.geometry.Rect;
+        slot(from: number, to?: string, limit?: boolean): kendo.geometry.Rect;
+        slot(from: number, to?: number, limit?: boolean): kendo.geometry.Rect;
+        slot(from: number, to?: Date, limit?: boolean): kendo.geometry.Rect;
+        slot(from: Date, to?: string, limit?: boolean): kendo.geometry.Rect;
+        slot(from: Date, to?: number, limit?: boolean): kendo.geometry.Rect;
+        slot(from: Date, to?: Date, limit?: boolean): kendo.geometry.Rect;
 
     }
 
@@ -14796,12 +15434,13 @@ declare module kendo.dataviz {
 
 
 }
-declare module kendo.dataviz.diagram {
+declare namespace kendo.dataviz.diagram {
     class Circle extends Observable {
 
 
         options: CircleOptions;
 
+        drawingElement: kendo.drawing.Circle;
 
         constructor(options?: CircleOptions);
 
@@ -14888,7 +15527,12 @@ declare module kendo.dataviz.diagram {
     }
 
     interface ConnectionContent {
-        template?: string|Function;
+        color?: string;
+        fontFamily?: string;
+        fontSize?: number;
+        fontStyle?: string;
+        fontWeight?: string;
+        template?: string | Function;
         text?: string;
         visual?: Function;
     }
@@ -14986,11 +15630,35 @@ declare module kendo.dataviz.diagram {
         opacity?: number;
     }
 
+    interface ConnectorHoverFill {
+        color?: string;
+        opacity?: number;
+    }
+
+    interface ConnectorHoverStroke {
+        color?: string;
+        dashType?: string;
+        width?: number;
+    }
+
+    interface ConnectorHover {
+        fill?: ConnectorHoverFill;
+        stroke?: ConnectorHoverStroke;
+    }
+
+    interface ConnectorStroke {
+        color?: string;
+        dashType?: string;
+        width?: number;
+    }
+
     interface ConnectorOptions {
         name?: string;
         width?: number;
         height?: number;
+        hover?: ConnectorHover;
         fill?: ConnectorFill;
+        stroke?: ConnectorStroke;
     }
     interface ConnectorEvent {
         sender: Connector;
@@ -15004,6 +15672,7 @@ declare module kendo.dataviz.diagram {
 
         options: GroupOptions;
 
+        drawingElement: kendo.drawing.Group;
 
         constructor(options?: GroupOptions);
 
@@ -15036,6 +15705,7 @@ declare module kendo.dataviz.diagram {
 
         options: ImageOptions;
 
+        drawingElement: kendo.drawing.Image;
 
         constructor(options?: ImageOptions);
 
@@ -15068,6 +15738,7 @@ declare module kendo.dataviz.diagram {
 
         options: LayoutOptions;
 
+        drawingElement: kendo.drawing.Layout;
 
         constructor(rect: kendo.dataviz.diagram.Rect, options?: LayoutOptions);
 
@@ -15105,6 +15776,7 @@ declare module kendo.dataviz.diagram {
 
         options: LineOptions;
 
+        drawingElement: kendo.drawing.Path;
 
         constructor(options?: LineOptions);
 
@@ -15140,6 +15812,7 @@ declare module kendo.dataviz.diagram {
 
         options: PathOptions;
 
+        drawingElement: kendo.drawing.Path;
 
         constructor(options?: PathOptions);
 
@@ -15259,6 +15932,7 @@ declare module kendo.dataviz.diagram {
 
         options: PolylineOptions;
 
+        drawingElement: kendo.drawing.Path;
 
         constructor(options?: PolylineOptions);
 
@@ -15380,6 +16054,7 @@ declare module kendo.dataviz.diagram {
 
         options: RectangleOptions;
 
+        drawingElement: kendo.drawing.Path;
 
         constructor(options?: RectangleOptions);
 
@@ -15452,7 +16127,43 @@ declare module kendo.dataviz.diagram {
         getConnector(): void;
         getPosition(side: string): void;
         redraw(options: any): void;
+        redrawVisual(): void;
 
+    }
+
+    interface ShapeConnectorDefaultsFill {
+        color?: string;
+        opacity?: number;
+    }
+
+    interface ShapeConnectorDefaultsHoverFill {
+        color?: string;
+        opacity?: number;
+    }
+
+    interface ShapeConnectorDefaultsHoverStroke {
+        color?: string;
+        dashType?: string;
+        width?: number;
+    }
+
+    interface ShapeConnectorDefaultsHover {
+        fill?: ShapeConnectorDefaultsHoverFill;
+        stroke?: ShapeConnectorDefaultsHoverStroke;
+    }
+
+    interface ShapeConnectorDefaultsStroke {
+        color?: string;
+        dashType?: string;
+        width?: number;
+    }
+
+    interface ShapeConnectorDefaults {
+        width?: number;
+        height?: number;
+        hover?: ShapeConnectorDefaultsHover;
+        fill?: ShapeConnectorDefaultsFill;
+        stroke?: ShapeConnectorDefaultsStroke;
     }
 
     interface ShapeConnector {
@@ -15462,8 +16173,13 @@ declare module kendo.dataviz.diagram {
     }
 
     interface ShapeContent {
-        text?: string;
         align?: string;
+        color?: string;
+        fontFamily?: string;
+        fontSize?: number;
+        fontStyle?: string;
+        fontWeight?: string;
+        text?: string;
     }
 
     interface ShapeEditable {
@@ -15513,7 +16229,7 @@ declare module kendo.dataviz.diagram {
     interface ShapeOptions {
         name?: string;
         id?: string;
-        editable?: ShapeEditable;
+        editable?: boolean | ShapeEditable;
         path?: string;
         stroke?: ShapeStroke;
         type?: string;
@@ -15530,6 +16246,7 @@ declare module kendo.dataviz.diagram {
         content?: ShapeContent;
         selectable?: boolean;
         visual?: Function;
+        connectorDefaults?: ShapeConnectorDefaults;
     }
     interface ShapeEvent {
         sender: Shape;
@@ -15543,6 +16260,7 @@ declare module kendo.dataviz.diagram {
 
         options: TextBlockOptions;
 
+        drawingElement: kendo.drawing.Text;
 
         constructor(options?: TextBlockOptions);
 
@@ -15562,6 +16280,8 @@ declare module kendo.dataviz.diagram {
         color?: string;
         fontFamily?: string;
         fontSize?: number;
+        fontStyle?: string;
+        fontWeight?: string;
         height?: number;
         text?: string;
         width?: number;
@@ -15576,7 +16296,7 @@ declare module kendo.dataviz.diagram {
 
 
 }
-declare module kendo {
+declare namespace kendo {
     class Color extends Observable {
 
 
@@ -15607,7 +16327,7 @@ declare module kendo {
     }
 
 
-    module drawing {
+    namespace drawing {
         function align(elements: any, rect: kendo.geometry.Rect, alignment: string): void;
         function drawDOM(element: JQuery, options: any): JQueryPromise<any>;
         function exportImage(group: kendo.drawing.Group, options: any): JQueryPromise<any>;
@@ -15621,54 +16341,54 @@ declare module kendo {
         function wrap(elements: any, rect: kendo.geometry.Rect): any;
     }
 
-    module effects {
+    namespace effects {
         function box(element: HTMLElement): any;
         function fillScale(firstElement: HTMLElement, secondElement: HTMLElement): number;
         function fitScale(firstElement: HTMLElement, secondElement: HTMLElement): number;
         function transformOrigin(firstElement: HTMLElement, secondElement: HTMLElement): any;
     }
 
-        function antiForgeryTokens(): any;
-        function bind(element: string, viewModel: any, namespace?: any): void;
-        function bind(element: string, viewModel: kendo.data.ObservableObject, namespace?: any): void;
-        function bind(element: JQuery, viewModel: any, namespace?: any): void;
-        function bind(element: JQuery, viewModel: kendo.data.ObservableObject, namespace?: any): void;
-        function bind(element: Element, viewModel: any, namespace?: any): void;
-        function bind(element: Element, viewModel: kendo.data.ObservableObject, namespace?: any): void;
-        function observableHierarchy(array: any): void;
-        function culture(culture: string): void;
-        function destroy(element: string): void;
-        function destroy(element: JQuery): void;
-        function destroy(element: Element): void;
-        function htmlEncode(value: string): string;
-        function parseDate(value: string, formats?: string, culture?: string): Date;
-        function parseDate(value: string, formats?: any, culture?: string): Date;
-        function parseFloat(value: string, culture?: string): number;
-        function parseInt(value: string, culture?: string): number;
-        function parseColor(color: string, noerror: boolean): kendo.Color;
-        function proxyModelSetters(): void;
-        function proxyModelSetters(data: kendo.data.Model): void;
-        function resize(element: string, force: boolean): void;
-        function resize(element: JQuery, force: boolean): void;
-        function resize(element: Element, force: boolean): void;
-        function saveAs(options: any): void;
-        function stringify(value: any): string;
-        function throttle(fn: Function, timeout: number): void;
-        function touchScroller(element: string): void;
-        function touchScroller(element: JQuery): void;
-        function touchScroller(element: Element): void;
-        function toString(value: Date, format: string, culture?: string): string;
-        function toString(value: number, format: string, culture?: string): string;
-        function unbind(element: string): void;
-        function unbind(element: JQuery): void;
-        function unbind(element: Element): void;
+	function antiForgeryTokens(): any;
+	function bind(element: string, viewModel: any, namespace?: any): void;
+	function bind(element: string, viewModel: kendo.data.ObservableObject, namespace?: any): void;
+	function bind(element: JQuery, viewModel: any, namespace?: any): void;
+	function bind(element: JQuery, viewModel: kendo.data.ObservableObject, namespace?: any): void;
+	function bind(element: Element, viewModel: any, namespace?: any): void;
+	function bind(element: Element, viewModel: kendo.data.ObservableObject, namespace?: any): void;
+	function observableHierarchy(array: any): void;
+	function culture(culture: string): void;
+	function destroy(element: string): void;
+	function destroy(element: JQuery): void;
+	function destroy(element: Element): void;
+	function htmlEncode(value: string): string;
+	function parseDate(value: string, formats?: string, culture?: string): Date;
+	function parseDate(value: string, formats?: any, culture?: string): Date;
+	function parseFloat(value: string, culture?: string): number;
+	function parseInt(value: string, culture?: string): number;
+	function parseColor(color: string, noerror: boolean): kendo.Color;
+	function proxyModelSetters(): void;
+	function proxyModelSetters(data: kendo.data.Model): void;
+	function resize(element: string, force: boolean): void;
+	function resize(element: JQuery, force: boolean): void;
+	function resize(element: Element, force: boolean): void;
+	function saveAs(options: any): void;
+	function stringify(value: any): string;
+	function throttle(fn: Function, timeout: number): void;
+	function touchScroller(element: string): void;
+	function touchScroller(element: JQuery): void;
+	function touchScroller(element: Element): void;
+	function toString(value: Date, format: string, culture?: string): string;
+	function toString(value: number, format: string, culture?: string): string;
+	function unbind(element: string): void;
+	function unbind(element: JQuery): void;
+	function unbind(element: Element): void;
 
-    module pdf {
+    namespace pdf {
         function defineFont(map: any): void;
     }
 
 }
-declare module kendo.spreadsheet {
+declare namespace kendo.spreadsheet {
     class CustomFilter extends Observable {
 
 
@@ -15748,6 +16468,7 @@ declare module kendo.spreadsheet {
         fontFamily(value?: string): void;
         fontSize(): number;
         fontSize(value?: number): void;
+        forEachCell(callback: Function): void;
         format(): string;
         format(format?: string): void;
         formula(): string;
@@ -15761,6 +16482,8 @@ declare module kendo.spreadsheet {
         isFilterable(): boolean;
         italic(): boolean;
         italic(value?: boolean): void;
+        link(): string;
+        link(url?: string): void;
         merge(): void;
         select(): void;
         sort(sort: number): void;
@@ -15819,6 +16542,9 @@ declare module kendo.spreadsheet {
         rowHeight(): void;
         rowHeight(index: number, width?: number): void;
         selection(): kendo.spreadsheet.Range;
+        setDataSource(dataSource: kendo.data.DataSource, columns?: any): void;
+        showGridLines(): boolean;
+        showGridLines(showGridLiens?: boolean): void;
         toJSON(): void;
         unhideColumn(index: number): void;
         unhideRow(index: number): void;
@@ -15884,7 +16610,7 @@ declare module kendo.spreadsheet {
 
 
 }
-declare module kendo.mobile.ui {
+declare namespace kendo.mobile.ui {
     class ActionSheet extends kendo.mobile.ui.Widget {
 
         static fn: ActionSheet;
@@ -15907,9 +16633,9 @@ declare module kendo.mobile.ui {
     }
 
     interface ActionSheetPopup {
-        direction?: number|string;
-        height?: number|string;
-        width?: number|string;
+        direction?: number | string;
+        height?: number | string;
+        width?: number | string;
     }
 
     interface ActionSheetOptions {
@@ -16277,18 +17003,18 @@ declare module kendo.mobile.ui {
         name?: string;
         appendOnRefresh?: boolean;
         autoBind?: boolean;
-        dataSource?: kendo.data.DataSource|any;
+        dataSource?: kendo.data.DataSource | any;
         endlessScroll?: boolean;
         fixedHeaders?: boolean;
-        headerTemplate?: string|Function;
+        headerTemplate?: string | Function;
         loadMore?: boolean;
         messages?: ListViewMessages;
         pullToRefresh?: boolean;
         pullParameters?: Function;
         style?: string;
-        template?: string|Function;
+        template?: string | Function;
         type?: string;
-        filterable?: ListViewFilterable;
+        filterable?: boolean | ListViewFilterable;
         virtualViewSize?: number;
         click?(e: ListViewClickEvent): void;
         dataBound?(e: ListViewEvent): void;
@@ -16500,8 +17226,8 @@ declare module kendo.mobile.ui {
     }
 
     interface PopOverPopup {
-        height?: number|string;
-        width?: number|string;
+        height?: number | string;
+        width?: number | string;
     }
 
     interface PopOverOptions {
@@ -16557,8 +17283,8 @@ declare module kendo.mobile.ui {
         name?: string;
         autoBind?: boolean;
         bounceVelocityThreshold?: number;
-        contentHeight?: number|string;
-        dataSource?: kendo.data.DataSource|any;
+        contentHeight?: number | string;
+        dataSource?: kendo.data.DataSource | any;
         duration?: number;
         emptyTemplate?: string;
         enablePager?: boolean;
@@ -16863,7 +17589,7 @@ declare module kendo.mobile.ui {
 
 
 }
-declare module kendo.ooxml {
+declare namespace kendo.ooxml {
     class Workbook extends Observable {
 
 
@@ -16896,22 +17622,22 @@ declare module kendo.ooxml {
 
     interface WorkbookSheetRowCellBorderBottom {
         color?: string;
-        size?: string;
+        size?: number;
     }
 
     interface WorkbookSheetRowCellBorderLeft {
         color?: string;
-        size?: string;
+        size?: number;
     }
 
     interface WorkbookSheetRowCellBorderRight {
         color?: string;
-        size?: string;
+        size?: number;
     }
 
     interface WorkbookSheetRowCellBorderTop {
         color?: string;
-        size?: string;
+        size?: number;
     }
 
     interface WorkbookSheetRowCell {
@@ -16937,7 +17663,7 @@ declare module kendo.ooxml {
         wrap?: boolean;
         vAlign?: string;
         verticalAlign?: string;
-        value?: Date|number|string|boolean;
+        value?: Date | number | string | boolean;
     }
 
     interface WorkbookSheetRow {
@@ -16954,6 +17680,7 @@ declare module kendo.ooxml {
         filter?: WorkbookSheetFilter;
         name?: string;
         rows?: WorkbookSheetRow[];
+        showGridLines?: boolean;
         title?: string;
     }
 
@@ -16972,7 +17699,7 @@ declare module kendo.ooxml {
 
 }
 
-declare module kendo.dataviz.geometry {
+declare namespace kendo.dataviz.geometry {
     class Arc extends Observable {
 
 
@@ -17142,7 +17869,7 @@ declare module kendo.dataviz.geometry {
         origin: kendo.geometry.Point;
         size: kendo.geometry.Size;
 
-        constructor(origin: kendo.geometry.Point, size: kendo.geometry.Size);
+        constructor(origin: kendo.geometry.Point | any, size: kendo.geometry.Size | any);
 
         static fromPoints(pointA: kendo.geometry.Point, pointB: kendo.geometry.Point): kendo.geometry.Rect;
         static union(rectA: kendo.geometry.Rect, rectB: kendo.geometry.Rect): kendo.geometry.Rect;
@@ -17238,7 +17965,7 @@ declare module kendo.dataviz.geometry {
 
 
 }
-declare module kendo.dataviz.drawing {
+declare namespace kendo.dataviz.drawing {
     class Arc extends kendo.drawing.Element {
 
 
@@ -17252,6 +17979,7 @@ declare module kendo.dataviz.drawing {
         clip(): kendo.drawing.Path;
         clip(clip: kendo.drawing.Path): void;
         clippedBBox(): kendo.geometry.Rect;
+        containsPoint(point: kendo.geometry.Point): boolean;
         geometry(): kendo.geometry.Arc;
         geometry(value: kendo.geometry.Arc): void;
         fill(color: string, opacity?: number): kendo.drawing.Arc;
@@ -17272,6 +18000,7 @@ declare module kendo.dataviz.drawing {
         fill?: kendo.drawing.FillOptions;
         opacity?: number;
         stroke?: kendo.drawing.StrokeOptions;
+        tooltip?: kendo.drawing.TooltipOptions;
         transform?: kendo.geometry.Transformation;
         visible?: boolean;
     }
@@ -17295,6 +18024,7 @@ declare module kendo.dataviz.drawing {
         clip(): kendo.drawing.Path;
         clip(clip: kendo.drawing.Path): void;
         clippedBBox(): kendo.geometry.Rect;
+        containsPoint(point: kendo.geometry.Point): boolean;
         geometry(): kendo.geometry.Circle;
         geometry(value: kendo.geometry.Circle): void;
         fill(color: string, opacity?: number): kendo.drawing.Circle;
@@ -17315,6 +18045,7 @@ declare module kendo.dataviz.drawing {
         fill?: kendo.drawing.FillOptions;
         opacity?: number;
         stroke?: kendo.drawing.StrokeOptions;
+        tooltip?: kendo.drawing.TooltipOptions;
         transform?: kendo.geometry.Transformation;
         visible?: boolean;
     }
@@ -17330,6 +18061,7 @@ declare module kendo.dataviz.drawing {
 
         options: ElementOptions;
 
+        parent: kendo.drawing.Group;
 
         constructor(options?: ElementOptions);
 
@@ -17338,6 +18070,7 @@ declare module kendo.dataviz.drawing {
         clip(): kendo.drawing.Path;
         clip(clip: kendo.drawing.Path): void;
         clippedBBox(): kendo.geometry.Rect;
+        containsPoint(point: kendo.geometry.Point): boolean;
         opacity(): number;
         opacity(opacity: number): void;
         transform(): kendo.geometry.Transformation;
@@ -17362,7 +18095,7 @@ declare module kendo.dataviz.drawing {
     }
 
 
-    interface FillOptions  {
+    interface FillOptions {
 
 
 
@@ -17442,6 +18175,7 @@ declare module kendo.dataviz.drawing {
         clip(): kendo.drawing.Path;
         clip(clip: kendo.drawing.Path): void;
         clippedBBox(): kendo.geometry.Rect;
+        containsPoint(point: kendo.geometry.Point): boolean;
         insert(position: number, element: kendo.drawing.Element): void;
         opacity(): number;
         opacity(opacity: number): void;
@@ -17458,6 +18192,7 @@ declare module kendo.dataviz.drawing {
         cursor?: string;
         opacity?: number;
         pdf?: kendo.drawing.PDFOptions;
+        tooltip?: kendo.drawing.TooltipOptions;
         transform?: kendo.geometry.Transformation;
         visible?: boolean;
     }
@@ -17481,6 +18216,7 @@ declare module kendo.dataviz.drawing {
         clip(): kendo.drawing.Path;
         clip(clip: kendo.drawing.Path): void;
         clippedBBox(): kendo.geometry.Rect;
+        containsPoint(point: kendo.geometry.Point): boolean;
         opacity(): number;
         opacity(opacity: number): void;
         src(): string;
@@ -17499,6 +18235,7 @@ declare module kendo.dataviz.drawing {
         clip?: kendo.drawing.Path;
         cursor?: string;
         opacity?: number;
+        tooltip?: kendo.drawing.TooltipOptions;
         transform?: kendo.geometry.Transformation;
         visible?: boolean;
     }
@@ -17588,6 +18325,7 @@ declare module kendo.dataviz.drawing {
         clip(clip: kendo.drawing.Path): void;
         clippedBBox(): kendo.geometry.Rect;
         close(): kendo.drawing.MultiPath;
+        containsPoint(point: kendo.geometry.Point): boolean;
         curveTo(controlOut: any, controlIn: any, endPoint: any): kendo.drawing.MultiPath;
         curveTo(controlOut: any, controlIn: any, endPoint: kendo.geometry.Point): kendo.drawing.MultiPath;
         curveTo(controlOut: any, controlIn: kendo.geometry.Point, endPoint: any): kendo.drawing.MultiPath;
@@ -17620,6 +18358,7 @@ declare module kendo.dataviz.drawing {
         fill?: kendo.drawing.FillOptions;
         opacity?: number;
         stroke?: kendo.drawing.StrokeOptions;
+        tooltip?: kendo.drawing.TooltipOptions;
         transform?: kendo.geometry.Transformation;
         visible?: boolean;
     }
@@ -17655,7 +18394,7 @@ declare module kendo.dataviz.drawing {
     }
 
 
-    interface PDFOptions  {
+    interface PDFOptions {
 
 
 
@@ -17693,6 +18432,7 @@ declare module kendo.dataviz.drawing {
         clip(clip: kendo.drawing.Path): void;
         clippedBBox(): kendo.geometry.Rect;
         close(): kendo.drawing.Path;
+        containsPoint(point: kendo.geometry.Point): boolean;
         curveTo(controlOut: any, controlIn: any, endPoint: any): kendo.drawing.Path;
         curveTo(controlOut: any, controlIn: any, endPoint: kendo.geometry.Point): kendo.drawing.Path;
         curveTo(controlOut: any, controlIn: kendo.geometry.Point, endPoint: any): kendo.drawing.Path;
@@ -17725,6 +18465,7 @@ declare module kendo.dataviz.drawing {
         fill?: kendo.drawing.FillOptions;
         opacity?: number;
         stroke?: kendo.drawing.StrokeOptions;
+        tooltip?: kendo.drawing.TooltipOptions;
         transform?: kendo.geometry.Transformation;
         visible?: boolean;
     }
@@ -17757,7 +18498,7 @@ declare module kendo.dataviz.drawing {
 
     interface RadialGradientOptions {
         name?: string;
-        center?: any|kendo.geometry.Point;
+        center?: any | kendo.geometry.Point;
         radius?: number;
         stops?: any;
     }
@@ -17781,6 +18522,7 @@ declare module kendo.dataviz.drawing {
         clip(): kendo.drawing.Path;
         clip(clip: kendo.drawing.Path): void;
         clippedBBox(): kendo.geometry.Rect;
+        containsPoint(point: kendo.geometry.Point): boolean;
         geometry(): kendo.geometry.Rect;
         geometry(value: kendo.geometry.Rect): void;
         fill(color: string, opacity?: number): kendo.drawing.Rect;
@@ -17801,6 +18543,7 @@ declare module kendo.dataviz.drawing {
         fill?: kendo.drawing.FillOptions;
         opacity?: number;
         stroke?: kendo.drawing.StrokeOptions;
+        tooltip?: kendo.drawing.TooltipOptions;
         transform?: kendo.geometry.Transformation;
         visible?: boolean;
     }
@@ -17839,7 +18582,7 @@ declare module kendo.dataviz.drawing {
     }
 
 
-    interface StrokeOptions  {
+    interface StrokeOptions {
 
 
 
@@ -17871,8 +18614,30 @@ declare module kendo.dataviz.drawing {
         clear(): void;
         draw(element: kendo.drawing.Element): void;
         eventTarget(e: any): kendo.drawing.Element;
+        hideTooltip(): void;
         resize(force?: boolean): void;
+        showTooltip(element: kendo.drawing.Element, options?: any): void;
 
+    }
+
+    interface SurfaceTooltipAnimationClose {
+        effects?: string;
+        duration?: number;
+    }
+
+    interface SurfaceTooltipAnimationOpen {
+        effects?: string;
+        duration?: number;
+    }
+
+    interface SurfaceTooltipAnimation {
+        close?: SurfaceTooltipAnimationClose;
+        open?: SurfaceTooltipAnimationOpen;
+    }
+
+    interface SurfaceTooltip {
+        animation?: boolean | SurfaceTooltipAnimation;
+        appendTo?: string | JQuery;
     }
 
     interface SurfaceOptions {
@@ -17880,9 +18645,12 @@ declare module kendo.dataviz.drawing {
         type?: string;
         height?: string;
         width?: string;
+        tooltip?: SurfaceTooltip;
         click?(e: SurfaceClickEvent): void;
         mouseenter?(e: SurfaceMouseenterEvent): void;
         mouseleave?(e: SurfaceMouseleaveEvent): void;
+        tooltipClose?(e: SurfaceTooltipCloseEvent): void;
+        tooltipOpen?(e: SurfaceTooltipOpenEvent): void;
     }
     interface SurfaceEvent {
         sender: Surface;
@@ -17905,6 +18673,16 @@ declare module kendo.dataviz.drawing {
         originalEvent?: any;
     }
 
+    interface SurfaceTooltipCloseEvent extends SurfaceEvent {
+        element?: kendo.drawing.Element;
+        target?: kendo.drawing.Element;
+    }
+
+    interface SurfaceTooltipOpenEvent extends SurfaceEvent {
+        element?: kendo.drawing.Element;
+        target?: kendo.drawing.Element;
+    }
+
 
     class Text extends kendo.drawing.Element {
 
@@ -17919,6 +18697,7 @@ declare module kendo.dataviz.drawing {
         clip(): kendo.drawing.Path;
         clip(clip: kendo.drawing.Path): void;
         clippedBBox(): kendo.geometry.Rect;
+        containsPoint(point: kendo.geometry.Point): boolean;
         content(): string;
         content(value: string): void;
         fill(color: string, opacity?: number): kendo.drawing.Text;
@@ -17942,6 +18721,7 @@ declare module kendo.dataviz.drawing {
         font?: string;
         opacity?: number;
         stroke?: kendo.drawing.StrokeOptions;
+        tooltip?: kendo.drawing.TooltipOptions;
         transform?: kendo.geometry.Transformation;
         visible?: boolean;
     }
@@ -17950,6 +18730,28 @@ declare module kendo.dataviz.drawing {
         preventDefault: Function;
         isDefaultPrevented(): boolean;
     }
+
+
+    interface TooltipOptions {
+
+
+
+        autoHide?: boolean;
+        content?: string | Function;
+        position?: string;
+        height?: number | string;
+        hideDelay?: number;
+        offset?: number;
+        shared?: boolean;
+        showAfter?: number;
+        showOn?: string;
+        width?: number | string;
+
+
+
+
+    }
+
 
 
 }
@@ -18035,6 +18837,10 @@ interface JQuery {
     kendoEditor(): JQuery;
     kendoEditor(options: kendo.ui.EditorOptions): JQuery;
     data(key: "kendoEditor"): kendo.ui.Editor;
+
+    kendoFilterMenu(): JQuery;
+    kendoFilterMenu(options: kendo.ui.FilterMenuOptions): JQuery;
+    data(key: "kendoFilterMenu"): kendo.ui.FilterMenu;
 
     kendoFlatColorPicker(): JQuery;
     kendoFlatColorPicker(options: kendo.ui.FlatColorPickerOptions): JQuery;

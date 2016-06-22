@@ -1,78 +1,77 @@
 ﻿<!DOCTYPE html>
 <html>
-	<head>
-		<meta charset="utf-8">
-		<title>Kendo UI Snippet</title>
+<head>
+	<meta charset="utf-8">
+	<title>Kendo UI Snippet</title>
 
-		<link rel="stylesheet" href="http://kendo.cdn.telerik.com/2016.1.226/styles/kendo.common.min.css">
-		<link rel="stylesheet" href="http://kendo.cdn.telerik.com/2016.1.226/styles/kendo.rtl.min.css">
-		<link rel="stylesheet" href="http://kendo.cdn.telerik.com/2016.1.226/styles/kendo.default.min.css">
-		<link rel="stylesheet" href="http://kendo.cdn.telerik.com/2016.1.226/styles/kendo.dataviz.min.css">
-		<link rel="stylesheet" href="http://kendo.cdn.telerik.com/2016.1.226/styles/kendo.dataviz.default.min.css">
-		<link rel="stylesheet" href="http://kendo.cdn.telerik.com/2016.1.226/styles/kendo.mobile.all.min.css">
+	<link rel="stylesheet" href="http://kendo.cdn.telerik.com/2016.1.226/styles/kendo.common.min.css">
+	<link rel="stylesheet" href="http://kendo.cdn.telerik.com/2016.1.226/styles/kendo.rtl.min.css">
+	<link rel="stylesheet" href="http://kendo.cdn.telerik.com/2016.1.226/styles/kendo.default.min.css">
+	<link rel="stylesheet" href="http://kendo.cdn.telerik.com/2016.1.226/styles/kendo.dataviz.min.css">
+	<link rel="stylesheet" href="http://kendo.cdn.telerik.com/2016.1.226/styles/kendo.dataviz.default.min.css">
+	<link rel="stylesheet" href="http://kendo.cdn.telerik.com/2016.1.226/styles/kendo.mobile.all.min.css">
 
-		<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
-		<script src="http://kendo.cdn.telerik.com/2016.1.226/js/kendo.all.min.js"></script>
-	</head>
-	<body>
-		<!--Example adapted from: http://docs.telerik.com/kendo-ui/web/grid/how-to/persist-grouped-grid-collapsed-details-state
-		Deleted Telerik's group state preservation algorithm with eSkillz custom algorithm.
-		-->
+	<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+	<script src="http://kendo.cdn.telerik.com/2016.1.226/js/kendo.all.min.js"></script>
+</head>
+<body>
+	<!--Example adapted from: http://docs.telerik.com/kendo-ui/web/grid/how-to/persist-grouped-grid-collapsed-details-state
+	Deleted Telerik's group state preservation algorithm with eSkillz custom algorithm.
+	-->
 
-		<div id="grid"></div>
+	<div id="grid"></div>
 
-		<!--NOTE: Typically, you may want to combine all TypeScript into a single file (which can be configured in Project Settings).
-		In that case, include only the combined JS file here.
-		These JS files have been kept separate only for demonstration purposes.-->
+	<!--NOTE: Typically, you may want to combine all TypeScript into a single file (which can be configured in Project Settings).
+	In that case, include only the combined JS file here.
+	These JS files have been kept separate only for demonstration purposes.-->
 
-		<script type="text/javascript" src="/Scripts/eSkillz/Extenders/TelerikCustom/GridCommon/GroupStatePreservation/Core.js"></script>
-		<script type="text/javascript" src="/Scripts/eSkillz/Extenders/TelerikCustom/KendoGrid/GroupStatePreservation/Core.js"></script>
-		<script type="text/javascript">
-			var GridGroupStatePreservation;
-			function ApplicationLoaded() {
-				var GroupStatePreservationOptions =
-					new eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation.Options(
-						"grid");
-				GroupStatePreservationOptions.saveGridScrollPosition = true;
-				//Setting this option will automatically collapse all rows by default (rows are collapsed when first group is applied).
-				GroupStatePreservationOptions.defaultGroupState =
-				eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.Collapse;
-				GridGroupStatePreservation = new eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation.Core(
-					GroupStatePreservationOptions);
-			}
-		</script>
+	<script type="text/javascript" src="/Scripts/eSkillz/Extenders/TelerikCustom/GridCommon/GroupStatePreservation/Core.js"></script>
+	<script type="text/javascript" src="/Scripts/eSkillz/Extenders/TelerikCustom/KendoGrid/GroupStatePreservation/Core.js"></script>
+	<script type="text/javascript">
+		var GridGroupStatePreservation;
+		function ApplicationLoaded() {
+			var groupStatePreservationOptions =
+				new eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation.Options("grid");
+			groupStatePreservationOptions.SaveGridScrollPosition = true;
+			//Setting this option will automatically collapse all rows by default (rows are collapsed when first group is applied).
+			groupStatePreservationOptions.DefaultGroupState =
+			eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.Collapse;
+			GridGroupStatePreservation = new eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation.Core(
+				groupStatePreservationOptions);
+		}
+	</script>
 
-		<script>
-		
-			$(document).ready(function () {
-				var crudServiceBaseUrl = "",
-					dataSource = new kendo.data.DataSource({
-															   transport: {
-							read: {
-																		   url: "http://demos.kendoui.com/service/Products",
-																		   dataType: "jsonp"
-																	   }
-						},
-															   pageSize: 20
-														   });
+	<script>
 
-				$("#grid").kendoGrid({
-										 dataSource: dataSource,
-										 pageable: true,
-										 height: 430,
-										 sortable: true,
-										 groupable: true,
-										 columns: [
-						"ProductName",
-						{ field: "UnitPrice", title: "Unit Price", format: "{0:c}", width: "100px" },
-						{ field: "UnitsInStock", title: "Units In Stock", width: "100px" },
-						{ field: "Discontinued", width: "100px" }
-					]
-									 });
-			
-				ApplicationLoaded();
+		$(document).ready(function () {
+			var crudServiceBaseUrl = "",
+				dataSource = new kendo.data.DataSource({
+					transport: {
+						read: {
+							url: "http://demos.kendoui.com/service/Products",
+							dataType: "jsonp"
+						}
+					},
+					pageSize: 20
+				});
+
+			$("#grid").kendoGrid({
+				dataSource: dataSource,
+				pageable: true,
+				height: 430,
+				sortable: true,
+				groupable: true,
+				columns: [
+					"ProductName",
+					{ field: "UnitPrice", title: "Unit Price", format: "{0:c}", width: "100px" },
+					{ field: "UnitsInStock", title: "Units In Stock", width: "100px" },
+					{ field: "Discontinued", width: "100px" }
+				]
 			});
-		
-		</script>
-	</body>
+
+			ApplicationLoaded();
+		});
+
+	</script>
+</body>
 </html>

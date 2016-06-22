@@ -5,17 +5,20 @@ module eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 		ClientDataSource = 1,
 		AJAX = 2
 	}
-	export class Options {
+	export class Options extends GridCommon.GroupStatePreservation.GridOptionsCommon {
 		constructor(
-			public gridClientID: string,
+			gridClientId: string,
 			public RefreshMode: RefreshModes = null,
-			public addEventHandlers: boolean = true,
-			public saveGridScrollPosition: boolean = false,
-			public gridContainerSelector: string = null) {
+			addEventHandlers: boolean = true,
+			saveGridScrollPosition: boolean = false,
+			gridContainerSelector: string = null) {
+			super(gridClientId,
+				addEventHandlers,
+				saveGridScrollPosition,
+				gridContainerSelector);
 		}
 	}
-	export class Core
-		implements eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.IImplementation {
+	export class Core {
 
 		constructor(private options: Options) {
 			this._Initialize();
@@ -25,7 +28,7 @@ module eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 		}
 
 		static GroupingSettings_GroupByFieldsSeparator: string;
-		private _commonGroupState: eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Core;
+		private groupStateCommon: GridCommon.GroupStatePreservation.Core;
 		private _Initialize() {
 			if (!this.options.RefreshMode) {
 				if (console && typeof console.log === "function") {
@@ -34,9 +37,13 @@ module eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 				return;
 			}
 
-			this._commonGroupState =
-				new eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Core(
-					new eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Options(
+			this.groupStateCommon =
+				new GridCommon.GroupStatePreservation.Core(
+					new GridCommon.GroupStatePreservation.Setup(
+						this.options,
+						() => {
+							return this._get_$MasterTableViewElement();
+						},
 						"tr.rgGroupHeader",
 						"td button",
 						":last",
@@ -44,101 +51,111 @@ module eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 						":last",
 						"rgExpand",
 						"rgCollapse",
-						($groupHeaderElement) => this.GetGroupDataByRow($groupHeaderElement)
-						//,($groupHeaderElement, toggleAction) =>
-						//this.ToggleGroupByRow($groupHeaderElement, toggleAction)
-					));
+						($groupHeaderElement) => {
+							switch (this.options.RefreshMode) {
+								case RefreshModes.ClientDataSource:
+									var grid = this.get_Grid(),
+										masterTableView = <Telerik.Web.UI.GridTableViewInternal>(grid.get_masterTableView()),
+										kendoDataSourceWidget = (<Telerik.Web.UI.RadClientDataSource_Corrected>$find(
+											(<Telerik.Web.UI.RadGridInternal>grid)._clientDataSourceID)).get_kendoWidget();
 
-			this._addGroupStateChangeEventHandlers();
-			this._InitializeStateTrackingMode();
-		}
+									var groupLevel = $groupHeaderElement.children(".rgGroupCol").length,
+										groups = kendoDataSourceWidget.group(),
+										fieldName = groups[groupLevel - 1].field;
 
-		GetGroupDataByRow($groupHeaderElement: JQuery):
-			eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.IGroupData {
-			switch (this.options.RefreshMode) {
-				case RefreshModes.ClientDataSource:
-					var grid = this.get_Grid(),
-						masterTableView = <Telerik.Web.UI.GridTableViewInternal>(grid.get_masterTableView()),
-						kendoDataSourceWidget = (<Telerik.Web.UI.RadClientDataSource_Corrected>$find(
-							(<Telerik.Web.UI.RadGridInternal>grid)._clientDataSourceID)).get_kendoWidget();
+									var nextDataRow = $groupHeaderElement.nextUntil("tr.rgRow,tr.rgAltRow").last().next();
+									nextDataRow = (nextDataRow.length === 1 ? nextDataRow : $groupHeaderElement.next());
 
-					var groupLevel = $groupHeaderElement.children(".rgGroupCol").length,
-						groups = kendoDataSourceWidget.group(),
-						fieldName = groups[groupLevel - 1].field;
+									var dataItems = masterTableView.get_dataItems();
+									var fieldValue: any, nextDataRowElement = nextDataRow.get(0);
+									if (nextDataRow.length === 1) {
+										for (var i = 0, itemCount = dataItems.length; i < itemCount; i++) {
+											var dataItem = dataItems[i];
+											if (dataItem.get_element() === nextDataRowElement) {
+												fieldValue = dataItem.get_dataItem()[fieldName];
+												break;
+											}
+										}
+									}
+									if (typeof fieldValue === "undefined") {
+										return null;
+									}
 
-					var nextDataRow = $groupHeaderElement.nextUntil("tr.rgRow,tr.rgAltRow").last().next();
-					nextDataRow = (nextDataRow.length === 1 ? nextDataRow : $groupHeaderElement.next());
+									return {
+										key: groupLevel.toString() + fieldName + fieldValue,
+										level: groupLevel,
+										fieldName: fieldName
+									};
+								case RefreshModes.AJAX:
+									var groupDataString = $groupHeaderElement.attr("data-gdata");
 
-					var dataItems = masterTableView.get_dataItems();
-					var fieldValue: any, nextDataRowElement = nextDataRow.get(0);
-					if (nextDataRow.length === 1) {
-						for (var i = 0, itemCount = dataItems.length; i < itemCount; i++) {
-							var dataItem = dataItems[i];
-							if (dataItem.get_element() === nextDataRowElement) {
-								fieldValue = dataItem.get_dataItem()[fieldName];
-								break;
+									if (!groupDataString || groupDataString === "") {
+										if (console && typeof console.log === "function") {
+											console.log("Error, group data attribute [data-gdata] is missing.");
+										}
+										return null;
+									}
+									var groupData = JSON.parse<WebApplication2.Extenders.TelerikCustom.RadGrid.Helpers.GroupData>(groupDataString);
+
+									if (!groupData || typeof groupData.FieldValue === "undefined") {
+										return null;
+									}
+
+									return {
+										key: groupData.GroupLevel.toString() + groupData.FieldName + groupData.FieldValue,
+										level: groupData.GroupLevel,
+										fieldName: groupData.FieldName
+									};
 							}
-						}
-					}
-					if (typeof fieldValue === "undefined") {
-						return null;
-					}
+						},
+						() => {
+							var $containerElement: JQuery;
+							if (this.options.GridContainerSelector) {
+								$containerElement = $(this.options.GridContainerSelector);
+							} else {
+								$containerElement = this.get_$GridDataElement();
+							}
+							var masterTableView = this.get_GridMasterTableView();
+							if (masterTableView) {
+								return {
+									$ScrollElement: $containerElement,
+									PageIndex: masterTableView.get_currentPageIndex()
+								};
+							}
 
-					return {
-						key: groupLevel.toString() + fieldName + fieldValue,
-						level: groupLevel,
-						fieldName: fieldName
-					};
-				case RefreshModes.AJAX:
-					var groupDataString = $groupHeaderElement.attr("data-gdata");
+							return null;
+						}/*,
+					($groupHeaderElement, toggleAction) => {
+						//TODO: This code does not work...check with Telerik to see if it's a bug
 
-					if (!groupDataString || groupDataString === "") {
-						if (console && typeof console.log === "function") {
-							console.log("Error, group data attribute [data-gdata] is missing.");
-						}
-						return null;
-					}
-					var groupData = JSON.parse<WebApplication2.Extenders.TelerikCustom.RadGrid.Helpers.GroupData>(groupDataString);
+						//var view = this.get_GridMasterTableView();
+						//switch (toggleAction) {
+						//	case GridCommon.GroupStatePreservation.GroupToggleActions.Expand:
+						//		view.expandGroup($groupHeaderElement.get(0));
+						//		break;
+						//	case GridCommon.GroupStatePreservation.GroupToggleActions.Collapse:
+						//		view.collapseGroup($groupHeaderElement.get(0));
+						//		break;
+						//}
+					}*/));
 
-					if (!groupData || typeof groupData.FieldValue === "undefined") {
-						return null;
-					}
-
-					return {
-						key: groupData.GroupLevel.toString() + groupData.FieldName + groupData.FieldValue,
-						level: groupData.GroupLevel,
-						fieldName: groupData.FieldName
-					};
-			}
-		}
-		ToggleGroupByRow($groupHeaderElement: JQuery,
-			toggleAction: eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions): void {
-			//TODO: This code does not seem to work...check with Telerik
-
-			//var view = this.get_GridMasterTableView();
-			//switch (toggleAction) {
-			//	case eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.Expand:
-			//		view.expandGroup($groupHeaderElement.get(0));
-			//		break;
-			//	case eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.Collapse:
-			//		view.collapseGroup($groupHeaderElement.get(0));
-			//		break;
-			//}
+			this._AddGroupStateChangeEventHandlers();
+			this._InitializeStateTrackingMode();
 		}
 
 		//#region Group State Change Event Handlers
 		private gridGroupStateChangedHandler: (
-			sender: Telerik.Web.UI.RadGrid_Corrected, args: Telerik.Web.UI.GridGroupCollapsingEventArgs) => void;
-		private _addGroupStateChangeEventHandlers() {
+			sender: Telerik.Web.UI.RadGrid, args: Telerik.Web.UI.GridGroupCollapsingEventArgs) => void;
+		private _AddGroupStateChangeEventHandlers() {
 			var grid = this.get_Grid();
 			this.gridGroupStateChangedHandler = (sender, args) => {
-				if (this._commonGroupState.get_pauseGroupStateChangeEventHandlers()) { return; }
-				this.SaveGroupStateAsync();
+				if (this.groupStateCommon.get_pauseGroupStateChangeEventHandlers()) { return; }
+				this.groupStateCommon.SaveGroupStateAsync();
 			};
 			grid.add_groupExpanded(this.gridGroupStateChangedHandler);
 			grid.add_groupCollapsed(this.gridGroupStateChangedHandler);
 		}
-		private _removeGroupStateChangeEventHandlers() {
+		private _RemoveGroupStateChangeEventHandlers() {
 			var grid = this.get_Grid();
 			grid.remove_groupExpanded(this.gridGroupStateChangedHandler);
 			grid.remove_groupCollapsed(this.gridGroupStateChangedHandler);
@@ -149,8 +166,12 @@ module eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 			switch (this.options.RefreshMode) {
 				case RefreshModes.ClientDataSource:
 					var grid = this.get_Grid();
-					grid.add_dataBinding((sender, args) => { this.SaveGroupStateFinishCheck(); });
-					grid.add_dataBound((sender, args) => { this.RestoreGroupState(); });
+					grid.add_dataBinding((sender, args) => {
+						this.groupStateCommon.SaveGroupStateFinishCheck();
+					});
+					grid.add_dataBound((sender, args) => {
+						this.groupStateCommon.RestoreGroupState();
+					});
 					break;
 				case RefreshModes.AJAX:
 					var prmInstance = Sys.WebForms.PageRequestManager.getInstance();
@@ -161,77 +182,41 @@ module eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 						return;
 					}
 					prmInstance.add_beginRequest((sender, args) => {
-						this._removeGroupStateChangeEventHandlers();
-						this.SaveGroupStateFinishCheck();
+						this._RemoveGroupStateChangeEventHandlers();
+						this.groupStateCommon.SaveGroupStateFinishCheck();
 					});
 					prmInstance.add_endRequest((sender, args) => {
-						this.RestoreGroupState();
-						this._addGroupStateChangeEventHandlers();
+						this.groupStateCommon.RestoreGroupState();
+						this._AddGroupStateChangeEventHandlers();
 					});
 					break;
 			}
 		}
 
 		get_Grid() {
-			return <Telerik.Web.UI.RadGrid_Corrected>($find(this.options.gridClientID));
+			return <Telerik.Web.UI.RadGrid_Corrected>($find(this.options.GridClientId));
 		}
 		get_GridMasterTableView(grid?: Telerik.Web.UI.RadGrid): Telerik.Web.UI.GridTableView {
-			if (this._restoreInProgress_GridView) {
-				return this._restoreInProgress_GridView;
-			} else {
-				if (!grid) {
-					grid = this.get_Grid();
-				}
-				try {
-					return grid.get_masterTableView();
-				} catch (err) {
-					if (console && typeof console.log === "function") {
-						console.log("RadGrid Group State Preservation: MasterTableView missing/error.");
-					}
+			if (!grid) {
+				grid = this.get_Grid();
+			}
+			try {
+				return grid.get_masterTableView();
+			} catch (err) {
+				if (console && typeof console.log === "function") {
+					console.log("RadGrid Group State Preservation: MasterTableView missing/error.");
 				}
 			}
 		}
 
-		//#region Scroll Position
 		get_$GridDataElement(): JQuery {
 			//Note: this element is available only when the grid has static headers and scrolling enabled in the grid
-			var gridDataElement = $("#" + this.options.gridClientID + "_GridData");
+			var gridDataElement = $("#" + this.options.GridClientId + "_GridData");
 			if (gridDataElement.length === 1) {
 				return gridDataElement;
 			}
 			return null;
 		}
-		private _scrollPosition_Save() {
-			if (this.get_Options().saveGridScrollPosition) {
-				var $containerElement: JQuery;
-				if (this.options.gridContainerSelector) {
-					$containerElement = $(this.options.gridContainerSelector);
-				} else {
-					$containerElement = this.get_$GridDataElement();
-				}
-				var masterTableView = this.get_GridMasterTableView();
-				if (masterTableView) {
-					this._commonGroupState.SaveScrollPosition(
-						$containerElement, masterTableView.get_currentPageIndex());
-				}
-			}
-		}
-		private _scrollPosition_Restore() {
-			if (this.get_Options().saveGridScrollPosition) {
-				var $containerElement: JQuery;
-				if (this.options.gridContainerSelector) {
-					$containerElement = $(this.options.gridContainerSelector);
-				} else {
-					$containerElement = this.get_$GridDataElement();
-				}
-				var masterTableView = this.get_GridMasterTableView();
-				if (masterTableView) {
-					this._commonGroupState.RestoreScrollPosition(
-						$containerElement, masterTableView.get_currentPageIndex());
-				}
-			}
-		}
-		//#endregion
 
 		private _get_$MasterTableViewElement(): JQuery {
 			var masterTableView = this.get_GridMasterTableView();
@@ -240,25 +225,8 @@ module eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation {
 			return $(masterTableView.get_element());
 		}
 
-		SaveGroupStateAsync(): void {
-			this._scrollPosition_Save();
-			this._commonGroupState.SaveGroupStateAsync(this._get_$MasterTableViewElement());
-		}
-		SaveGroupStateFinishCheck(forceSave = false): void {
-			this._scrollPosition_Save();
-			this._commonGroupState.SaveGroupStateFinishCheck(this._get_$MasterTableViewElement(), forceSave);
-		}
-		private _restoreInProgress_GridView: Telerik.Web.UI.GridTableView = null;
-		RestoreGroupState(
-			defaultGroupToggleAction =
-				eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.None): void {
-			this._restoreInProgress_GridView = this.get_GridMasterTableView();
-			this._commonGroupState.RestoreGroupState(this._get_$MasterTableViewElement(), defaultGroupToggleAction);
-			setTimeout(() => this._scrollPosition_Restore(), 0);
-			this._restoreInProgress_GridView = null;
-		}
 		ResetGroupState(): void {
-			this._commonGroupState.ResetGroupState();
+			this.groupStateCommon.ResetGroupState();
 		}
 	}
 }

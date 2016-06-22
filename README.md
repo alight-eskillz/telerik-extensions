@@ -15,15 +15,14 @@ Please review the wiki for full implementation details.
 		<script type="text/javascript">
 			var GridGroupStatePreservation;
 			function ApplicationLoaded() {
-				var GroupStatePreservationOptions =
-					new eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation.Options(
-						"grid");
-				GroupStatePreservationOptions.saveGridScrollPosition = true;
+				var groupStatePreservationOptions =
+					new eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation.Options("grid");
+				groupStatePreservationOptions.SaveGridScrollPosition = true;
 				//Setting this option will automatically collapse all rows by default (rows are collapsed when first group is applied).
-				GroupStatePreservationOptions.defaultGroupState =
-					eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.Collapse;
+				groupStatePreservationOptions.DefaultGroupState =
+				eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.Collapse;
 				GridGroupStatePreservation = new eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation.Core(
-					GroupStatePreservationOptions);
+					groupStatePreservationOptions);
 			}
 		</script>
 		
@@ -92,17 +91,17 @@ Please review the wiki for full implementation details.
     				var GridGroupStatePreservation;
     
     				function ApplicationLoaded(args) {
-    					Sys.Application.remove_load(appLoadedHandler);
-    					var GroupStatePreservationOptions =
-    						new eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation.Options(
-    							"<%= RadGrid1.ClientID%>",
-    							//Change the following option to StateTrackingModes.ClientDataSource for client data sources
-    							eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation.RefreshModes.AJAX,
-    							true, "Random Number Sum");
-    					GroupStatePreservationOptions.saveGridScrollPosition = true;
-    					GridGroupStatePreservation = new eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation.Core(
-    						GroupStatePreservationOptions);
-    				}
+						Sys.Application.remove_load(appLoadedHandler);
+						var groupStatePreservationOptions =
+							new eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation.Options(
+								"<%= this.RadGrid1.ClientID%>",
+								//Change the following option to StateTrackingModes.ClientDataSource for client data sources
+								eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation.RefreshModes.ClientDataSource,
+								true);
+						groupStatePreservationOptions.SaveGridScrollPosition = true;
+						GridGroupStatePreservation = new eSkillz.Extenders.TelerikCustom.RadGrid.GroupStatePreservation.Core(
+							groupStatePreservationOptions);
+					}
     				var appLoadedHandler = function (args) {
     					return ApplicationLoaded(args);
     				};

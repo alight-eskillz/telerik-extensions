@@ -2,32 +2,39 @@
 /// <reference path="../../gridcommon/groupstatepreservation/core.ts" />
 
 module eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation {
-	export class Options {
+	export class Options extends GridCommon.GroupStatePreservation.GridOptionsCommon {
 		constructor(
-			public gridClientID: string,
-			public addEventHandlers: boolean = true,
-			public saveGridScrollPosition: boolean = false,
-			public gridContainerSelector: string = null,
-			public defaultGroupState = eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.None
+			gridClientId: string,
+			addEventHandlers: boolean = true,
+			saveGridScrollPosition: boolean = false,
+			gridContainerSelector: string = null,
+			public DefaultGroupState = GridCommon.GroupStatePreservation.GroupToggleActions.None
 		) {
+			super(gridClientId,
+				addEventHandlers,
+				saveGridScrollPosition,
+				gridContainerSelector);
 		}
 	}
-	export class Core
-		implements eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.IImplementation {
+	export class Core {
 
-		constructor(private _Options: Options) {
+		constructor(private options: Options) {
 			this._Initialize();
 		}
 		get_Options() {
-			return this._Options;
+			return this.options;
 		}
 
 		static GroupingSettings_GroupByFieldsSeparator: string;
-		private _commonGroupState: eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Core;
+		private groupStateCommon: GridCommon.GroupStatePreservation.Core;
 		private _Initialize() {
-			this._commonGroupState =
-				new eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Core(
-					new eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.Options(
+			this.groupStateCommon =
+				new GridCommon.GroupStatePreservation.Core(
+					new GridCommon.GroupStatePreservation.Setup(
+						this.options,
+						() => {
+							return this.get_Grid().table;
+						},
 						"tr.k-grouping-row",
 						"td a",
 						":last",
@@ -35,77 +42,84 @@ module eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation {
 						":last",
 						"k-i-expand",
 						"k-i-collapse",
-						($groupHeaderElement) => this.GetGroupDataByRow($groupHeaderElement),
-						($groupHeaderElement, toggleAction) =>
-							this.ToggleGroupByRow($groupHeaderElement, toggleAction)));
+						($groupHeaderElement) => {
+							var grid = this.get_Grid(),
+								nextDataRow = $groupHeaderElement.nextUntil("[data-uid]").last().next(),
+								dataItem = grid.dataItem(nextDataRow.length === 1 ? nextDataRow : $groupHeaderElement.next()),
+								groupLevel = $groupHeaderElement.children(".k-group-cell").length,
+								groups = grid.dataSource.group(),
+								fieldName = groups[groupLevel].field,
+								fieldValue = dataItem ? dataItem[fieldName] : null;
+
+							if (typeof fieldValue === "undefined") {
+								return null;
+							}
+
+							return {
+								key: groupLevel.toString() + fieldName + fieldValue,
+								level: groupLevel,
+								fieldName: fieldName
+							};
+						},
+						() => {
+							var $containerElement: JQuery;
+							if (this.options.GridContainerSelector) {
+								$containerElement = $(this.options.GridContainerSelector);
+							} else {
+								$containerElement = this.get_$GridContentElement();
+							}
+
+							var data: GridCommon.GroupStatePreservation.ISaveScrollPositionData = {
+								$ScrollElement: $containerElement,
+								PageIndex: this.get_Grid().dataSource.page()
+							};
+							return data;
+						},
+						($groupHeaderElement, toggleAction) => {
+							var grid = this.get_Grid();
+							switch (toggleAction) {
+								case GridCommon.GroupStatePreservation.GroupToggleActions.Expand:
+									grid.expandGroup($groupHeaderElement.get(0));
+									break;
+								case GridCommon.GroupStatePreservation.GroupToggleActions.Collapse:
+									grid.collapseGroup($groupHeaderElement.get(0));
+									break;
+							}
+						}));
 
 			this._Initialize_BindEventHandlers();
 		}
 
-		GetGroupDataByRow($groupHeaderElement: JQuery):
-			eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.IGroupData {
-			var grid = this.get_Grid(),
-				nextDataRow = $groupHeaderElement.nextUntil("[data-uid]").last().next(),
-				dataItem = grid.dataItem(nextDataRow.length === 1 ? nextDataRow : $groupHeaderElement.next()),
-				groupLevel = $groupHeaderElement.children(".k-group-cell").length,
-				groups = grid.dataSource.group(),
-				fieldName = groups[groupLevel].field,
-				fieldValue = dataItem ? dataItem[fieldName] : null;
-
-			if (typeof fieldValue === "undefined") {
-				return null;
-			}
-
-			return {
-				key: groupLevel.toString() + fieldName + fieldValue,
-				level: groupLevel,
-				fieldName: fieldName
-			};
-		}
-		ToggleGroupByRow($groupHeaderElement: JQuery,
-			toggleAction: eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions): void {
-			var grid = this.get_Grid();
-			switch (toggleAction) {
-				case eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.Expand:
-					grid.expandGroup($groupHeaderElement.get(0));
-					break;
-				case eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.Collapse:
-					grid.collapseGroup($groupHeaderElement.get(0));
-					break;
-			}
-		}
-		
 		//#region Event Handlers
 		private _Initialize_BindEventHandlers() {
 			var grid = this.get_Grid();
 
-			grid.bind("dataBinding", (sender, args) => { this.SaveGroupStateFinishCheck(); });
-			grid.bind("dataBound", (sender, args) => { this.RestoreGroupState(this._Options.defaultGroupState); });
+			grid.bind("dataBinding", (sender, args) => {
+				this.groupStateCommon.SaveGroupStateFinishCheck();
+			});
+			grid.bind("dataBound", (sender, args) => {
+				this.groupStateCommon.RestoreGroupState(this.options.DefaultGroupState);
+			});
 
-			this._gridAddToggleButtonClickHandlers();
+			this._GridAddToggleButtonClickHandlers();
 		}
-		private _gridAddToggleButtonClickHandlers() {
+		private _GridAddToggleButtonClickHandlers() {
 			var grid = this.get_Grid(),
-				commonOptions = this._commonGroupState.get_Options();
+				commonOptions = this.groupStateCommon.get_Setup();
 			grid.table.on(
 				"click",
 				commonOptions.get_ExpandAndCollapseToggleElementsSelector(),
 				(e) => {
-					if (this._commonGroupState.get_pauseGroupStateChangeEventHandlers()) { return; }
-					this.SaveGroupStateAsync();
+					if (this.groupStateCommon.get_pauseGroupStateChangeEventHandlers()) { return; }
+					this.groupStateCommon.SaveGroupStateAsync();
 				});
 		}
 		//#endregion
 
 		get_Grid() {
-			if (this._restoreInProgress_Grid) {
-				return this._restoreInProgress_Grid;
-			} else {
-				return <kendo.ui.Grid>($("#" + this._Options.gridClientID).data("kendoGrid"));
-			}
+			return <kendo.ui.Grid>($("#" + this.options.GridClientId).data("kendoGrid"));
 		}
-		
-		//#region Scroll Position
+
 		get_$GridContentElement(): JQuery {
 			//Note: this element is available only when the grid has static headers and scrolling enabled in the grid
 			var gridDataElement = this.get_Grid().element.find(".k-grid-content");
@@ -114,50 +128,9 @@ module eSkillz.Extenders.TelerikCustom.KendoGrid.GroupStatePreservation {
 			}
 			return null;
 		}
-		private _scrollPosition_Save() {
-			if (this.get_Options().saveGridScrollPosition) {
-				var $containerElement: JQuery;
-				if (this._Options.gridContainerSelector) {
-					$containerElement = $(this._Options.gridContainerSelector);
-				} else {
-					$containerElement = this.get_$GridContentElement();
-				}
-				this._commonGroupState.SaveScrollPosition(
-					$containerElement, this.get_Grid().dataSource.page());
-			}
-		}
-		private _scrollPosition_Restore() {
-			if (this.get_Options().saveGridScrollPosition) {
-				var $containerElement: JQuery;
-				if (this._Options.gridContainerSelector) {
-					$containerElement = $(this._Options.gridContainerSelector);
-				} else {
-					$containerElement = this.get_$GridContentElement();
-				}
-				this._commonGroupState.RestoreScrollPosition(
-					$containerElement, this.get_Grid().dataSource.page());
-			}
-		}
-		//#endregion
 
-		SaveGroupStateAsync(): void {
-			this._scrollPosition_Save();
-			this._commonGroupState.SaveGroupStateAsync(this.get_Grid().table);
-		}
-		SaveGroupStateFinishCheck(forceSave = false): void {
-			this._commonGroupState.SaveGroupStateFinishCheck(this.get_Grid().table, forceSave);
-		}
-		private _restoreInProgress_Grid: kendo.ui.Grid = null;
-		RestoreGroupState(
-			defaultGroupToggleAction =
-				eSkillz.Extenders.TelerikCustom.GridCommon.GroupStatePreservation.GroupToggleActions.None): void {
-			this._restoreInProgress_Grid = this.get_Grid();
-			this._commonGroupState.RestoreGroupState(this.get_Grid().table, defaultGroupToggleAction);
-			setTimeout(() => this._scrollPosition_Restore(), 0);
-			this._restoreInProgress_Grid = null;
-		}
 		ResetGroupState(): void {
-			this._commonGroupState.ResetGroupState();
+			this.groupStateCommon.ResetGroupState();
 		}
 	}
 }

@@ -20,7 +20,7 @@
     <IISExpressAnonymousAuthentication />
     <IISExpressWindowsAuthentication />
     <IISExpressUseClassicPipelineMode />
-    <TypeScriptToolsVersion>1.7</TypeScriptToolsVersion>
+    <TypeScriptToolsVersion>1.8</TypeScriptToolsVersion>
     <UseGlobalApplicationHostFile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -76,28 +76,28 @@
     <Reference Include="System.Web.Services" />
     <Reference Include="System.EnterpriseServices" />
     <Reference Include="Telerik.Web.Spreadsheet">
-      <HintPath>..\..\..\..\..\Program Files (x86)\Telerik\UI for ASP.NET AJAX Q1 2016\Bin45\..\AdditionalLibraries\Bin45\Telerik.Web.Spreadsheet.dll</HintPath>
+      <HintPath>..\..\..\..\..\Program Files (x86)\Telerik\UI for ASP.NET AJAX Q2 2016\Bin45\..\AdditionalLibraries\Bin45\Telerik.Web.Spreadsheet.dll</HintPath>
     </Reference>
     <Reference Include="Telerik.Web.UI">
-      <HintPath>..\..\..\..\..\Program Files (x86)\Telerik\UI for ASP.NET AJAX Q1 2016\Bin45\Telerik.Web.UI.dll</HintPath>
+      <HintPath>..\..\..\..\..\Program Files (x86)\Telerik\UI for ASP.NET AJAX Q2 2016\Bin45\Telerik.Web.UI.dll</HintPath>
     </Reference>
     <Reference Include="Telerik.Web.UI.Skins">
-      <HintPath>..\..\..\..\..\Program Files (x86)\Telerik\UI for ASP.NET AJAX Q1 2016\Bin45\Telerik.Web.UI.Skins.dll</HintPath>
+      <HintPath>..\..\..\..\..\Program Files (x86)\Telerik\UI for ASP.NET AJAX Q2 2016\Bin45\Telerik.Web.UI.Skins.dll</HintPath>
     </Reference>
     <Reference Include="Telerik.Windows.Documents.Core">
-      <HintPath>..\..\..\..\..\Program Files (x86)\Telerik\UI for ASP.NET AJAX Q1 2016\Bin45\..\AdditionalLibraries\Bin45\Telerik.Windows.Documents.Core.dll</HintPath>
+      <HintPath>..\..\..\..\..\Program Files (x86)\Telerik\UI for ASP.NET AJAX Q2 2016\Bin45\..\AdditionalLibraries\Bin45\Telerik.Windows.Documents.Core.dll</HintPath>
     </Reference>
     <Reference Include="Telerik.Windows.Documents.Flow">
-      <HintPath>..\..\..\..\..\Program Files (x86)\Telerik\UI for ASP.NET AJAX Q1 2016\Bin45\..\AdditionalLibraries\Bin45\Telerik.Windows.Documents.Flow.dll</HintPath>
+      <HintPath>..\..\..\..\..\Program Files (x86)\Telerik\UI for ASP.NET AJAX Q2 2016\Bin45\..\AdditionalLibraries\Bin45\Telerik.Windows.Documents.Flow.dll</HintPath>
     </Reference>
     <Reference Include="Telerik.Windows.Documents.Spreadsheet">
-      <HintPath>..\..\..\..\..\Program Files (x86)\Telerik\UI for ASP.NET AJAX Q1 2016\Bin45\..\AdditionalLibraries\Bin45\Telerik.Windows.Documents.Spreadsheet.dll</HintPath>
+      <HintPath>..\..\..\..\..\Program Files (x86)\Telerik\UI for ASP.NET AJAX Q2 2016\Bin45\..\AdditionalLibraries\Bin45\Telerik.Windows.Documents.Spreadsheet.dll</HintPath>
     </Reference>
     <Reference Include="Telerik.Windows.Documents.Spreadsheet.FormatProviders.OpenXml">
-      <HintPath>..\..\..\..\..\Program Files (x86)\Telerik\UI for ASP.NET AJAX Q1 2016\Bin45\..\AdditionalLibraries\Bin45\Telerik.Windows.Documents.Spreadsheet.FormatProviders.OpenXml.dll</HintPath>
+      <HintPath>..\..\..\..\..\Program Files (x86)\Telerik\UI for ASP.NET AJAX Q2 2016\Bin45\..\AdditionalLibraries\Bin45\Telerik.Windows.Documents.Spreadsheet.FormatProviders.OpenXml.dll</HintPath>
     </Reference>
     <Reference Include="Telerik.Windows.Zip">
-      <HintPath>..\..\..\..\..\Program Files (x86)\Telerik\UI for ASP.NET AJAX Q1 2016\Bin45\..\AdditionalLibraries\Bin45\Telerik.Windows.Zip.dll</HintPath>
+      <HintPath>..\..\..\..\..\Program Files (x86)\Telerik\UI for ASP.NET AJAX Q2 2016\Bin45\..\AdditionalLibraries\Bin45\Telerik.Windows.Zip.dll</HintPath>
     </Reference>
     <Reference Include="TypeLite, Version=1.4.0.0, Culture=neutral, PublicKeyToken=8cd4b9c9ac23d744, processorArchitecture=MSIL">
       <HintPath>..\packages\TypeLite.1.4.0\lib\net4\TypeLite.dll</HintPath>
@@ -210,7 +210,7 @@
           <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
         </WebProjectProperties>
       </FlavorProperties>
-      <UserProperties UseJQuerySupport="True" UseAjaxifiedTemplates="True" />
+      <UserProperties UseAjaxifiedTemplates="True" UseJQuerySupport="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
